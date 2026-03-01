@@ -241,7 +241,7 @@ function applyEntityOverlay<T extends { id: string }>(
 type ObjectiveAddEntry = Record<string, unknown>;
 const DEFAULT_OVERLAY_OBJECTIVE_TYPE = 'giveItem';
 const DEFAULT_OVERLAY_OBJECTIVE_COUNT = 1;
-function expandObjectiveAdditions(additions: unknown[]): ObjectiveAddEntry[] {
+export function expandObjectiveAdditions(additions: unknown[]): ObjectiveAddEntry[] {
   const expanded: ObjectiveAddEntry[] = [];
   for (const [index, entry] of additions.entries()) {
     if (!isPlainObject(entry)) continue;
@@ -296,7 +296,21 @@ function expandObjectiveAdditions(additions: unknown[]): ObjectiveAddEntry[] {
   }
   return expanded;
 }
-function applyTaskObjectiveAdditions<T extends { id: string }>(task: T): T {
+export function getObjectiveItemIds(objective: Record<string, unknown>): Set<string> {
+  const ids = new Set<string>();
+  const item = objective.item;
+  if (isPlainObject(item) && typeof item.id === 'string') ids.add(item.id);
+  const items = objective.items;
+  if (Array.isArray(items)) {
+    for (const entry of items) {
+      if (isPlainObject(entry) && typeof entry.id === 'string') ids.add(entry.id);
+    }
+  }
+  const questItem = objective.questItem;
+  if (isPlainObject(questItem) && typeof questItem.id === 'string') ids.add(questItem.id);
+  return ids;
+}
+export function applyTaskObjectiveAdditions<T extends { id: string }>(task: T): T {
   if (!isPlainObject(task)) return task;
   const obj = task as Record<string, unknown>;
   const additions = Array.isArray(obj.objectivesAdd) ? obj.objectivesAdd : [];
@@ -304,10 +318,30 @@ function applyTaskObjectiveAdditions<T extends { id: string }>(task: T): T {
   const existing = Array.isArray(obj.objectives) ? obj.objectives : [];
   const expanded = expandObjectiveAdditions(additions);
   if (expanded.length === 0) return task;
+  const existingItemIds = new Set<string>();
+  for (const objective of existing) {
+    if (isPlainObject(objective)) {
+      for (const id of getObjectiveItemIds(objective)) existingItemIds.add(id);
+    }
+  }
+  const deduped = expanded.filter((addition) => {
+    const additionItemIds = getObjectiveItemIds(addition);
+    if (additionItemIds.size === 0) return true;
+    for (const id of additionItemIds) {
+      if (existingItemIds.has(id)) return false;
+    }
+    return true;
+  });
+  if (deduped.length < expanded.length) {
+    logger.info(
+      `Skipped ${expanded.length - deduped.length} overlay objective(s) for task ${task.id} (items already in API)`
+    );
+  }
   const { objectivesAdd, ...rest } = obj;
+  if (deduped.length === 0) return { ...(rest as T) };
   return {
     ...(rest as T),
-    objectives: [...existing, ...expanded],
+    objectives: [...existing, ...deduped],
   };
 }
 type OverlayTaskAddition = Record<string, unknown> & { id: string };

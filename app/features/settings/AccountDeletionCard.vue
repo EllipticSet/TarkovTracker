@@ -25,6 +25,9 @@
   const showUsername = ref(false);
   const showEmail = ref(false);
   const showAccountId = ref(false);
+  const attrs = useAttrs();
+  type CssClassValue = string | string[] | Record<string, boolean> | undefined;
+  const rootClass = computed<CssClassValue>(() => attrs.class as CssClassValue);
   const maskedUsername = computed(() => {
     const username = $supabase?.user?.username;
     if (!username) return 'N/A';
@@ -268,7 +271,7 @@
   };
 </script>
 <template>
-  <div :class="$attrs.class">
+  <div :class="rootClass">
     <GenericCard
       icon="mdi-database-cog"
       icon-color="warning"

@@ -202,6 +202,33 @@ export default defineNuxtConfig({
     locales: SUPPORTED_LOCALES.map((code) => ({ code, file: `${code}.json5` })),
     vueI18n: 'i18n.config.ts',
   },
+  hooks: {
+    'imports:extend': (imports: Array<{ as?: string; from?: string; name: string }>) => {
+      const blockedImports = [
+        { names: new Set(['meta']), sourcePattern: '/app/utils/perf' },
+        { names: new Set(['string']), sourcePattern: '/app/utils/constants' },
+        { names: new Set(['string']), sourcePattern: '/app/utils/mapTime' },
+        { names: new Set(['string']), sourcePattern: '/app/utils/skillHelpers' },
+        { names: new Set(['getters']), sourcePattern: '/app/stores/useApp' },
+        { names: new Set(['actions']), sourcePattern: '/app/stores/useTarkov' },
+        {
+          names: new Set(['options']),
+          sourcePattern: '@nuxt/ui/dist/runtime/composables/useResizable',
+        },
+      ];
+      for (let index = imports.length - 1; index >= 0; index -= 1) {
+        const imported = imports[index];
+        if (!imported) continue;
+        const source = imported.from ?? '';
+        const exposedName = imported.as ?? imported.name;
+        const shouldBlock = blockedImports.some(
+          ({ names, sourcePattern }) =>
+            source.includes(sourcePattern) && (names.has(imported.name) || names.has(exposedName))
+        );
+        if (shouldBlock) imports.splice(index, 1);
+      }
+    },
+  },
   image: {
     domains: ['avatars.githubusercontent.com', 'github.com'],
   },
@@ -261,6 +288,21 @@ export default defineNuxtConfig({
     },
   },
   vite: {
+    plugins: [
+      {
+        enforce: 'pre',
+        name: 'nuxt-ui-use-resizable-options-shim',
+        transform(code, id) {
+          if (!id.includes('@nuxt/ui/dist/runtime/composables/useResizable.js')) {
+            return;
+          }
+          if (code.includes('export const options')) {
+            return;
+          }
+          return `${code}\nexport const options = {};\n`;
+        },
+      },
+    ],
     base: '/',
     optimizeDeps: {
       exclude: ['better-sqlite3'],

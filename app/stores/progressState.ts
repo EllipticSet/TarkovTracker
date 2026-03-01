@@ -327,8 +327,13 @@ export const actions = {
   setTaskComplete(this: UserState, taskId: string) {
     updateObjective(this, 'taskCompletions', taskId, createCompletion(true, false, false));
   },
-  setTaskFailed(this: UserState, taskId: string, options?: { manual?: boolean }) {
-    updateObjective(this, 'taskCompletions', taskId, createCompletion(true, true, options?.manual));
+  setTaskFailed(this: UserState, taskId: string, failOptions?: { manual?: boolean }) {
+    updateObjective(
+      this,
+      'taskCompletions',
+      taskId,
+      createCompletion(true, true, failOptions?.manual)
+    );
   },
   setTaskUncompleted(this: UserState, taskId: string) {
     updateObjective(this, 'taskCompletions', taskId, createCompletion(false, false, false));
