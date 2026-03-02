@@ -1,3 +1,10 @@
+# [1.19.0](https://github.com/tarkovtracker-org/TarkovTracker/compare/v1.18.0...v1.19.0) (2026-03-02)
+
+
+### Features
+
+* **storyline:** clarify route outcomes and progressive unlocks ([d3469fa](https://github.com/tarkovtracker-org/TarkovTracker/commit/d3469fa767f350a3095ce431cdb53114f2a0a36e))
+
 # [1.18.0](https://github.com/tarkovtracker-org/TarkovTracker/compare/v1.17.0...v1.18.0) (2026-03-02)
 
 
