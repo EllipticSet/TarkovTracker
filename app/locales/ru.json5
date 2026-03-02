@@ -244,6 +244,12 @@
       route_optional_steps: 'Optional steps',
       route_selected_hint: 'This route is active.',
       route_switch_hint: 'To switch routes, uncheck the selected route first.',
+      route_unlocks_here: 'Unlocks here',
+      route_unlocks_chapter: 'Chapter unlocks',
+      route_unlocks_estimated: 'Estimated timing',
+      route_unlock_map: 'Map: {name}',
+      route_unlock_trader: 'Trader: {name}',
+      route_unlock_reward: 'Reward: {name}',
     },
     tasks: {
       title: 'Задания',

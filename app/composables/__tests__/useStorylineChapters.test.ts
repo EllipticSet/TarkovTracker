@@ -11,6 +11,14 @@ const STORY_CHAPTERS: StoryChapter[] = [
     order: 1,
     autoStart: false,
     chapterRequirements: [{ id: 'req-1', name: 'Finish Intro' }],
+    mapUnlocks: [
+      { id: 'map-1', name: 'Route B Objective' },
+      { id: 'map-2', name: 'Side Objective' },
+    ],
+    traderUnlocks: [{ id: 'trader-1', name: 'Peacekeeper' }],
+    rewards: {
+      description: 'Chapter completion package',
+    },
     objectives: {
       'obj-a': {
         id: 'obj-a',
@@ -88,6 +96,17 @@ describe('useStorylineChapters', () => {
       'obj-a',
       'obj-b',
     ]);
+    const objectiveAUnlocks = objectiveA?.unlocks.map((unlock) => unlock.label) ?? [];
+    const objectiveBUnlocks = objectiveB?.unlocks.map((unlock) => unlock.label) ?? [];
+    const objectiveCUnlocks = objectiveC?.unlocks.map((unlock) => unlock.label) ?? [];
+    expect(objectiveAUnlocks).toContain('Peacekeeper');
+    expect(objectiveBUnlocks).toContain('Route B Objective');
+    expect(objectiveBUnlocks).toContain('Chapter completion package');
+    expect(objectiveCUnlocks).toContain('Side Objective');
+    expect(objectiveA?.hasEstimatedUnlocks).toBe(true);
+    expect(objectiveB?.hasEstimatedUnlocks).toBe(true);
+    expect(objectiveC?.hasEstimatedUnlocks).toBe(false);
+    expect(chapter.chapterUnlocks).toEqual([]);
     expect(chapter.mainLinearObjectives).toEqual([]);
     expect(chapter.optionalRouteChoices).toEqual([]);
     expect(chapter.optionalLinearObjectives.map((objective) => objective.id)).toEqual([

@@ -59,38 +59,6 @@
             {{ chapter.requirements.map((r) => r.label).join(', ') }}
           </div>
         </div>
-        <div v-if="chapter.mapUnlocks.length" class="mb-1.5">
-          <div class="text-surface-500 mb-0.5 text-[11px] font-medium tracking-wider uppercase">
-            {{ t('page.profile.storyline_unlocks_maps') }}
-          </div>
-          <div class="flex flex-wrap gap-1">
-            <UBadge
-              v-for="map in chapter.mapUnlocks"
-              :key="map.id"
-              variant="subtle"
-              color="primary"
-              size="xs"
-            >
-              {{ map.name }}
-            </UBadge>
-          </div>
-        </div>
-        <div v-if="chapter.traderUnlocks.length" class="mb-1.5">
-          <div class="text-surface-500 mb-0.5 text-[11px] font-medium tracking-wider uppercase">
-            {{ t('page.profile.storyline_unlocks_traders') }}
-          </div>
-          <div class="flex flex-wrap gap-1">
-            <UBadge
-              v-for="trader in chapter.traderUnlocks"
-              :key="trader.id"
-              variant="subtle"
-              color="warning"
-              size="xs"
-            >
-              {{ trader.name }}
-            </UBadge>
-          </div>
-        </div>
         <div v-if="chapter.description" class="mb-1.5">
           <div class="text-surface-400 text-xs">
             {{ chapter.description }}
@@ -185,6 +153,30 @@
                         })
                       }}
                     </span>
+                    <span v-if="obj.unlocks.length" class="mt-1 block">
+                      <span class="text-surface-500 text-[11px] font-medium uppercase">
+                        {{ t('page.storyline.route_unlocks_here') }}
+                      </span>
+                      <span class="mt-0.5 flex flex-wrap gap-1">
+                        <UBadge
+                          v-for="unlock in obj.unlocks"
+                          :key="`${obj.id}-${unlock.type}-${unlock.id}`"
+                          variant="subtle"
+                          size="xs"
+                          :color="getUnlockBadgeColor(unlock.type)"
+                        >
+                          {{ getUnlockLabel(unlock.type, unlock.label) }}
+                        </UBadge>
+                        <UBadge
+                          v-if="obj.hasEstimatedUnlocks"
+                          variant="subtle"
+                          color="neutral"
+                          size="xs"
+                        >
+                          {{ t('page.storyline.route_unlocks_estimated') }}
+                        </UBadge>
+                      </span>
+                    </span>
                   </span>
                 </label>
               </div>
@@ -274,6 +266,30 @@
                     })
                   }}
                 </span>
+                <span v-if="obj.unlocks.length" class="mt-1 block">
+                  <span class="text-surface-500 text-[11px] font-medium uppercase">
+                    {{ t('page.storyline.route_unlocks_here') }}
+                  </span>
+                  <span class="mt-0.5 flex flex-wrap gap-1">
+                    <UBadge
+                      v-for="unlock in obj.unlocks"
+                      :key="`${obj.id}-${unlock.type}-${unlock.id}`"
+                      variant="subtle"
+                      size="xs"
+                      :color="getUnlockBadgeColor(unlock.type)"
+                    >
+                      {{ getUnlockLabel(unlock.type, unlock.label) }}
+                    </UBadge>
+                    <UBadge
+                      v-if="obj.hasEstimatedUnlocks"
+                      variant="subtle"
+                      color="neutral"
+                      size="xs"
+                    >
+                      {{ t('page.storyline.route_unlocks_estimated') }}
+                    </UBadge>
+                  </span>
+                </span>
               </span>
             </label>
           </div>
@@ -360,6 +376,30 @@
                             .join(', '),
                         })
                       }}
+                    </span>
+                    <span v-if="obj.unlocks.length" class="mt-1 block">
+                      <span class="text-surface-500 text-[11px] font-medium uppercase">
+                        {{ t('page.storyline.route_unlocks_here') }}
+                      </span>
+                      <span class="mt-0.5 flex flex-wrap gap-1">
+                        <UBadge
+                          v-for="unlock in obj.unlocks"
+                          :key="`${obj.id}-${unlock.type}-${unlock.id}`"
+                          variant="subtle"
+                          size="xs"
+                          :color="getUnlockBadgeColor(unlock.type)"
+                        >
+                          {{ getUnlockLabel(unlock.type, unlock.label) }}
+                        </UBadge>
+                        <UBadge
+                          v-if="obj.hasEstimatedUnlocks"
+                          variant="subtle"
+                          color="neutral"
+                          size="xs"
+                        >
+                          {{ t('page.storyline.route_unlocks_estimated') }}
+                        </UBadge>
+                      </span>
                     </span>
                   </span>
                 </label>
@@ -450,15 +490,49 @@
                     })
                   }}
                 </span>
+                <span v-if="obj.unlocks.length" class="mt-1 block">
+                  <span class="text-surface-500 text-[11px] font-medium uppercase">
+                    {{ t('page.storyline.route_unlocks_here') }}
+                  </span>
+                  <span class="mt-0.5 flex flex-wrap gap-1">
+                    <UBadge
+                      v-for="unlock in obj.unlocks"
+                      :key="`${obj.id}-${unlock.type}-${unlock.id}`"
+                      variant="subtle"
+                      size="xs"
+                      :color="getUnlockBadgeColor(unlock.type)"
+                    >
+                      {{ getUnlockLabel(unlock.type, unlock.label) }}
+                    </UBadge>
+                    <UBadge
+                      v-if="obj.hasEstimatedUnlocks"
+                      variant="subtle"
+                      color="neutral"
+                      size="xs"
+                    >
+                      {{ t('page.storyline.route_unlocks_estimated') }}
+                    </UBadge>
+                  </span>
+                </span>
               </span>
             </label>
           </div>
         </div>
-        <div v-if="chapter.rewards" class="mb-1.5">
+        <div v-if="chapter.chapterUnlocks.length" class="mb-1.5">
           <div class="text-surface-500 mb-0.5 text-[11px] font-medium tracking-wider uppercase">
-            {{ t('page.profile.storyline_rewards') }}
+            {{ t('page.storyline.route_unlocks_chapter') }}
           </div>
-          <div class="text-surface-300 text-xs">{{ chapter.rewards.description }}</div>
+          <div class="flex flex-wrap gap-1">
+            <UBadge
+              v-for="unlock in chapter.chapterUnlocks"
+              :key="`chapter-${chapter.id}-${unlock.type}-${unlock.id}`"
+              variant="subtle"
+              :color="getUnlockBadgeColor(unlock.type)"
+              size="xs"
+            >
+              {{ getUnlockLabel(unlock.type, unlock.label) }}
+            </UBadge>
+          </div>
         </div>
         <div class="bg-surface-800/60 mt-2 h-1.5 overflow-hidden rounded-full">
           <div
@@ -488,6 +562,7 @@
   import {
     useStorylineChapters,
     type StorylineNormalizedChapterView,
+    type StorylineObjectiveUnlockView,
   } from '@/composables/useStorylineChapters';
   interface Props {
     storyChapterCompletionState: Record<string, boolean>;
@@ -522,5 +597,23 @@
       return;
     }
     emit('toggleObjective', chapterId, objectiveId);
+  };
+  const getUnlockBadgeColor = (type: StorylineObjectiveUnlockView['type']) => {
+    if (type === 'map') {
+      return 'primary';
+    }
+    if (type === 'trader') {
+      return 'warning';
+    }
+    return 'success';
+  };
+  const getUnlockLabel = (type: StorylineObjectiveUnlockView['type'], label: string) => {
+    if (type === 'map') {
+      return t('page.storyline.route_unlock_map', { name: label });
+    }
+    if (type === 'trader') {
+      return t('page.storyline.route_unlock_trader', { name: label });
+    }
+    return t('page.storyline.route_unlock_reward', { name: label });
   };
 </script>

@@ -33,6 +33,12 @@ export interface StorylineObjectiveRouteView {
   label: string;
   complete: boolean;
 }
+export interface StorylineObjectiveUnlockView {
+  estimated: boolean;
+  id: string;
+  label: string;
+  type: 'map' | 'reward' | 'trader';
+}
 export interface StorylineRouteChoiceGroup {
   chosenObjectiveId: string | null;
   id: string;
@@ -40,6 +46,8 @@ export interface StorylineRouteChoiceGroup {
 }
 export interface StorylineObjectiveProgress extends StoryObjective {
   complete: boolean;
+  hasEstimatedUnlocks: boolean;
+  unlocks: StorylineObjectiveUnlockView[];
   routeAlternatives: StorylineObjectiveRouteView[];
   routeBlockingAlternatives: StorylineObjectiveRouteView[];
   routeState: 'open' | 'chosen' | 'blocked';
@@ -53,6 +61,7 @@ export interface StorylineNormalizedChapterView extends Omit<
   mainObjectives: StorylineObjectiveProgress[];
   mainLinearObjectives: StorylineObjectiveProgress[];
   mainRouteChoices: StorylineRouteChoiceGroup[];
+  chapterUnlocks: StorylineObjectiveUnlockView[];
   objectives: StorylineObjectiveProgress[];
   optionalObjectives: StorylineObjectiveProgress[];
   optionalLinearObjectives: StorylineObjectiveProgress[];
@@ -91,6 +100,118 @@ const normalizeChapterRequirements = (
       };
     })
     .filter((requirement): requirement is StorylineRequirementView => Boolean(requirement));
+};
+const normalizeSearchText = (value: string): string => {
+  return value
+    .toLowerCase()
+    .replace(/[^\p{L}\p{N}]+/gu, ' ')
+    .trim();
+};
+const matchesUnlockText = (objectiveText: string, unlockLabel: string): boolean => {
+  const normalizedUnlock = normalizeSearchText(unlockLabel);
+  if (!normalizedUnlock) {
+    return false;
+  }
+  return objectiveText.includes(normalizedUnlock);
+};
+const parseChapterRewards = (
+  chapter: StorylineChapterView
+): Array<Omit<StorylineObjectiveUnlockView, 'estimated'>> => {
+  const rewardDescription = chapter.rewards?.description?.trim();
+  if (!rewardDescription) {
+    return [];
+  }
+  const rewardLines = rewardDescription
+    .split('\n')
+    .map((line) => line.trim())
+    .filter((line) => line.length > 0);
+  const lines = rewardLines.length > 1 ? rewardLines : [rewardDescription];
+  return lines.map((line, index) => ({
+    id: `${chapter.id}-reward-${index + 1}`,
+    label: line,
+    type: 'reward',
+  }));
+};
+const assignChapterUnlocks = (
+  chapter: StorylineChapterView,
+  matchObjectives: StorylineObjectiveProgress[],
+  distributionObjectives: StorylineObjectiveProgress[]
+): {
+  chapterUnlocks: StorylineObjectiveUnlockView[];
+  objectiveUnlockMap: Map<string, StorylineObjectiveUnlockView[]>;
+} => {
+  const chapterUnlockItems: Array<Omit<StorylineObjectiveUnlockView, 'estimated'>> = [
+    ...chapter.mapUnlocks.map((map) => ({ id: map.id, label: map.name, type: 'map' as const })),
+    ...chapter.traderUnlocks.map((trader) => ({
+      id: trader.id,
+      label: trader.name,
+      type: 'trader' as const,
+    })),
+    ...parseChapterRewards(chapter),
+  ];
+  const objectiveUnlockMap = new Map<string, StorylineObjectiveUnlockView[]>(
+    matchObjectives.map((objective) => [objective.id, []])
+  );
+  if (!chapterUnlockItems.length) {
+    return {
+      chapterUnlocks: [],
+      objectiveUnlockMap,
+    };
+  }
+  if (!matchObjectives.length) {
+    return {
+      chapterUnlocks: chapterUnlockItems.map((unlock) => ({ ...unlock, estimated: false })),
+      objectiveUnlockMap,
+    };
+  }
+  const objectiveTextById = new Map(
+    matchObjectives.map((objective) => [
+      objective.id,
+      normalizeSearchText(`${objective.description} ${objective.notes ?? ''}`),
+    ])
+  );
+  const unassignedUnlockItems: Array<Omit<StorylineObjectiveUnlockView, 'estimated'>> = [];
+  for (const unlockItem of chapterUnlockItems) {
+    const matchedObjective = matchObjectives.find((objective) =>
+      matchesUnlockText(objectiveTextById.get(objective.id) ?? '', unlockItem.label)
+    );
+    if (!matchedObjective) {
+      unassignedUnlockItems.push(unlockItem);
+      continue;
+    }
+    objectiveUnlockMap.set(matchedObjective.id, [
+      ...(objectiveUnlockMap.get(matchedObjective.id) ?? []),
+      {
+        ...unlockItem,
+        estimated: false,
+      },
+    ]);
+  }
+  if (unassignedUnlockItems.length) {
+    const fallbackObjectives =
+      distributionObjectives.length > 0 ? distributionObjectives : matchObjectives;
+    unassignedUnlockItems.forEach((unlockItem, index) => {
+      const targetIndex = Math.min(
+        fallbackObjectives.length - 1,
+        Math.floor((index * fallbackObjectives.length) / unassignedUnlockItems.length)
+      );
+      const objectiveId = fallbackObjectives[targetIndex]?.id;
+      if (!objectiveId) {
+        return;
+      }
+      objectiveUnlockMap.set(objectiveId, [
+        ...(objectiveUnlockMap.get(objectiveId) ?? []),
+        {
+          ...unlockItem,
+          estimated: true,
+        },
+      ]);
+    });
+  }
+  return {
+    chapterUnlocks: [],
+    objectiveUnlockMap,
+  };
 };
 const buildRouteChoiceGroups = (
   objectives: StorylineObjectiveProgress[]
@@ -207,7 +328,7 @@ export function useStorylineChapters(options: UseStorylineChaptersOptions = {}):
       const objectiveCompleteMap = new Map(
         objectiveProgress.map((objective) => [objective.id, objective.complete])
       );
-      const objectives: StorylineObjectiveProgress[] = objectiveProgress.map((objective) => {
+      const baseObjectives: StorylineObjectiveProgress[] = objectiveProgress.map((objective) => {
         const routeAlternatives: StorylineObjectiveRouteView[] = (
           objective.mutuallyExclusiveWith ?? []
         )
@@ -235,9 +356,27 @@ export function useStorylineChapters(options: UseStorylineChaptersOptions = {}):
             : 'open';
         return {
           ...objective,
+          hasEstimatedUnlocks: false,
+          unlocks: [],
           routeAlternatives,
           routeBlockingAlternatives,
           routeState,
+        };
+      });
+      const unlockDistributionObjectives = baseObjectives.filter(
+        (objective) => objective.type === 'main'
+      );
+      const { chapterUnlocks, objectiveUnlockMap } = assignChapterUnlocks(
+        chapter,
+        baseObjectives,
+        unlockDistributionObjectives.length > 0 ? unlockDistributionObjectives : baseObjectives
+      );
+      const objectives: StorylineObjectiveProgress[] = baseObjectives.map((objective) => {
+        const unlocks = objectiveUnlockMap.get(objective.id) ?? [];
+        return {
+          ...objective,
+          hasEstimatedUnlocks: unlocks.some((unlock) => unlock.estimated),
+          unlocks,
         };
       });
       const mainObjectives = objectives.filter((objective) => objective.type === 'main');
@@ -255,6 +394,7 @@ export function useStorylineChapters(options: UseStorylineChaptersOptions = {}):
         mainLinearObjectives,
         mainObjectives,
         mainRouteChoices,
+        chapterUnlocks,
         objectives,
         optionalLinearObjectives,
         optionalObjectives,

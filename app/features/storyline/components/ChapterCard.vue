@@ -135,6 +135,28 @@
                     >
                       {{ t('page.storyline.route_blocked') }}
                     </UBadge>
+                    <template v-if="objective.unlocks.length">
+                      <span class="text-surface-500 text-[11px] font-medium uppercase">
+                        {{ t('page.storyline.route_unlocks_here') }}:
+                      </span>
+                      <UBadge
+                        v-for="unlock in objective.unlocks"
+                        :key="`${objective.id}-${unlock.type}-${unlock.id}`"
+                        variant="subtle"
+                        size="xs"
+                        :color="getUnlockBadgeColor(unlock.type)"
+                      >
+                        {{ getUnlockLabel(unlock.type, unlock.label) }}
+                      </UBadge>
+                      <UBadge
+                        v-if="objective.hasEstimatedUnlocks"
+                        variant="subtle"
+                        color="neutral"
+                        size="xs"
+                      >
+                        {{ t('page.storyline.route_unlocks_estimated') }}
+                      </UBadge>
+                    </template>
                   </span>
                   <span
                     v-if="objective.routeState === 'chosen'"
@@ -223,6 +245,28 @@
                 >
                   {{ t('page.storyline.route_choice') }}
                 </UBadge>
+                <template v-if="objective.unlocks.length">
+                  <span class="text-surface-500 text-[11px] font-medium uppercase">
+                    {{ t('page.storyline.route_unlocks_here') }}:
+                  </span>
+                  <UBadge
+                    v-for="unlock in objective.unlocks"
+                    :key="`${objective.id}-${unlock.type}-${unlock.id}`"
+                    variant="subtle"
+                    size="xs"
+                    :color="getUnlockBadgeColor(unlock.type)"
+                  >
+                    {{ getUnlockLabel(unlock.type, unlock.label) }}
+                  </UBadge>
+                  <UBadge
+                    v-if="objective.hasEstimatedUnlocks"
+                    variant="subtle"
+                    color="neutral"
+                    size="xs"
+                  >
+                    {{ t('page.storyline.route_unlocks_estimated') }}
+                  </UBadge>
+                </template>
               </span>
               <span
                 v-if="
@@ -319,6 +363,28 @@
                     >
                       {{ t('page.storyline.route_blocked') }}
                     </UBadge>
+                    <template v-if="objective.unlocks.length">
+                      <span class="text-surface-500 text-[11px] font-medium uppercase">
+                        {{ t('page.storyline.route_unlocks_here') }}:
+                      </span>
+                      <UBadge
+                        v-for="unlock in objective.unlocks"
+                        :key="`${objective.id}-${unlock.type}-${unlock.id}`"
+                        variant="subtle"
+                        size="xs"
+                        :color="getUnlockBadgeColor(unlock.type)"
+                      >
+                        {{ getUnlockLabel(unlock.type, unlock.label) }}
+                      </UBadge>
+                      <UBadge
+                        v-if="objective.hasEstimatedUnlocks"
+                        variant="subtle"
+                        color="neutral"
+                        size="xs"
+                      >
+                        {{ t('page.storyline.route_unlocks_estimated') }}
+                      </UBadge>
+                    </template>
                   </span>
                   <span
                     v-if="objective.routeState === 'chosen'"
@@ -407,6 +473,28 @@
                 >
                   {{ t('page.storyline.route_choice') }}
                 </UBadge>
+                <template v-if="objective.unlocks.length">
+                  <span class="text-surface-500 text-[11px] font-medium uppercase">
+                    {{ t('page.storyline.route_unlocks_here') }}:
+                  </span>
+                  <UBadge
+                    v-for="unlock in objective.unlocks"
+                    :key="`${objective.id}-${unlock.type}-${unlock.id}`"
+                    variant="subtle"
+                    size="xs"
+                    :color="getUnlockBadgeColor(unlock.type)"
+                  >
+                    {{ getUnlockLabel(unlock.type, unlock.label) }}
+                  </UBadge>
+                  <UBadge
+                    v-if="objective.hasEstimatedUnlocks"
+                    variant="subtle"
+                    color="neutral"
+                    size="xs"
+                  >
+                    {{ t('page.storyline.route_unlocks_estimated') }}
+                  </UBadge>
+                </template>
               </span>
               <span
                 v-if="
@@ -438,40 +526,21 @@
       </div>
     </div>
     <div
-      v-if="chapter.mapUnlocks.length"
+      v-if="chapter.chapterUnlocks.length"
       class="bg-surface-950/20 mb-2 rounded-md border border-white/5 p-2"
     >
       <div class="text-surface-500 mb-0.5 text-[11px] font-medium tracking-wider uppercase">
-        {{ t('page.profile.storyline_unlocks_maps') }}
+        {{ t('page.storyline.route_unlocks_chapter') }}
       </div>
       <div class="flex flex-wrap gap-1">
         <UBadge
-          v-for="map in chapter.mapUnlocks"
-          :key="map.id"
+          v-for="unlock in chapter.chapterUnlocks"
+          :key="`chapter-${chapter.id}-${unlock.type}-${unlock.id}`"
           variant="subtle"
-          color="primary"
+          :color="getUnlockBadgeColor(unlock.type)"
           size="xs"
         >
-          {{ map.name }}
-        </UBadge>
-      </div>
-    </div>
-    <div
-      v-if="chapter.traderUnlocks.length"
-      class="bg-surface-950/20 mb-2 rounded-md border border-white/5 p-2"
-    >
-      <div class="text-surface-500 mb-0.5 text-[11px] font-medium tracking-wider uppercase">
-        {{ t('page.profile.storyline_unlocks_traders') }}
-      </div>
-      <div class="flex flex-wrap gap-1">
-        <UBadge
-          v-for="trader in chapter.traderUnlocks"
-          :key="trader.id"
-          variant="subtle"
-          color="warning"
-          size="xs"
-        >
-          {{ trader.name }}
+          {{ getUnlockLabel(unlock.type, unlock.label) }}
         </UBadge>
       </div>
     </div>
@@ -488,7 +557,10 @@
   </div>
 </template>
 <script setup lang="ts">
-  import type { StorylineNormalizedChapterView } from '@/composables/useStorylineChapters';
+  import type {
+    StorylineNormalizedChapterView,
+    StorylineObjectiveUnlockView,
+  } from '@/composables/useStorylineChapters';
   interface Props {
     chapter: StorylineNormalizedChapterView;
   }
@@ -499,4 +571,22 @@
     toggleObjective: [chapterId: string, objectiveId: string];
   }>();
   const { t } = useI18n({ useScope: 'global' });
+  const getUnlockBadgeColor = (type: StorylineObjectiveUnlockView['type']) => {
+    if (type === 'map') {
+      return 'primary';
+    }
+    if (type === 'trader') {
+      return 'warning';
+    }
+    return 'success';
+  };
+  const getUnlockLabel = (type: StorylineObjectiveUnlockView['type'], label: string) => {
+    if (type === 'map') {
+      return t('page.storyline.route_unlock_map', { name: label });
+    }
+    if (type === 'trader') {
+      return t('page.storyline.route_unlock_trader', { name: label });
+    }
+    return t('page.storyline.route_unlock_reward', { name: label });
+  };
 </script>
