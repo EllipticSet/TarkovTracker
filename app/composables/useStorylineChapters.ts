@@ -28,8 +28,16 @@ export interface StorylineRequirementView {
   id: string;
   label: string;
 }
+export interface StorylineObjectiveRouteView {
+  id: string;
+  label: string;
+  complete: boolean;
+}
 export interface StorylineObjectiveProgress extends StoryObjective {
   complete: boolean;
+  routeAlternatives: StorylineObjectiveRouteView[];
+  routeBlockingAlternatives: StorylineObjectiveRouteView[];
+  routeState: 'open' | 'chosen' | 'blocked';
 }
 export interface StorylineNormalizedChapterView extends Omit<
   StorylineChapterView,
@@ -107,10 +115,46 @@ export function useStorylineChapters(options: UseStorylineChaptersOptions = {}):
   });
   const normalizedChapters = computed<StorylineNormalizedChapterView[]>(() => {
     return chapters.value.map((chapter) => {
-      const objectives = chapter.objectives.map((objective) => ({
+      const objectiveProgress = chapter.objectives.map((objective) => ({
         ...objective,
         complete: isObjectiveComplete(chapter.id, objective.id),
       }));
+      const objectiveCompleteMap = new Map(
+        objectiveProgress.map((objective) => [objective.id, objective.complete])
+      );
+      const objectives: StorylineObjectiveProgress[] = objectiveProgress.map((objective) => {
+        const routeAlternatives: StorylineObjectiveRouteView[] = (
+          objective.mutuallyExclusiveWith ?? []
+        )
+          .map((linkedId) => {
+            const linkedObjective = chapter.objectiveMap[linkedId];
+            if (!linkedObjective) {
+              return null;
+            }
+            return {
+              id: linkedId,
+              label: linkedObjective.description,
+              complete: objectiveCompleteMap.get(linkedId) === true,
+            };
+          })
+          .filter((linkedObjective): linkedObjective is StorylineObjectiveRouteView =>
+            Boolean(linkedObjective)
+          );
+        const routeBlockingAlternatives = routeAlternatives.filter(
+          (linkedObjective) => linkedObjective.complete
+        );
+        const routeState: StorylineObjectiveProgress['routeState'] = objective.complete
+          ? 'chosen'
+          : routeBlockingAlternatives.length > 0
+            ? 'blocked'
+            : 'open';
+        return {
+          ...objective,
+          routeAlternatives,
+          routeBlockingAlternatives,
+          routeState,
+        };
+      });
       const mainObjectives = objectives.filter((objective) => objective.type === 'main');
       const optionalObjectives = objectives.filter((objective) => objective.type === 'optional');
       return {

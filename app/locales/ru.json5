@@ -233,6 +233,11 @@
       mark_complete: 'Отметить как выполнено',
       mark_incomplete: 'Отметить как невыполнено',
       completed: 'Выполнено',
+      route_choice: 'Route choice',
+      route_chosen: 'Route selected',
+      route_blocked: 'Blocked',
+      route_blocks: 'Blocks: {objectives}',
+      route_blocked_by: 'Blocked by: {objectives}',
     },
     tasks: {
       title: 'Задания',

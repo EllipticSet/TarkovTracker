@@ -56,7 +56,7 @@
             {{ t('page.profile.storyline_requires') }}
           </div>
           <div class="text-surface-300 text-xs">
-            {{ chapter.requirements.map((r) => r.name).join(', ') }}
+            {{ chapter.requirements.map((r) => r.label).join(', ') }}
           </div>
         </div>
         <div v-if="chapter.mapUnlocks.length" class="mb-1.5">
@@ -112,21 +112,73 @@
               :key="obj.id"
               class="flex items-start gap-1.5 rounded px-1 py-0.5"
               :class="
-                props.readOnly ? 'cursor-default opacity-70' : 'cursor-pointer hover:bg-white/5'
+                props.readOnly || obj.routeState === 'blocked'
+                  ? 'cursor-not-allowed opacity-70'
+                  : 'cursor-pointer hover:bg-white/5'
               "
             >
               <input
                 type="checkbox"
                 :checked="obj.complete"
                 class="accent-success-500 mt-0.5 shrink-0"
-                :disabled="props.readOnly"
+                :disabled="props.readOnly || obj.routeState === 'blocked'"
                 @change="handleObjectiveToggle(chapter.id, obj.id)"
               />
-              <span
-                class="text-xs"
-                :class="obj.complete ? 'text-surface-500 line-through' : 'text-surface-300'"
-              >
-                {{ obj.description }}
+              <span class="min-w-0 flex-1">
+                <span class="flex flex-wrap items-center gap-1">
+                  <span
+                    class="text-xs"
+                    :class="obj.complete ? 'text-surface-500 line-through' : 'text-surface-300'"
+                  >
+                    {{ obj.description }}
+                  </span>
+                  <UBadge
+                    v-if="obj.routeState === 'chosen'"
+                    variant="subtle"
+                    color="success"
+                    size="xs"
+                  >
+                    {{ t('page.storyline.route_chosen') }}
+                  </UBadge>
+                  <UBadge
+                    v-else-if="obj.routeState === 'blocked'"
+                    variant="subtle"
+                    color="error"
+                    size="xs"
+                  >
+                    {{ t('page.storyline.route_blocked') }}
+                  </UBadge>
+                  <UBadge
+                    v-else-if="obj.routeAlternatives.length"
+                    variant="subtle"
+                    color="warning"
+                    size="xs"
+                  >
+                    {{ t('page.storyline.route_choice') }}
+                  </UBadge>
+                </span>
+                <span
+                  v-if="obj.routeState === 'blocked' && obj.routeBlockingAlternatives.length"
+                  class="text-error-300 mt-0.5 block text-[11px] leading-tight"
+                >
+                  {{
+                    t('page.storyline.route_blocked_by', {
+                      objectives: obj.routeBlockingAlternatives
+                        .map((entry) => entry.label)
+                        .join(', '),
+                    })
+                  }}
+                </span>
+                <span
+                  v-else-if="obj.routeAlternatives.length"
+                  class="text-surface-500 mt-0.5 block text-[11px] leading-tight"
+                >
+                  {{
+                    t('page.storyline.route_blocks', {
+                      objectives: obj.routeAlternatives.map((entry) => entry.label).join(', '),
+                    })
+                  }}
+                </span>
               </span>
             </label>
           </div>
@@ -141,21 +193,73 @@
               :key="obj.id"
               class="flex items-start gap-1.5 rounded px-1 py-0.5"
               :class="
-                props.readOnly ? 'cursor-default opacity-70' : 'cursor-pointer hover:bg-white/5'
+                props.readOnly || obj.routeState === 'blocked'
+                  ? 'cursor-not-allowed opacity-70'
+                  : 'cursor-pointer hover:bg-white/5'
               "
             >
               <input
                 type="checkbox"
                 :checked="obj.complete"
                 class="accent-info-500 mt-0.5 shrink-0"
-                :disabled="props.readOnly"
+                :disabled="props.readOnly || obj.routeState === 'blocked'"
                 @change="handleObjectiveToggle(chapter.id, obj.id)"
               />
-              <span
-                class="text-xs"
-                :class="obj.complete ? 'text-surface-500 line-through' : 'text-surface-300'"
-              >
-                {{ obj.description }}
+              <span class="min-w-0 flex-1">
+                <span class="flex flex-wrap items-center gap-1">
+                  <span
+                    class="text-xs"
+                    :class="obj.complete ? 'text-surface-500 line-through' : 'text-surface-300'"
+                  >
+                    {{ obj.description }}
+                  </span>
+                  <UBadge
+                    v-if="obj.routeState === 'chosen'"
+                    variant="subtle"
+                    color="success"
+                    size="xs"
+                  >
+                    {{ t('page.storyline.route_chosen') }}
+                  </UBadge>
+                  <UBadge
+                    v-else-if="obj.routeState === 'blocked'"
+                    variant="subtle"
+                    color="error"
+                    size="xs"
+                  >
+                    {{ t('page.storyline.route_blocked') }}
+                  </UBadge>
+                  <UBadge
+                    v-else-if="obj.routeAlternatives.length"
+                    variant="subtle"
+                    color="warning"
+                    size="xs"
+                  >
+                    {{ t('page.storyline.route_choice') }}
+                  </UBadge>
+                </span>
+                <span
+                  v-if="obj.routeState === 'blocked' && obj.routeBlockingAlternatives.length"
+                  class="text-error-300 mt-0.5 block text-[11px] leading-tight"
+                >
+                  {{
+                    t('page.storyline.route_blocked_by', {
+                      objectives: obj.routeBlockingAlternatives
+                        .map((entry) => entry.label)
+                        .join(', '),
+                    })
+                  }}
+                </span>
+                <span
+                  v-else-if="obj.routeAlternatives.length"
+                  class="text-surface-500 mt-0.5 block text-[11px] leading-tight"
+                >
+                  {{
+                    t('page.storyline.route_blocks', {
+                      objectives: obj.routeAlternatives.map((entry) => entry.label).join(', '),
+                    })
+                  }}
+                </span>
               </span>
             </label>
           </div>
@@ -191,7 +295,10 @@
   </div>
 </template>
 <script setup lang="ts">
-  import { useStorylineChapters } from '@/composables/useStorylineChapters';
+  import {
+    useStorylineChapters,
+    type StorylineNormalizedChapterView,
+  } from '@/composables/useStorylineChapters';
   interface Props {
     storyChapterCompletionState: Record<string, boolean>;
     storyObjectiveCompletionState: Record<string, Record<string, boolean>>;
@@ -202,66 +309,21 @@
     toggleObjective: [chapterId: string, objectiveId: string];
   }>();
   const { t } = useI18n({ useScope: 'global' });
-  const { chapters } = useStorylineChapters({
+  const { normalizedChapters } = useStorylineChapters({
     isChapterComplete: (chapterId: string) => props.storyChapterCompletionState[chapterId] === true,
+    isObjectiveComplete: (chapterId: string, objectiveId: string) =>
+      props.storyObjectiveCompletionState[chapterId]?.[objectiveId] === true,
   });
-  interface ObjectiveProgress {
-    id: string;
-    order: number;
-    type: 'main' | 'optional';
-    description: string;
-    notes?: string | null;
-    mutuallyExclusiveWith?: string[];
-    complete: boolean;
-  }
-  interface ChapterProgress {
-    id: string;
-    name: string;
-    normalizedName: string;
-    order: number;
-    autoStart: boolean;
-    complete: boolean;
-    wikiLink: string;
-    description?: string | null;
-    notes?: string | null;
-    rewards?: { description: string } | null;
-    requirements: Array<{ id: string; name: string }>;
-    mapUnlocks: Array<{ id: string; name: string }>;
-    traderUnlocks: Array<{ id: string; name: string }>;
-    mainObjectives: ObjectiveProgress[];
-    optionalObjectives: ObjectiveProgress[];
+  interface ChapterProgress extends StorylineNormalizedChapterView {
     mainProgress: number;
     mainTotal: number;
   }
   const chapterProgress = computed<ChapterProgress[]>(() => {
-    return chapters.value.map((chapter) => {
-      const chapterObjState = props.storyObjectiveCompletionState[chapter.id] ?? {};
-      const mainObjectives = chapter.objectives
-        .filter((o) => o.type === 'main')
-        .map((o) => ({ ...o, complete: chapterObjState[o.id] === true }));
-      const optionalObjectives = chapter.objectives
-        .filter((o) => o.type === 'optional')
-        .map((o) => ({ ...o, complete: chapterObjState[o.id] === true }));
-      const mainTotal = mainObjectives.length;
-      const mainProgress = mainObjectives.filter((o) => o.complete).length;
+    return normalizedChapters.value.map((chapter) => {
       return {
-        id: chapter.id,
-        name: chapter.name || chapter.id,
-        normalizedName: chapter.normalizedName,
-        order: chapter.order,
-        autoStart: chapter.autoStart ?? false,
-        complete: chapter.complete,
-        wikiLink: chapter.wikiLink,
-        description: chapter.description,
-        notes: chapter.notes,
-        rewards: chapter.rewards,
-        requirements: chapter.requirements,
-        mapUnlocks: chapter.mapUnlocks,
-        traderUnlocks: chapter.traderUnlocks,
-        mainObjectives,
-        optionalObjectives,
-        mainProgress,
-        mainTotal,
+        ...chapter,
+        mainProgress: chapter.mainObjectiveCompleted,
+        mainTotal: chapter.mainObjectiveTotal,
       };
     });
   });

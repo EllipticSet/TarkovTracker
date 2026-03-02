@@ -12,17 +12,12 @@ const TEST_CHAPTERS = [
     autoStart: false,
     complete: false,
     wikiLink: 'https://example.com/chapter-1',
+    description: null,
+    notes: null,
+    rewards: null,
     requirements: [],
     mapUnlocks: [],
     traderUnlocks: [],
-    objectives: [
-      {
-        id: 'objective-1',
-        order: 1,
-        type: 'main',
-        description: 'Complete main objective',
-      },
-    ],
     objectiveMap: {
       'objective-1': {
         id: 'objective-1',
@@ -31,12 +26,39 @@ const TEST_CHAPTERS = [
         description: 'Complete main objective',
       },
     },
+    objectives: [
+      {
+        id: 'objective-1',
+        order: 1,
+        type: 'main',
+        description: 'Complete main objective',
+        complete: false,
+        routeAlternatives: [],
+        routeBlockingAlternatives: [],
+        routeState: 'open',
+      },
+    ],
+    mainObjectiveCompleted: 0,
+    mainObjectiveTotal: 1,
+    mainObjectives: [
+      {
+        id: 'objective-1',
+        order: 1,
+        type: 'main',
+        description: 'Complete main objective',
+        complete: false,
+        routeAlternatives: [],
+        routeBlockingAlternatives: [],
+        routeState: 'open',
+      },
+    ],
+    optionalObjectives: [],
   },
 ];
 const cloneTestChapters = () => structuredClone(TEST_CHAPTERS);
-const chapters = ref(cloneTestChapters());
+const normalizedChapters = ref(cloneTestChapters());
 vi.mock('@/composables/useStorylineChapters', () => ({
-  useStorylineChapters: () => ({ chapters }),
+  useStorylineChapters: () => ({ normalizedChapters }),
 }));
 mockNuxtImport('useI18n', () => () => ({
   t: (key: string) => key,
@@ -69,7 +91,7 @@ const createWrapper = async (readOnly: boolean) => {
 };
 describe('ProfileStorylineTab', () => {
   beforeEach(() => {
-    chapters.value = cloneTestChapters();
+    normalizedChapters.value = cloneTestChapters();
   });
   it('does not emit objective toggle events when read-only', async () => {
     const wrapper = await createWrapper(true);
@@ -85,6 +107,21 @@ describe('ProfileStorylineTab', () => {
     expect(checkbox.attributes('disabled')).toBeUndefined();
     await checkbox.trigger('change');
     expect(wrapper.emitted('toggleObjective')).toEqual([['chapter-1', 'objective-1']]);
+    wrapper.unmount();
+  });
+  it('does not emit objective toggle events when route is blocked', async () => {
+    normalizedChapters.value[0].mainObjectives[0].routeState = 'blocked';
+    normalizedChapters.value[0].mainObjectives[0].routeAlternatives = [
+      { id: 'objective-2', label: 'Alternative objective', complete: true },
+    ];
+    normalizedChapters.value[0].mainObjectives[0].routeBlockingAlternatives = [
+      { id: 'objective-2', label: 'Alternative objective', complete: true },
+    ];
+    const wrapper = await createWrapper(false);
+    const checkbox = wrapper.get('input[type="checkbox"]');
+    expect(checkbox.attributes('disabled')).toBeDefined();
+    await checkbox.trigger('change');
+    expect(wrapper.emitted('toggleObjective')).toBeUndefined();
     wrapper.unmount();
   });
 });

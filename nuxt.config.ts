@@ -9,9 +9,32 @@ const testsDir = resolve(__dirname, 'tests');
 const packageJson = JSON.parse(readFileSync(resolve(__dirname, 'package.json'), 'utf-8'));
 const appVersion = packageJson.version ?? 'dev';
 const isNonProduction = process.env.NODE_ENV !== 'production';
+const webApplicationSchema = {
+  '@context': 'https://schema.org',
+  '@type': 'WebApplication',
+  name: 'Tarkov Tracker',
+  alternateName: 'TarkovTracker',
+  url: 'https://tarkovtracker.org',
+  applicationCategory: 'GameApplication',
+  operatingSystem: 'Web',
+  description:
+    'Tarkov Tracker helps you track Escape from Tarkov quest progress, storyline, hideout upgrades, and needed items.',
+  offers: {
+    '@type': 'Offer',
+    price: '0',
+    priceCurrency: 'USD',
+  },
+  author: {
+    '@type': 'Organization',
+    name: 'Tarkov Tracker',
+    url: 'https://tarkovtracker.org',
+  },
+  sameAs: ['https://github.com/tarkovtracker-org/TarkovTracker'],
+};
 export default defineNuxtConfig({
   compatibilityDate: '2025-07-15',
   ssr: false,
+  spaLoadingTemplate: true,
   srcDir: 'app',
   ignore: ['**/__tests__/**', '**/*.test.*', '**/*.spec.*'],
   runtimeConfig: {
@@ -107,25 +130,37 @@ export default defineNuxtConfig({
     baseURL: '/',
     buildAssetsDir: '/_nuxt/',
     head: {
-      titleTemplate: '%s | TarkovTracker',
-      title: 'TarkovTracker',
+      titleTemplate: '%s | Tarkov Tracker',
+      title: 'Escape from Tarkov Quest, Hideout, and Item Tracker',
+      script: [
+        {
+          type: 'application/ld+json',
+          textContent: JSON.stringify(webApplicationSchema),
+        },
+      ],
       meta: [
         { charset: 'utf-8' },
         { name: 'viewport', content: 'width=device-width, initial-scale=1' },
+        { name: 'robots', content: 'index, follow, max-image-preview:large' },
         {
           name: 'description',
           content:
-            'Complete Escape from Tarkov progress tracker for patch 1.0+. Track quests, storyline, hideout, and needed items. Team collaboration features and API integration with TarkovMonitor and RatScanner.',
+            'Tarkov Tracker helps you track Escape from Tarkov quest progress, storyline, hideout upgrades, and needed items. Plan raids, share progression with your team, and stay ready for wipe updates.',
+        },
+        {
+          name: 'keywords',
+          content:
+            'tarkov tracker, tarkov quest tracker, escape from tarkov tasks, eft hideout tracker, eft needed items',
         },
         { name: 'theme-color', content: '#c8a882' },
         // OpenGraph tags
-        { property: 'og:site_name', content: 'TarkovTracker' },
+        { property: 'og:site_name', content: 'Tarkov Tracker' },
         { property: 'og:type', content: 'website' },
-        { property: 'og:title', content: 'TarkovTracker - Escape from Tarkov Progress Tracker' },
+        { property: 'og:title', content: 'Tarkov Tracker - Escape from Tarkov Progress Tracker' },
         {
           property: 'og:description',
           content:
-            'Complete Escape from Tarkov progress tracker for patch 1.0+. Track quests, storyline, hideout, and needed items. Team collaboration features and API integration with TarkovMonitor and RatScanner.',
+            'Tarkov Tracker helps you track Escape from Tarkov quest progress, storyline, hideout upgrades, and needed items. Plan raids, share progression with your team, and stay ready for wipe updates.',
         },
         {
           property: 'og:image',
@@ -134,11 +169,11 @@ export default defineNuxtConfig({
         { property: 'og:url', content: 'https://tarkovtracker.org' },
         // Twitter Card tags
         { name: 'twitter:card', content: 'summary_large_image' },
-        { name: 'twitter:title', content: 'TarkovTracker - Escape from Tarkov Progress Tracker' },
+        { name: 'twitter:title', content: 'Tarkov Tracker - Escape from Tarkov Progress Tracker' },
         {
           name: 'twitter:description',
           content:
-            'Complete Escape from Tarkov progress tracker for patch 1.0+. Track quests, storyline, hideout, and needed items. Team collaboration features and API integration with TarkovMonitor and RatScanner.',
+            'Tarkov Tracker helps you track Escape from Tarkov quest progress, storyline, hideout upgrades, and needed items. Plan raids, share progression with your team, and stay ready for wipe updates.',
         },
         {
           name: 'twitter:image',
@@ -164,7 +199,7 @@ export default defineNuxtConfig({
   ].filter(Boolean) as string[],
   site: {
     url: 'https://tarkovtracker.org',
-    name: 'TarkovTracker',
+    name: 'Tarkov Tracker',
   },
   sitemap: {
     xslColumns: [
@@ -178,6 +213,7 @@ export default defineNuxtConfig({
       '/login',
       '/not-found',
       '/oauth/**',
+      '/profile',
       '/settings',
       '/team',
     ],

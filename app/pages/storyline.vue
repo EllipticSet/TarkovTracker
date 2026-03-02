@@ -84,10 +84,8 @@
     }
     const chapter = chapters.value.find((entry) => entry.id === chapterId);
     const linkedIds = chapter?.objectiveMap[objectiveId]?.mutuallyExclusiveWith ?? [];
-    for (const linkedId of linkedIds) {
-      if (tarkovStore.isStoryObjectiveComplete(chapterId, linkedId)) {
-        tarkovStore.setStoryObjectiveUncomplete(chapterId, linkedId);
-      }
+    if (linkedIds.some((linkedId) => tarkovStore.isStoryObjectiveComplete(chapterId, linkedId))) {
+      return;
     }
     tarkovStore.setStoryObjectiveComplete(chapterId, objectiveId);
   };

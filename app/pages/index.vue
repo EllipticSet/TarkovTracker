@@ -1,6 +1,7 @@
 <template>
   <div class="min-h-[calc(100vh-250px)] px-3 py-6 sm:px-6">
     <div class="mx-auto max-w-[1400px]">
+      <h1 class="sr-only">Tarkov Tracker - Escape from Tarkov Progress Tracker</h1>
       <DashboardChangelog />
       <!-- Progress Breakdown Section -->
       <div class="content-visibility-auto-280 mb-8">
@@ -212,9 +213,13 @@
   const milestonesSectionCollapsed = ref(false);
   // Page metadata
   useSeoMeta({
-    title: 'Dashboard',
+    title: 'Tarkov Tracker - Escape from Tarkov Quest and Hideout Tracker',
     description:
-      'Your Escape from Tarkov progress dashboard. View overall stats, recent completions, and quick access to tasks, hideout, and needed items.',
+      'Track Escape from Tarkov quests, storyline, hideout upgrades, and needed items in one place. Tarkov Tracker supports PvP and PvE progression tracking and team collaboration.',
+    ogTitle: 'Tarkov Tracker - Escape from Tarkov Quest and Hideout Tracker',
+    ogDescription:
+      'Track Escape from Tarkov quests, storyline, hideout upgrades, and needed items in one place. Tarkov Tracker supports PvP and PvE progression tracking and team collaboration.',
+    robots: 'index, follow',
   });
   // Dashboard statistics composable
   const dashboardStats = useDashboardStats();

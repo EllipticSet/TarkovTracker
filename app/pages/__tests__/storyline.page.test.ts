@@ -7,7 +7,10 @@ import StorylinePage from '@/pages/storyline.vue';
 const toggleChapterMock = vi.fn();
 const setStoryObjectiveCompleteMock = vi.fn();
 const setStoryObjectiveUncompleteMock = vi.fn();
-const isStoryObjectiveCompleteMock = vi.fn(() => false);
+let objectiveCompletionState: Record<string, boolean> = {};
+const isStoryObjectiveCompleteMock = vi.fn((chapterId: string, objectiveId: string) => {
+  return objectiveCompletionState[`${chapterId}:${objectiveId}`] === true;
+});
 mockNuxtImport('definePageMeta', () => () => {});
 mockNuxtImport('useHead', () => () => {});
 vi.mock('@/composables/useStorylineChapters', () => ({
@@ -16,7 +19,8 @@ vi.mock('@/composables/useStorylineChapters', () => ({
       {
         id: 'chapter-1',
         objectiveMap: {
-          'obj-1': { mutuallyExclusiveWith: [] },
+          'obj-1': { mutuallyExclusiveWith: ['obj-2'] },
+          'obj-2': { mutuallyExclusiveWith: ['obj-1'] },
         },
       },
     ]),
@@ -46,23 +50,60 @@ vi.mock('vue-i18n', async (importOriginal) => ({
 describe('storyline page', () => {
   beforeEach(() => {
     vi.clearAllMocks();
+    objectiveCompletionState = {};
   });
-  it('renders storyline chapter cards and forwards chapter toggle', async () => {
-    const wrapper = mount(StorylinePage, {
+  const createWrapper = () =>
+    mount(StorylinePage, {
       global: {
         stubs: {
           ChapterCard: {
             emits: ['toggle-chapter', 'toggle-objective'],
-            template:
-              '<button data-testid="chapter-card" @click="$emit(\'toggle-chapter\', \'chapter-1\')" />',
+            template: `
+              <div>
+                <button data-testid="chapter-card" @click="$emit('toggle-chapter', 'chapter-1')" />
+                <button
+                  data-testid="objective-card"
+                  @click="$emit('toggle-objective', 'chapter-1', 'obj-1')"
+                />
+              </div>
+            `,
           },
           UAlert: true,
         },
       },
     });
+  it('renders storyline chapter cards and forwards chapter toggle', async () => {
+    const wrapper = createWrapper();
     const chapterCard = wrapper.find('[data-testid="chapter-card"]');
     expect(chapterCard.exists()).toBe(true);
     await chapterCard.trigger('click');
     expect(toggleChapterMock).toHaveBeenCalledWith('chapter-1');
+    wrapper.unmount();
+  });
+  it('marks objective complete when no route blocker exists', async () => {
+    const wrapper = createWrapper();
+    const objectiveCard = wrapper.get('[data-testid="objective-card"]');
+    await objectiveCard.trigger('click');
+    expect(setStoryObjectiveCompleteMock).toHaveBeenCalledWith('chapter-1', 'obj-1');
+    expect(setStoryObjectiveUncompleteMock).not.toHaveBeenCalled();
+    wrapper.unmount();
+  });
+  it('marks objective incomplete when objective is already complete', async () => {
+    objectiveCompletionState['chapter-1:obj-1'] = true;
+    const wrapper = createWrapper();
+    const objectiveCard = wrapper.get('[data-testid="objective-card"]');
+    await objectiveCard.trigger('click');
+    expect(setStoryObjectiveUncompleteMock).toHaveBeenCalledWith('chapter-1', 'obj-1');
+    expect(setStoryObjectiveCompleteMock).not.toHaveBeenCalled();
+    wrapper.unmount();
+  });
+  it('does not toggle blocked route objective', async () => {
+    objectiveCompletionState['chapter-1:obj-2'] = true;
+    const wrapper = createWrapper();
+    const objectiveCard = wrapper.get('[data-testid="objective-card"]');
+    await objectiveCard.trigger('click');
+    expect(setStoryObjectiveCompleteMock).not.toHaveBeenCalled();
+    expect(setStoryObjectiveUncompleteMock).not.toHaveBeenCalled();
+    wrapper.unmount();
   });
 });

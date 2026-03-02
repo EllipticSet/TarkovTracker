@@ -233,6 +233,11 @@
       mark_complete: '标记为已完成',
       mark_incomplete: '标记为未完成',
       completed: '已完成',
+      route_choice: 'Route choice',
+      route_chosen: 'Route selected',
+      route_blocked: 'Blocked',
+      route_blocks: 'Blocks: {objectives}',
+      route_blocked_by: 'Blocked by: {objectives}',
     },
     tasks: {
       title: '任务',

@@ -28,27 +28,6 @@
   const { locale, t } = useI18n();
   const { public: publicConfig } = useRuntimeConfig();
   const siteUrl = (publicConfig.appUrl || 'https://tarkovtracker.org').replace(/\/$/, '');
-  const webApplicationSchema = {
-    '@context': 'https://schema.org',
-    '@type': 'WebApplication',
-    name: 'TarkovTracker',
-    url: siteUrl,
-    applicationCategory: 'GameApplication',
-    operatingSystem: 'Web',
-    description:
-      'Complete Escape from Tarkov progress tracker for patch 1.0+. Track quests, storyline, hideout, and needed items.',
-    offers: {
-      '@type': 'Offer',
-      price: '0',
-      priceCurrency: 'USD',
-    },
-    author: {
-      '@type': 'Organization',
-      name: 'TarkovTracker',
-      url: siteUrl,
-    },
-    sameAs: ['https://github.com/tarkovtracker-org/TarkovTracker'],
-  };
   useHeadSafe(() => ({
     htmlAttrs: {
       lang: locale.value,
@@ -66,12 +45,6 @@
       {
         rel: 'canonical',
         href: `${siteUrl}${route.path}`,
-      },
-    ],
-    script: [
-      {
-        type: 'application/ld+json',
-        textContent: JSON.stringify(webApplicationSchema),
       },
     ],
   }));

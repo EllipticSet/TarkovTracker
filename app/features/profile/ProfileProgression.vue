@@ -820,10 +820,10 @@
         (value) => value.id === objectiveId
       );
       const linkedIds = objective?.mutuallyExclusiveWith ?? [];
-      for (const linkedId of linkedIds) {
-        if (storyObjectiveCompletionState.value[chapterId]?.[linkedId] === true) {
-          tarkovStore.setStoryObjectiveUncomplete(chapterId, linkedId);
-        }
+      if (
+        linkedIds.some((linkedId) => storyObjectiveCompletionState.value[chapterId]?.[linkedId])
+      ) {
+        return;
       }
     }
     tarkovStore.setStoryObjectiveComplete(chapterId, objectiveId);

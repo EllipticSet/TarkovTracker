@@ -233,6 +233,11 @@
       mark_complete: 'Marcar como completado',
       mark_incomplete: 'Marcar como incompleto',
       completed: 'Completado',
+      route_choice: 'Route choice',
+      route_chosen: 'Route selected',
+      route_blocked: 'Blocked',
+      route_blocks: 'Blocks: {objectives}',
+      route_blocked_by: 'Blocked by: {objectives}',
     },
     tasks: {
       title: 'Misiones',
