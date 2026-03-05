@@ -3,6 +3,12 @@ import { mockNuxtImport } from '@nuxt/test-utils/runtime';
 import { mount } from '@vue/test-utils';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { ref } from 'vue';
+type RouteAlternative = {
+  complete: boolean;
+  id: string;
+  label: string;
+};
+const emptyRouteAlternatives = (): RouteAlternative[] => [];
 const TEST_CHAPTERS = [
   {
     id: 'chapter-1',
@@ -35,8 +41,8 @@ const TEST_CHAPTERS = [
         complete: false,
         hasEstimatedUnlocks: false,
         unlocks: [],
-        routeAlternatives: [],
-        routeBlockingAlternatives: [],
+        routeAlternatives: emptyRouteAlternatives(),
+        routeBlockingAlternatives: emptyRouteAlternatives(),
         routeState: 'open',
       },
     ],
@@ -53,8 +59,8 @@ const TEST_CHAPTERS = [
         complete: false,
         hasEstimatedUnlocks: false,
         unlocks: [],
-        routeAlternatives: [],
-        routeBlockingAlternatives: [],
+        routeAlternatives: emptyRouteAlternatives(),
+        routeBlockingAlternatives: emptyRouteAlternatives(),
         routeState: 'open',
       },
     ],
@@ -67,8 +73,8 @@ const TEST_CHAPTERS = [
         complete: false,
         hasEstimatedUnlocks: false,
         unlocks: [],
-        routeAlternatives: [],
-        routeBlockingAlternatives: [],
+        routeAlternatives: emptyRouteAlternatives(),
+        routeBlockingAlternatives: emptyRouteAlternatives(),
         routeState: 'open',
       },
     ],
@@ -79,6 +85,13 @@ const TEST_CHAPTERS = [
 ];
 const cloneTestChapters = () => structuredClone(TEST_CHAPTERS);
 const normalizedChapters = ref(cloneTestChapters());
+const requireDefined = <T>(value: T | null | undefined, message: string): T => {
+  expect(value, message).toBeDefined();
+  if (value === null || value === undefined) {
+    throw new Error(message);
+  }
+  return value;
+};
 vi.mock('@/composables/useStorylineChapters', () => ({
   useStorylineChapters: () => ({ normalizedChapters }),
 }));
@@ -132,18 +145,27 @@ describe('ProfileStorylineTab', () => {
     wrapper.unmount();
   });
   it('does not emit objective toggle events when route is blocked', async () => {
-    normalizedChapters.value[0].mainObjectives[0].routeState = 'blocked';
-    normalizedChapters.value[0].mainObjectives[0].routeAlternatives = [
+    const chapter = requireDefined(normalizedChapters.value[0], 'Expected first chapter');
+    const mainObjective = requireDefined(
+      chapter.mainObjectives[0],
+      'Expected first main objective'
+    );
+    const mainLinearObjective = requireDefined(
+      chapter.mainLinearObjectives[0],
+      'Expected first main linear objective'
+    );
+    mainObjective.routeState = 'blocked';
+    mainObjective.routeAlternatives = [
       { id: 'objective-2', label: 'Alternative objective', complete: true },
     ];
-    normalizedChapters.value[0].mainObjectives[0].routeBlockingAlternatives = [
+    mainObjective.routeBlockingAlternatives = [
       { id: 'objective-2', label: 'Alternative objective', complete: true },
     ];
-    normalizedChapters.value[0].mainLinearObjectives[0].routeState = 'blocked';
-    normalizedChapters.value[0].mainLinearObjectives[0].routeAlternatives = [
+    mainLinearObjective.routeState = 'blocked';
+    mainLinearObjective.routeAlternatives = [
       { id: 'objective-2', label: 'Alternative objective', complete: true },
     ];
-    normalizedChapters.value[0].mainLinearObjectives[0].routeBlockingAlternatives = [
+    mainLinearObjective.routeBlockingAlternatives = [
       { id: 'objective-2', label: 'Alternative objective', complete: true },
     ];
     const wrapper = await createWrapper(false);
