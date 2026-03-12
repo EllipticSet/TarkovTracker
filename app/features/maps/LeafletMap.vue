@@ -407,7 +407,6 @@
   const preferencesStore = usePreferencesStore();
   const mapSurfaceRef = ref<HTMLElement | null>(null);
   const showKeyboardCursor = ref(false);
-  const clearPinnedTask = inject<(() => void) | null>('clearPinnedTask', null);
   const mapHeightStyle = computed(() => {
     if (typeof props.height !== 'number' || Number.isNaN(props.height)) return undefined;
     return { height: `${props.height}px` };
@@ -884,7 +883,6 @@
     const container = document.createElement('div');
     const app = createApp(LeafletObjectiveTooltip, { objectiveId, onClose, t });
     app.provide('router', router);
-    app.provide('clearPinnedTask', clearPinnedTask);
     app.mount(container);
     return { element: container, unmount: () => app.unmount() };
   };

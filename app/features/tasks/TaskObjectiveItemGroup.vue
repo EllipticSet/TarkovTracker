@@ -149,9 +149,13 @@
   import { usePreferencesStore } from '@/stores/usePreferences';
   import { useTarkovStore } from '@/stores/useTarkov';
   import { getKeyDevUrl, getKeyPrimaryUrl } from '@/utils/tarkovKeyHelpers';
+  import type { DashboardFocusProgressInteraction } from '@/composables/useDashboardFocusAnalytics';
   import type { TaskObjective, TarkovItem } from '@/types/tarkov';
   const jumpToMapObjective = inject<((id: string) => void) | null>('jumpToMapObjective', null);
   const isMapView = inject<Ref<boolean>>('isMapView', ref(false));
+  const trackTaskProgressInteraction = inject<
+    ((taskId: string, interaction: DashboardFocusProgressInteraction) => void) | null
+  >('trackTaskProgressInteraction', null);
   const props = defineProps<{
     title: string;
     iconName: string;
@@ -436,6 +440,11 @@
   const isParentTaskLocked = computed(() => {
     return isParentTaskComplete.value || isParentTaskFailed.value;
   });
+  const trackDashboardFocusProgress = () => {
+    const taskId = parentTaskIds.value[0];
+    if (!taskId) return;
+    trackTaskProgressInteraction?.(taskId, 'objective_progress');
+  };
   // Update all objectives in a row together
   const decreaseCountForRow = (row: ConsolidatedRow) => {
     if (isParentTaskLocked.value) return;
@@ -446,6 +455,7 @@
       if (obj.meta.currentCount > 0) {
         const newCount = obj.meta.currentCount - 1;
         tarkovStore.setObjectiveCount(obj.objective.id, newCount);
+        trackDashboardFocusProgress();
         break;
       }
     }
@@ -457,6 +467,7 @@
       if (obj.meta.currentCount < obj.meta.neededCount) {
         const newCount = obj.meta.currentCount + 1;
         tarkovStore.setObjectiveCount(obj.objective.id, newCount);
+        trackDashboardFocusProgress();
         break;
       }
     }
@@ -472,6 +483,7 @@
         tarkovStore.setTaskObjectiveComplete(obj.objective.id);
       }
     });
+    trackDashboardFocusProgress();
   };
   /**
    * Set count to a specific value for a consolidated row (from direct input)
@@ -488,6 +500,7 @@
       tarkovStore.setObjectiveCount(obj.objective.id, objCount);
       remaining -= objCount;
     });
+    trackDashboardFocusProgress();
   };
   const isRowOptional = (row: ConsolidatedRow): boolean => {
     if (props.optional) return false;

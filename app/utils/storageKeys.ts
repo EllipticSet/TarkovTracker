@@ -5,6 +5,7 @@ export const STORAGE_KEYS = {
   progress: `${STORAGE_PREFIX}progress`,
   preferences: `${STORAGE_PREFIX}preferences`,
   analyticsConsent: `${STORAGE_PREFIX}analytics_consent`,
+  dashboardFocusAttribution: `${STORAGE_PREFIX}dashboard_focus_attribution`,
   progressBackupPrefix: `${STORAGE_PREFIX}progress_backup_`,
   adminLastPurge: `${STORAGE_PREFIX}tt:admin:last-purge`,
   cachePurgeAt: `${STORAGE_PREFIX}tt:cache:last-purge`,

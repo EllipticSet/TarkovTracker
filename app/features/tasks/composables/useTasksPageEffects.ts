@@ -6,7 +6,7 @@ type TasksPageEffectsInputs = {
   batchSize: number;
   checkAndLoadMore: () => Promise<void> | void;
   filteredTasks: ComputedRefLike<Task[]>;
-  handleTaskQueryParam: () => void;
+  handleTaskQueryParam: () => Promise<void> | void;
   isMapPanelExpanded: RefLike<boolean>;
   metadataStore: {
     fetchMapSpawnsData: () => Promise<unknown>;
@@ -34,6 +34,7 @@ export function useTasksPageEffects({
   tasksLoading,
   visibleTaskCount,
 }: TasksPageEffectsInputs) {
+  const filteredTaskIdsKey = computed(() => filteredTasks.value.map((task) => task.id).join(','));
   watch(
     [showMapDisplay, selectedMapData],
     ([showMap, selectedMap]) => {
@@ -65,12 +66,17 @@ export function useTasksPageEffects({
     }
   );
   watch(
-    [() => route.query.task, () => route.query.highlightObjective, tasksLoading],
+    [
+      () => route.query.task,
+      () => route.query.highlightObjective,
+      tasksLoading,
+      filteredTaskIdsKey,
+    ],
     ([taskQueryParam, , loading]) => {
       if (taskQueryParam && !loading) {
-        handleTaskQueryParam();
+        void handleTaskQueryParam();
       }
     },
-    { immediate: true }
+    { immediate: true, flush: 'post' }
   );
 }

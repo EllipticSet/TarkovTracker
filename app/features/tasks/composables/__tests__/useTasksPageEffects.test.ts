@@ -2,6 +2,9 @@ import { describe, expect, it, vi } from 'vitest';
 import { computed, nextTick, reactive, ref } from 'vue';
 import { useTasksPageEffects } from '@/features/tasks/composables/useTasksPageEffects';
 import type { Task } from '@/types/tarkov';
+type TestRoute = {
+  query: Record<string, string | undefined>;
+};
 const createTask = (id: string): Task =>
   ({
     experience: 0,
@@ -13,6 +16,8 @@ const createTask = (id: string): Task =>
     objectives: [],
     taskRequirements: [],
   }) as Task;
+const createRoute = (task?: string, highlightObjective?: string) =>
+  reactive<TestRoute>({ query: { task, highlightObjective } });
 describe('useTasksPageEffects', () => {
   it('does not run load-more when filtered task ids are unchanged', async () => {
     const metadataStore = {
@@ -26,7 +31,7 @@ describe('useTasksPageEffects', () => {
     const filteredTasks = computed(() => filteredTasksState.value);
     const visibleTaskCount = ref(8);
     const checkAndLoadMore = vi.fn(async () => undefined);
-    const route = reactive({ query: { task: undefined, highlightObjective: undefined } });
+    const route = createRoute();
     const tasksLoading = ref(false);
     const handleTaskQueryParam = vi.fn();
     useTasksPageEffects({
@@ -36,7 +41,7 @@ describe('useTasksPageEffects', () => {
       handleTaskQueryParam,
       isMapPanelExpanded,
       metadataStore,
-      route: route as { query: Record<string, unknown> },
+      route,
       selectedMapData,
       showMapDisplay,
       stopResize,
@@ -60,9 +65,11 @@ describe('useTasksPageEffects', () => {
     const filteredTasks = computed(() => filteredTasksState.value);
     const visibleTaskCount = ref(8);
     const checkAndLoadMore = vi.fn(async () => undefined);
-    const route = reactive({ query: { task: 'task-1', highlightObjective: undefined } });
+    const route = createRoute('task-1');
     const tasksLoading = ref(false);
-    const handleTaskQueryParam = vi.fn();
+    const handleTaskQueryParam = vi.fn(() => {
+      route.query.task = undefined;
+    });
     useTasksPageEffects({
       batchSize: 8,
       checkAndLoadMore,
@@ -70,7 +77,7 @@ describe('useTasksPageEffects', () => {
       handleTaskQueryParam,
       isMapPanelExpanded,
       metadataStore,
-      route: route as { query: Record<string, unknown> },
+      route,
       selectedMapData,
       showMapDisplay,
       stopResize,
@@ -85,5 +92,73 @@ describe('useTasksPageEffects', () => {
     expect(checkAndLoadMore).toHaveBeenCalled();
     expect(handleTaskQueryParam).toHaveBeenCalledTimes(1);
     expect(stopResize).not.toHaveBeenCalled();
+  });
+  it('attempts deep-link handling immediately even when filtered tasks are empty', async () => {
+    const metadataStore = {
+      fetchMapSpawnsData: vi.fn(async () => undefined),
+    };
+    const showMapDisplay = computed(() => false);
+    const selectedMapData = computed(() => null);
+    const isMapPanelExpanded = ref(true);
+    const stopResize = vi.fn();
+    const filteredTasksState = ref<Task[]>([]);
+    const filteredTasks = computed(() => filteredTasksState.value);
+    const visibleTaskCount = ref(8);
+    const checkAndLoadMore = vi.fn(async () => undefined);
+    const route = createRoute('task-1');
+    const tasksLoading = ref(false);
+    const handleTaskQueryParam = vi.fn();
+    useTasksPageEffects({
+      batchSize: 8,
+      checkAndLoadMore,
+      filteredTasks,
+      handleTaskQueryParam,
+      isMapPanelExpanded,
+      metadataStore,
+      route,
+      selectedMapData,
+      showMapDisplay,
+      stopResize,
+      tasksLoading,
+      visibleTaskCount,
+    });
+    await nextTick();
+    expect(handleTaskQueryParam).toHaveBeenCalledTimes(1);
+  });
+  it('retries deep-link handling when filtered task ids change without a count change', async () => {
+    const metadataStore = {
+      fetchMapSpawnsData: vi.fn(async () => undefined),
+    };
+    const showMapDisplay = computed(() => false);
+    const selectedMapData = computed(() => null);
+    const isMapPanelExpanded = ref(true);
+    const stopResize = vi.fn();
+    const filteredTasksState = ref<Task[]>([createTask('task-hidden')]);
+    const filteredTasks = computed(() => filteredTasksState.value);
+    const visibleTaskCount = ref(8);
+    const checkAndLoadMore = vi.fn(async () => undefined);
+    const route = createRoute('task-target');
+    const tasksLoading = ref(false);
+    const handleTaskQueryParam = vi.fn();
+    useTasksPageEffects({
+      batchSize: 8,
+      checkAndLoadMore,
+      filteredTasks,
+      handleTaskQueryParam,
+      isMapPanelExpanded,
+      metadataStore,
+      route,
+      selectedMapData,
+      showMapDisplay,
+      stopResize,
+      tasksLoading,
+      visibleTaskCount,
+    });
+    await nextTick();
+    handleTaskQueryParam.mockClear();
+    filteredTasksState.value = [createTask('task-target')];
+    await nextTick();
+    await nextTick();
+    expect(handleTaskQueryParam).toHaveBeenCalledTimes(1);
   });
 });

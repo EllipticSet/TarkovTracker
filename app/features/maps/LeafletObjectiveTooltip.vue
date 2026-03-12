@@ -63,6 +63,7 @@
         </button>
         <button
           type="button"
+          data-testid="objective-close-button"
           class="inline-flex h-7 w-7 items-center justify-center rounded-md text-gray-300 hover:bg-white/10"
           :aria-label="translate('generic.close_button')"
           @click.stop="emitClose"
@@ -94,12 +95,10 @@
     defineProps<{
       objectiveId: string;
       readOnly?: boolean;
-      onClose?: () => void;
       t?: Composer['t'];
     }>(),
     {
       readOnly: false,
-      onClose: undefined,
       t: undefined,
     }
   );
@@ -114,13 +113,8 @@
     }
   }
   const i18nT = getI18nT();
-  // Inject clearPinnedTask to dismiss the pinned task when tooltip closes
-  const clearPinnedTask = inject<(() => void) | null>('clearPinnedTask', null);
   const emitClose = () => {
     emit('close');
-    props.onClose?.();
-    // Clear the pinned task when user closes the tooltip
-    clearPinnedTask?.();
   };
   const translate: Composer['t'] = ((...args: Parameters<Composer['t']>) => {
     if (props.t) {

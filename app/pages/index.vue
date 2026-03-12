@@ -2,13 +2,13 @@
   <div class="min-h-[calc(100vh-250px)] px-3 py-6 sm:px-6">
     <div class="mx-auto max-w-[1400px]">
       <h1 class="sr-only">Tarkov Tracker - Escape from Tarkov Progress Tracker</h1>
+      <DashboardNextActions />
       <DashboardChangelog />
-      <!-- Progress Breakdown Section -->
       <div class="content-visibility-auto-280 mb-8">
         <button
           type="button"
           data-testid="dashboard-progress-toggle"
-          class="group mb-4 flex w-full cursor-pointer items-center text-2xl font-bold text-white"
+          class="group text-surface-100 mb-4 flex w-full cursor-pointer items-center text-xl font-semibold"
           :aria-expanded="!progressSectionCollapsed"
           @click="progressSectionCollapsed = !progressSectionCollapsed"
         >
@@ -20,95 +20,95 @@
           />
         </button>
         <div
-          v-if="!progressSectionCollapsed"
-          class="text-surface-400 mb-2 flex items-center justify-end gap-1.5 text-[11px] sm:text-xs"
-          data-testid="dashboard-filter-notice"
-          :data-filter-active="hasDashboardFiltersActive ? 'true' : 'false'"
+          v-show="!progressSectionCollapsed"
+          class="bg-surface-950/40 rounded-2xl border border-white/8 p-4 sm:p-5"
         >
-          <UIcon
-            :name="
-              hasDashboardFiltersActive ? 'i-mdi-filter-variant-minus' : 'i-mdi-filter-variant'
-            "
-            class="h-3.5 w-3.5 shrink-0"
-            :class="hasDashboardFiltersActive ? 'text-warning-300' : 'text-info-300'"
-          />
-          <span :class="hasDashboardFiltersActive ? 'text-warning-200' : 'text-surface-400'">
-            {{
-              hasDashboardFiltersActive
-                ? $t('page.dashboard.progress.filtered_status_active')
-                : $t('page.dashboard.progress.filtered_status_inactive')
-            }}
-          </span>
-          <AppTooltip :text="$t('page.dashboard.progress.filtered_warning_tooltip')">
+          <div
+            class="text-surface-400 mb-3 flex items-center justify-end gap-1.5 text-[11px] sm:text-xs"
+            data-testid="dashboard-filter-notice"
+            :data-filter-active="hasDashboardFiltersActive ? 'true' : 'false'"
+          >
             <UIcon
-              name="i-mdi-help-circle-outline"
+              :name="
+                hasDashboardFiltersActive ? 'i-mdi-filter-variant-minus' : 'i-mdi-filter-variant'
+              "
               class="h-3.5 w-3.5 shrink-0"
               :class="hasDashboardFiltersActive ? 'text-warning-300' : 'text-info-300'"
-              aria-hidden="true"
             />
-          </AppTooltip>
-        </div>
-        <div
-          v-show="!progressSectionCollapsed"
-          class="grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-3"
-        >
-          <DashboardProgressCard
-            icon="i-mdi-checkbox-marked-circle-outline"
-            :label="$t('page.dashboard.progress.tasks')"
-            :completed="dashboardStats.completedTasks.value"
-            :total="dashboardStats.totalTasks.value"
-            :percentage="totalTasksPercentageNum"
-            color="primary"
-            @click="router.push('/tasks')"
-          />
-          <DashboardProgressCard
-            icon="i-mdi-briefcase-search"
-            :label="$t('page.dashboard.progress.objectives')"
-            :completed="dashboardStats.completedObjectives.value"
-            :total="dashboardStats.totalObjectives.value"
-            :percentage="totalObjectivesPercentageNum"
-            color="info"
-            @click="router.push('/tasks')"
-          />
-          <DashboardProgressCard
-            icon="i-mdi-package-variant"
-            :label="$t('page.dashboard.progress.items')"
-            :completed="dashboardStats.completedTaskItems.value"
-            :total="dashboardStats.totalTaskItems.value"
-            :percentage="totalTaskItemsPercentageNum"
-            color="success"
-            @click="router.push({ path: '/needed-items', query: { type: 'tasks' } })"
-          />
-          <DashboardProgressCard
-            icon="i-mdi-home-city-outline"
-            :label="$t('page.dashboard.progress.hideout_items')"
-            :completed="dashboardStats.completedHideoutItems.value"
-            :total="dashboardStats.totalHideoutItems.value"
-            :percentage="totalHideoutItemsPercentageNum"
-            color="neutral"
-            @click="router.push({ path: '/needed-items', query: { type: 'hideout' } })"
-          />
-          <DashboardProgressCard
-            icon="i-mdi-trophy"
-            :label="$t('page.dashboard.progress.kappa')"
-            :completed="dashboardStats.completedKappaTasks.value"
-            :total="dashboardStats.totalKappaTasks.value"
-            :percentage="totalKappaTasksPercentageNum"
-            color="kappa"
-            @click="router.push('/tasks')"
-          />
-          <DashboardProgressCard
-            icon="i-mdi-lighthouse"
-            :label="$t('page.dashboard.progress.lightkeeper')"
-            :completed="dashboardStats.completedLightkeeperTasks.value"
-            :total="dashboardStats.totalLightkeeperTasks.value"
-            :percentage="totalLightkeeperTasksPercentageNum"
-            color="lightkeeper"
-            @click="router.push('/tasks')"
-          />
+            <span :class="hasDashboardFiltersActive ? 'text-warning-200' : 'text-surface-400'">
+              {{
+                hasDashboardFiltersActive
+                  ? $t('page.dashboard.progress.filtered_status_active')
+                  : $t('page.dashboard.progress.filtered_status_inactive')
+              }}
+            </span>
+            <AppTooltip :text="$t('page.dashboard.progress.filtered_warning_tooltip')">
+              <UIcon
+                name="i-mdi-help-circle-outline"
+                class="h-3.5 w-3.5 shrink-0"
+                :class="hasDashboardFiltersActive ? 'text-warning-300' : 'text-info-300'"
+                aria-hidden="true"
+              />
+            </AppTooltip>
+          </div>
+          <div class="grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-3">
+            <DashboardProgressCard
+              icon="i-mdi-checkbox-marked-circle-outline"
+              :label="$t('page.dashboard.progress.tasks')"
+              :completed="dashboardStats.completedTasks.value"
+              :total="dashboardStats.totalTasks.value"
+              :percentage="totalTasksPercentageNum"
+              color="primary"
+              @click="router.push('/tasks')"
+            />
+            <DashboardProgressCard
+              icon="i-mdi-briefcase-search"
+              :label="$t('page.dashboard.progress.objectives')"
+              :completed="dashboardStats.completedObjectives.value"
+              :total="dashboardStats.totalObjectives.value"
+              :percentage="totalObjectivesPercentageNum"
+              color="info"
+              @click="router.push('/tasks')"
+            />
+            <DashboardProgressCard
+              icon="i-mdi-package-variant"
+              :label="$t('page.dashboard.progress.items')"
+              :completed="dashboardStats.completedTaskItems.value"
+              :total="dashboardStats.totalTaskItems.value"
+              :percentage="totalTaskItemsPercentageNum"
+              color="success"
+              @click="router.push({ path: '/needed-items', query: { type: 'tasks' } })"
+            />
+            <DashboardProgressCard
+              icon="i-mdi-home-city-outline"
+              :label="$t('page.dashboard.progress.hideout_items')"
+              :completed="dashboardStats.completedHideoutItems.value"
+              :total="dashboardStats.totalHideoutItems.value"
+              :percentage="totalHideoutItemsPercentageNum"
+              color="neutral"
+              @click="router.push({ path: '/needed-items', query: { type: 'hideout' } })"
+            />
+            <DashboardProgressCard
+              icon="i-mdi-trophy"
+              :label="$t('page.dashboard.progress.kappa')"
+              :completed="dashboardStats.completedKappaTasks.value"
+              :total="dashboardStats.totalKappaTasks.value"
+              :percentage="totalKappaTasksPercentageNum"
+              color="kappa"
+              @click="router.push('/tasks')"
+            />
+            <DashboardProgressCard
+              icon="i-mdi-lighthouse"
+              :label="$t('page.dashboard.progress.lightkeeper')"
+              :completed="dashboardStats.completedLightkeeperTasks.value"
+              :total="dashboardStats.totalLightkeeperTasks.value"
+              :percentage="totalLightkeeperTasksPercentageNum"
+              color="lightkeeper"
+              @click="router.push('/tasks')"
+            />
+          </div>
         </div>
       </div>
-      <!-- Trader Progress Section -->
       <div class="mb-8">
         <button
           type="button"
@@ -141,7 +141,6 @@
           </div>
         </div>
       </div>
-      <!-- Milestones Section -->
       <div class="content-visibility-auto-240">
         <button
           type="button"
@@ -206,7 +205,7 @@
   </div>
 </template>
 <script setup lang="ts">
-  import { usePreferencesStore } from '@/stores/usePreferences';
+  import { useDashboardFilters } from '@/features/dashboard/composables/useDashboardFilters';
   import { calculatePercentageNum } from '@/utils/formatters';
   const progressSectionCollapsed = ref(false);
   const tradersSectionCollapsed = ref(false);
@@ -224,16 +223,7 @@
   // Dashboard statistics composable
   const dashboardStats = useDashboardStats();
   const router = useRouter();
-  const preferencesStore = usePreferencesStore();
-  const hasDashboardFiltersActive = computed(() => {
-    const showKappaTasks = preferencesStore.getHideNonKappaTasks !== true;
-    const showNonSpecialTasks = preferencesStore.getShowNonSpecialTasks !== false;
-    const showLightkeeperTasks = preferencesStore.getShowLightkeeperTasks !== false;
-    const onlyTasksWithRequiredKeys = preferencesStore.getOnlyTasksWithRequiredKeys === true;
-    return (
-      !(showKappaTasks && showNonSpecialTasks && showLightkeeperTasks) || onlyTasksWithRequiredKeys
-    );
-  });
+  const { hasDashboardFiltersActive } = useDashboardFilters();
   // Unwrap trader stats for template usage
   const traderStats = computed(() => dashboardStats.traderStats.value || []);
   // Percentage calculations (numeric)

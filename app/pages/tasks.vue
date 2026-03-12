@@ -126,6 +126,49 @@
               />
             </div>
             <div v-else ref="taskListRef" data-testid="task-list">
+              <div
+                v-if="focusedTaskInSlice.length > 0"
+                data-testid="focused-task-section"
+                class="mb-6"
+              >
+                <div class="mb-3 flex items-center justify-between gap-3">
+                  <div class="flex min-w-0 items-center gap-2">
+                    <UIcon name="i-mdi-crosshairs-gps" class="text-primary-400 h-4 w-4 shrink-0" />
+                    <div class="min-w-0">
+                      <h3 class="text-surface-100 text-sm font-medium">
+                        {{ t('page.tasks.focused_task_section') }}
+                      </h3>
+                      <p class="text-surface-400 text-xs">
+                        {{ t('page.tasks.focused_task_description') }}
+                      </p>
+                    </div>
+                  </div>
+                  <UButton
+                    color="neutral"
+                    variant="ghost"
+                    size="xs"
+                    :aria-label="t('page.tasks.clear_focused_task')"
+                    @click="clearPinnedTask"
+                  >
+                    {{ t('page.tasks.clear_focused_task') }}
+                  </UButton>
+                </div>
+                <div>
+                  <div
+                    v-for="task in focusedTaskInSlice"
+                    :key="`focused-${task.id}`"
+                    class="content-visibility-auto-280 pb-4"
+                  >
+                    <TaskCard
+                      :accent-variant="
+                        shouldGroupGlobalTasks && isGlobalTask(task) ? 'global' : 'default'
+                      "
+                      :task="task"
+                      @on-task-action="handleTaskAction"
+                    />
+                  </div>
+                </div>
+              </div>
               <div v-if="pinnedTasksInSlice.length > 0" class="mb-6">
                 <div class="mb-3 flex items-center gap-2">
                   <div class="bg-surface-700 h-px flex-1" />
@@ -157,7 +200,7 @@
                 v-if="
                   showMapTaskVisibilityNotice &&
                   (mapSpecificTasksInSlice.length > 0 ||
-                    (pinnedTasksInSlice.length > 0 &&
+                    ((focusedTaskInSlice.length > 0 || pinnedTasksInSlice.length > 0) &&
                       globalTasksInSlice.length === 0 &&
                       mapSpecificTasksInSlice.length === 0 &&
                       mapCompleteTasksCountOnMap > 0))
@@ -300,6 +343,10 @@
   import { breakpointsTailwind, useBreakpoints } from '@vueuse/core';
   import { storeToRefs } from 'pinia';
   import { useI18n } from 'vue-i18n';
+  import {
+    type DashboardFocusProgressInteraction,
+    useDashboardFocusAnalytics,
+  } from '@/composables/useDashboardFocusAnalytics';
   import { useInfiniteScroll } from '@/composables/useInfiniteScroll';
   import { useMapObjectivePopup } from '@/composables/useMapObjectivePopup';
   import { useMapResize } from '@/composables/useMapResize';
@@ -651,6 +698,7 @@
     closeNotification,
     cleanup: cleanupNotification,
   } = useTaskNotification();
+  const { trackFocusedTaskAction, trackFocusedTaskProgress } = useDashboardFocusAnalytics();
   const mergedMaps = computed(() => {
     return (maps.value || []).map((map) => ({
       id: map.id,
@@ -685,6 +733,7 @@
   }, 50);
   const handleTaskAction = (payload: TaskActionPayload) => {
     onTaskAction(payload);
+    trackFocusedTaskAction(payload);
     void nextTick(() => {
       refreshVisibleTasks();
       debouncedRefreshVisibleTasks.cancel();
@@ -760,10 +809,16 @@
     filteredTasks,
     leafletMapRef,
   });
+  const handleTrackedTaskProgressInteraction = (
+    taskId: string,
+    interaction: DashboardFocusProgressInteraction
+  ) => {
+    trackFocusedTaskProgress(taskId, interaction);
+  };
   provide('jumpToMapObjective', handleJumpToMapObjective);
   provide('isMapView', showMapDisplay);
   provide('impactEligibleTaskIds', impactEligibleTaskIds);
-  provide('clearPinnedTask', clearPinnedTask);
+  provide('trackTaskProgressInteraction', handleTrackedTaskProgressInteraction);
   const BATCH_SIZE = 8;
   const visibleTaskCount = ref(BATCH_SIZE);
   const loadMoreSentinel = ref<HTMLElement | null>(null);
@@ -775,17 +830,26 @@
     const sliceCount = Math.max(visibleTaskCount.value - 1, 0);
     return [pinnedTask.value, ...remaining.slice(0, sliceCount)];
   });
+  const focusedTaskInSlice = computed(() => {
+    if (!pinnedTask.value) return [];
+    return [pinnedTask.value];
+  });
+  const focusTaskId = computed(() => pinnedTask.value?.id ?? null);
   const pinnedTasksInSlice = computed(() => {
-    const pinnedIds = getPinnedTaskIds.value;
+    const pinnedIds = getPinnedTaskIds.value.filter((id) => id !== focusTaskId.value);
     if (!pinnedIds.length) return [];
     const pinnedIdSet = new Set(pinnedIds);
     return visibleTasksSlice.value.filter((task) => pinnedIdSet.has(task.id));
   });
   const unpinnedTasksInSlice = computed(() => {
-    const pinnedIds = getPinnedTaskIds.value;
-    if (!pinnedIds.length) return visibleTasksSlice.value;
+    const pinnedIds = getPinnedTaskIds.value.filter((id) => id !== focusTaskId.value);
+    if (!pinnedIds.length) {
+      return visibleTasksSlice.value.filter((task) => task.id !== focusTaskId.value);
+    }
     const pinnedIdSet = new Set(pinnedIds);
-    return visibleTasksSlice.value.filter((task) => !pinnedIdSet.has(task.id));
+    return visibleTasksSlice.value.filter(
+      (task) => task.id !== focusTaskId.value && !pinnedIdSet.has(task.id)
+    );
   });
   const shouldGroupGlobalTasks = computed(() => {
     return showMapDisplay.value && !getHideGlobalTasks.value;

@@ -142,6 +142,9 @@ const setup = async (
 };
 const defaultGlobalStubs = {
   AppTooltip: { template: '<span><slot /></span>' },
+  DashboardNextActions: {
+    template: '<div data-testid="dashboard-focus-card"></div>',
+  },
   DashboardProgressCard: {
     props: ['completed', 'total', 'percentage', 'label', 'icon', 'color'],
     template: `<div data-testid="progress-card" :data-completed="completed" :data-total="total" :data-percentage="percentage" :data-label="label"><slot /></div>`,
@@ -156,6 +159,13 @@ const defaultGlobalStubs = {
   UIcon: true,
 };
 describe('dashboard page', () => {
+  it('renders the next action focus area', async () => {
+    const { DashboardPage } = await setup();
+    const wrapper = await mountSuspended(DashboardPage, {
+      global: { stubs: defaultGlobalStubs },
+    });
+    expect(wrapper.find('[data-testid="dashboard-focus-card"]').exists()).toBe(true);
+  });
   it('renders dashboard progress cards', async () => {
     const { DashboardPage } = await setup();
     const wrapper = await mountSuspended(DashboardPage, {
@@ -344,10 +354,14 @@ describe('dashboard page', () => {
         global: { stubs: defaultGlobalStubs },
       });
       const progressToggle = wrapper.find('[data-testid="dashboard-progress-toggle"]');
+      const filterNotice = wrapper.find('[data-testid="dashboard-filter-notice"]');
+      const progressPanel = filterNotice.element.parentElement as HTMLElement | null;
       expect(progressToggle.exists()).toBe(true);
-      expect(wrapper.find('[data-testid="dashboard-filter-notice"]').exists()).toBe(true);
+      expect(filterNotice.exists()).toBe(true);
+      expect(filterNotice.isVisible()).toBe(true);
+      expect(progressPanel?.style.display ?? '').toBe('');
       await progressToggle.trigger('click');
-      expect(wrapper.find('[data-testid="dashboard-filter-notice"]').exists()).toBe(false);
+      expect(progressPanel?.style.display).toBe('none');
     });
   });
   describe('level calculation modes', () => {

@@ -82,8 +82,13 @@ const mapTaskCountsMock = {
   withoutHide: 1,
 };
 const visibleTasksRef = ref<Task[]>([defaultTask]);
+const focusedTaskRef = ref<Task | null>(null);
 const updateVisibleTasksMock = vi.fn();
 const isGlobalTaskMock = vi.fn((_task: Task) => false);
+const clearPinnedTaskMock = vi.fn(() => {
+  focusedTaskRef.value = null;
+});
+const handleTaskQueryParamMock = vi.fn();
 const progressStoreMock = {
   visibleTeamStores: { self: {} } as Record<string, Record<string, never>>,
   tasksCompletions: {} as Record<string, Record<string, boolean>>,
@@ -133,6 +138,14 @@ vi.mock('@/composables/useInfiniteScroll', () => ({
 vi.mock('@/composables/useTarkovTime', () => ({
   useTarkovTime: () => ({
     tarkovTime: ref('12:00'),
+  }),
+}));
+vi.mock('@/composables/useTaskDeepLink', () => ({
+  useTaskDeepLink: () => ({
+    pinnedTask: focusedTaskRef,
+    clearPinnedTask: clearPinnedTaskMock,
+    handleTaskQueryParam: handleTaskQueryParamMock,
+    cleanup: vi.fn(),
   }),
 }));
 vi.mock('@/stores/useMetadata', () => ({
@@ -256,8 +269,11 @@ describe('tasks page', () => {
   };
   beforeEach(async () => {
     visibleTasksRef.value = [defaultTask];
+    focusedTaskRef.value = null;
     updateVisibleTasksMock.mockReset();
     isGlobalTaskMock.mockReset();
+    clearPinnedTaskMock.mockClear();
+    handleTaskQueryParamMock.mockClear();
     isGlobalTaskMock.mockImplementation((_task: Task) => false);
     preferencesStoreMock.getTaskPrimaryView = 'all';
     preferencesStoreMock.getTaskSecondaryView = 'available';
@@ -431,6 +447,22 @@ describe('tasks page', () => {
     isGlobalTaskMock.mockImplementation((task: Task) => task.id === 'task-global');
     await mountPage();
     expect(wrapper.find('[data-testid="task-card"]').attributes('data-accent')).toBe('global');
+  });
+  it('shows a focused task section for deep-linked tasks', async () => {
+    const focusedTask = createDefaultTask({ id: 'task-focus', name: 'Focused Task' });
+    visibleTasksRef.value = [focusedTask, defaultTask];
+    focusedTaskRef.value = focusedTask;
+    await mountPage();
+    expect(wrapper.find('[data-testid="focused-task-section"]').exists()).toBe(true);
+    expect(wrapper.text()).toContain('page.tasks.focused_task_section');
+    const taskIds = wrapper
+      .findAll('[data-testid="task-card"]')
+      .map((item: { text: () => string }) => item.text());
+    expect(taskIds[0]).toBe('task-focus');
+    const clearButton = wrapper.find('button[aria-label="page.tasks.clear_focused_task"]');
+    expect(clearButton.exists()).toBe(true);
+    await clearButton.trigger('click');
+    expect(clearPinnedTaskMock).toHaveBeenCalledTimes(1);
   });
   it('keeps teammate objective markers when self already completed the same task objective', async () => {
     const task = createDefaultTask({

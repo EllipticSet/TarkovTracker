@@ -60,10 +60,12 @@ const setTaskSecondaryView = vi.fn((value: string) => {
 const tasksCompletions = ref<Record<string, Record<string, boolean>>>({});
 const tasksFailed = ref<Record<string, Record<string, boolean>>>({});
 const unlockedTasks = ref<Record<string, Record<string, boolean>>>({});
+const trackFocusedTaskVisible = vi.fn();
 describe('useTaskDeepLink', () => {
   beforeEach(() => {
     vi.resetModules();
     vi.clearAllMocks();
+    document.body.innerHTML = '';
     applyRouteQuery({});
     metadataTasks.value = [];
     metadataState.tasksObjectivesHydrated = false;
@@ -134,6 +136,11 @@ describe('useTaskDeepLink', () => {
         unlockedTasks,
       }),
     }));
+    vi.doMock('@/composables/useDashboardFocusAnalytics', () => ({
+      useDashboardFocusAnalytics: () => ({
+        trackFocusedTaskVisible,
+      }),
+    }));
   });
   it('does not clear required-keys preference before objectives hydrate', async () => {
     metadataTasks.value = [
@@ -173,5 +180,58 @@ describe('useTaskDeepLink', () => {
     await taskDeepLink.handleTaskQueryParam();
     expect(setOnlyTasksWithRequiredKeys).toHaveBeenCalledWith(false);
     expect(preferenceState.onlyTasksWithRequiredKeys).toBe(false);
+  });
+  it('keeps the deep-linked task focused even when it is already visible', async () => {
+    metadataTasks.value = [
+      {
+        id: 'task-visible',
+        name: 'Visible Task',
+        requiredKeys: [],
+      },
+    ];
+    applyRouteQuery({ task: 'task-visible' });
+    const taskElement = document.createElement('div');
+    taskElement.id = 'task-task-visible';
+    taskElement.scrollIntoView = vi.fn();
+    document.body.appendChild(taskElement);
+    const { useTaskDeepLink } = await import('@/composables/useTaskDeepLink');
+    const taskDeepLink = useTaskDeepLink({
+      searchQuery: ref(''),
+      filteredTasks: ref(metadataTasks.value),
+      leafletMapRef: ref(null),
+    });
+    await taskDeepLink.handleTaskQueryParam();
+    expect(taskDeepLink.pinnedTaskId.value).toBe('task-visible');
+    expect(taskElement.scrollIntoView).toHaveBeenCalled();
+    expect(trackFocusedTaskVisible).toHaveBeenCalledWith('task-visible');
+    expect(replace).toHaveBeenCalledWith({ query: {} });
+  });
+  it('keeps the task query intact until the target task is available to focus', async () => {
+    metadataTasks.value = [
+      {
+        id: 'task-delayed',
+        name: 'Delayed Task',
+        requiredKeys: [],
+      },
+    ];
+    applyRouteQuery({ task: 'task-delayed' });
+    const { useTaskDeepLink } = await import('@/composables/useTaskDeepLink');
+    const filteredTasks = ref<Task[]>(metadataTasks.value);
+    const taskDeepLink = useTaskDeepLink({
+      searchQuery: ref(''),
+      filteredTasks,
+      leafletMapRef: ref(null),
+    });
+    await taskDeepLink.handleTaskQueryParam();
+    expect(taskDeepLink.pinnedTaskId.value).toBe('task-delayed');
+    expect(replace).not.toHaveBeenCalled();
+    const taskElement = document.createElement('div');
+    taskElement.id = 'task-task-delayed';
+    taskElement.scrollIntoView = vi.fn();
+    document.body.appendChild(taskElement);
+    await taskDeepLink.handleTaskQueryParam();
+    expect(taskDeepLink.pinnedTaskId.value).toBe('task-delayed');
+    expect(trackFocusedTaskVisible).toHaveBeenCalledWith('task-delayed');
+    expect(replace).toHaveBeenCalledWith({ query: {} });
   });
 });

@@ -135,11 +135,15 @@
   import { useSystemStoreWithSupabase } from '@/stores/useSystemStore';
   import { useTarkovStore } from '@/stores/useTarkov';
   import { GAME_MODES } from '@/utils/constants';
+  import type { DashboardFocusProgressInteraction } from '@/composables/useDashboardFocusAnalytics';
   import type { TaskObjective } from '@/types/tarkov';
   const FALLBACK_IS_MAP_VIEW_REF = ref(false);
   const { t } = useI18n({ useScope: 'global' });
   const jumpToMapObjective = inject<((id: string) => void) | null>('jumpToMapObjective', null);
   const isMapView = inject<Ref<boolean>>('isMapView', FALLBACK_IS_MAP_VIEW_REF);
+  const trackTaskProgressInteraction = inject<
+    ((taskId: string, interaction: DashboardFocusProgressInteraction) => void) | null
+  >('trackTaskProgressInteraction', null);
   const { systemStore } = useSystemStoreWithSupabase();
   // Define the props for the component
   const props = defineProps<{
@@ -282,6 +286,11 @@
     (event.currentTarget as HTMLElement | null)?.blur();
     jumpToMapObjective?.(props.objective.id);
   };
+  const trackDashboardFocusProgress = () => {
+    const taskId = parentTaskId.value;
+    if (!taskId) return;
+    trackTaskProgressInteraction?.(taskId, 'objective_progress');
+  };
   const handleRowClick = () => {
     if (isParentTaskLocked.value) return;
     if (neededCount.value > 1) {
@@ -300,6 +309,7 @@
       }
     }
     tarkovStore.toggleTaskObjectiveComplete(props.objective.id);
+    trackDashboardFocusProgress();
   };
   const currentObjectiveCount = computed(() => {
     return tarkovStore.getObjectiveCount(props.objective.id);
@@ -324,6 +334,7 @@
       if (newCount < requiredCount && isComplete.value) {
         tarkovStore.setTaskObjectiveUncomplete(props.objective.id);
       }
+      trackDashboardFocusProgress();
     }
   };
   const increaseCount = () => {
@@ -336,6 +347,7 @@
       if (newCount >= requiredCount && !isComplete.value) {
         tarkovStore.setTaskObjectiveComplete(props.objective.id);
       }
+      trackDashboardFocusProgress();
     }
   };
   const toggleCount = () => {
@@ -353,6 +365,7 @@
         tarkovStore.setTaskObjectiveComplete(props.objective.id);
       }
     }
+    trackDashboardFocusProgress();
   };
   /**
    * Set count to a specific value (from direct input)
@@ -369,5 +382,6 @@
     } else if (clampedCount < requiredCount && isComplete.value) {
       tarkovStore.setTaskObjectiveUncomplete(props.objective.id);
     }
+    trackDashboardFocusProgress();
   };
 </script>

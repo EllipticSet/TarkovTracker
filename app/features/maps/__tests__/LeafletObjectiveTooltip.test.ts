@@ -37,9 +37,11 @@ const setup = async (task: MockTask) => {
   }));
   const { default: LeafletObjectiveTooltip } =
     await import('@/features/maps/LeafletObjectiveTooltip.vue');
+  const onClose = vi.fn();
   const wrapper = mount(LeafletObjectiveTooltip, {
     props: {
       objectiveId: 'obj-1',
+      onClose,
     },
     global: {
       provide: {
@@ -60,7 +62,7 @@ const setup = async (task: MockTask) => {
       },
     },
   });
-  return { wrapper };
+  return { onClose, wrapper };
 };
 describe('LeafletObjectiveTooltip', () => {
   beforeEach(() => {
@@ -90,5 +92,15 @@ describe('LeafletObjectiveTooltip', () => {
     });
     expect(wrapper.find('a[href="https://tarkov.dev/task/task-2"]').exists()).toBe(true);
     expect(wrapper.find('a[href*="escapefromtarkov.fandom.com/wiki/"]').exists()).toBe(false);
+  });
+  it('emits close when the tooltip close button is clicked', async () => {
+    const { onClose, wrapper } = await setup({
+      id: 'task-3',
+      name: 'Focused Task',
+      wikiLink: null,
+    });
+    await wrapper.get('[data-testid="objective-close-button"]').trigger('click');
+    expect(onClose).toHaveBeenCalledTimes(1);
+    expect(wrapper.emitted('close')).toHaveLength(1);
   });
 });

@@ -1,4 +1,5 @@
 import { storeToRefs } from 'pinia';
+import { useDashboardFocusAnalytics } from '@/composables/useDashboardFocusAnalytics';
 import { useMetadataStore } from '@/stores/useMetadata';
 import { usePreferencesStore } from '@/stores/usePreferences';
 import { useProgressStore } from '@/stores/useProgress';
@@ -17,7 +18,7 @@ export interface UseTaskDeepLinkReturn {
   pinnedTask: ComputedRef<Task | null>;
   clearPinnedTask: () => void;
   handleTaskQueryParam: () => Promise<void>;
-  scrollToTask: (taskId: string) => Promise<void>;
+  scrollToTask: (taskId: string) => Promise<boolean>;
   highlightTask: (taskElement: HTMLElement) => void;
   highlightObjective: (objectiveId: string) => Promise<void>;
   cleanup: () => void;
@@ -33,10 +34,10 @@ export function useTaskDeepLink({
   const metadataStore = useMetadataStore();
   const preferencesStore = usePreferencesStore();
   const progressStore = useProgressStore();
+  const { trackFocusedTaskVisible } = useDashboardFocusAnalytics();
   const { tasks } = storeToRefs(metadataStore);
   const { tasksCompletions, unlockedTasks, tasksFailed } = storeToRefs(progressStore);
   const pinnedTaskId = ref<string | null>(null);
-  const pinnedTaskTimeout = ref<ReturnType<typeof setTimeout> | null>(null);
   const highlightTimeout = ref<ReturnType<typeof setTimeout> | null>(null);
   const objectiveHighlightTimeout = ref<ReturnType<typeof setTimeout> | null>(null);
   const pinnedTask = computed(() => {
@@ -45,10 +46,6 @@ export function useTaskDeepLink({
   });
   const clearPinnedTask = () => {
     pinnedTaskId.value = null;
-    if (pinnedTaskTimeout.value) {
-      clearTimeout(pinnedTaskTimeout.value);
-      pinnedTaskTimeout.value = null;
-    }
   };
   const lightkeeperTraderId = computed(() => metadataStore.getTraderByName('lightkeeper')?.id);
   const getTaskStatus = (taskId: string): TaskStatus => {
@@ -148,45 +145,14 @@ export function useTaskDeepLink({
   const scrollToTask = async (taskId: string) => {
     await nextTick();
     const taskIndex = filteredTasks.value.findIndex((t) => t.id === taskId);
-    if (taskIndex === -1) return;
-    const pinTaskToTop = () => {
-      pinnedTaskId.value = taskId;
-      if (pinnedTaskTimeout.value) {
-        clearTimeout(pinnedTaskTimeout.value);
-      }
-      pinnedTaskTimeout.value = setTimeout(() => {
-        pinnedTaskId.value = null;
-        pinnedTaskTimeout.value = null;
-      }, 8000);
-    };
-    const taskElement = document.getElementById(`task-${taskId}`);
-    if (taskElement) {
-      const rect = taskElement.getBoundingClientRect();
-      const isVisible = rect.top >= 0 && rect.bottom <= window.innerHeight;
-      if (isVisible) {
-        highlightTask(taskElement);
-        return;
-      }
-      const nearbyThreshold = window.innerHeight * 1.5;
-      const isNearby = Math.abs(rect.top) <= nearbyThreshold;
-      if (isNearby) {
-        taskElement.scrollIntoView({ behavior: 'smooth', block: 'center' });
-        highlightTask(taskElement);
-        return;
-      }
-      pinTaskToTop();
-      await nextTick();
-      const pinnedElement = document.getElementById(`task-${taskId}`);
-      if (pinnedElement) {
-        highlightTask(pinnedElement);
-      }
-      return;
-    }
-    pinTaskToTop();
+    if (taskIndex === -1) return false;
+    pinnedTaskId.value = taskId;
     await nextTick();
-    const newTaskElement = document.getElementById(`task-${taskId}`);
-    if (!newTaskElement) return;
-    highlightTask(newTaskElement);
+    const focusedTaskElement = document.getElementById(`task-${taskId}`);
+    if (!focusedTaskElement) return false;
+    focusedTaskElement.scrollIntoView({ behavior: 'smooth', block: 'center' });
+    highlightTask(focusedTaskElement);
+    return true;
   };
   const handleTaskQueryParam = async () => {
     const taskId = getQueryString(route.query.task);
@@ -239,7 +205,9 @@ export function useTaskDeepLink({
       }
     }
     await nextTick();
-    await scrollToTask(taskId);
+    const didFocusTask = await scrollToTask(taskId);
+    if (!didFocusTask) return;
+    trackFocusedTaskVisible(taskId);
     if (objectiveIdToHighlight) {
       await highlightObjective(objectiveIdToHighlight);
       leafletMapRef.value?.activateObjectivePopup(objectiveIdToHighlight);
@@ -257,10 +225,6 @@ export function useTaskDeepLink({
     if (objectiveHighlightTimeout.value) {
       clearTimeout(objectiveHighlightTimeout.value);
       objectiveHighlightTimeout.value = null;
-    }
-    if (pinnedTaskTimeout.value) {
-      clearTimeout(pinnedTaskTimeout.value);
-      pinnedTaskTimeout.value = null;
     }
   };
   return {
