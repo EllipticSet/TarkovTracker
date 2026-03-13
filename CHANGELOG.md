@@ -1,3 +1,16 @@
+# [1.24.0](https://github.com/tarkovtracker-org/TarkovTracker/compare/v1.23.4...v1.24.0) (2026-03-13)
+
+
+### Bug Fixes
+
+* polish dashboard cards and control alignment ([d2fb050](https://github.com/tarkovtracker-org/TarkovTracker/commit/d2fb0501ad1530ad55908c95bb0e921326d4e572))
+* **sync:** preserve item-only progress on refresh ([#234](https://github.com/tarkovtracker-org/TarkovTracker/issues/234)) ([69047b6](https://github.com/tarkovtracker-org/TarkovTracker/commit/69047b6e7fcc010d1436e174dd8ce92f855f8430)), closes [#233](https://github.com/tarkovtracker-org/TarkovTracker/issues/233)
+
+
+### Features
+
+* refine dashboard trader progress cards ([fe87e02](https://github.com/tarkovtracker-org/TarkovTracker/commit/fe87e02778be5eab77fa497b6eb46a21808abdc2))
+
 ## [1.23.4](https://github.com/tarkovtracker-org/TarkovTracker/compare/v1.23.3...v1.23.4) (2026-03-13)
 
 
