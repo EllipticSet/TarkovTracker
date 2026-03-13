@@ -1,3 +1,10 @@
+## [1.23.1](https://github.com/tarkovtracker-org/TarkovTracker/compare/v1.23.0...v1.23.1) (2026-03-13)
+
+
+### Bug Fixes
+
+* stabilize dashboard recommendation focus flows ([5c6d487](https://github.com/tarkovtracker-org/TarkovTracker/commit/5c6d487779a15a26a688063345013cf53c85193b))
+
 # [1.23.0](https://github.com/tarkovtracker-org/TarkovTracker/compare/v1.22.1...v1.23.0) (2026-03-12)
 
 
