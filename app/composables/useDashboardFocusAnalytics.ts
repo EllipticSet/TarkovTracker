@@ -97,7 +97,11 @@ export function useDashboardFocusAnalytics(): {
       recommendation_variant: variant,
       task_id: taskId,
     });
-    if (!taskId || !import.meta.client) return;
+    if (!taskId) {
+      clearRecommendationAttribution();
+      return;
+    }
+    if (!import.meta.client) return;
     writeAttribution({
       clickedAt: getNow(),
       firstActionTracked: false,

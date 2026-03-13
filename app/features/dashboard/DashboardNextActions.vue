@@ -174,10 +174,11 @@
     useDashboardFocusAnalytics,
     type DashboardRecommendationClickVariant,
   } from '@/composables/useDashboardFocusAnalytics';
-  import type {
-    DashboardRecommendation,
-    DashboardRecommendationBlocker,
-    DashboardRecommendationTone,
+  import {
+    getPrimaryDashboardRecommendationBlocker,
+    type DashboardRecommendation,
+    type DashboardRecommendationBlocker,
+    type DashboardRecommendationTone,
   } from '@/composables/useDashboardRecommendations';
   const { t } = useI18n({ useScope: 'global' });
   const { trackRecommendationClick } = useDashboardFocusAnalytics();
@@ -291,7 +292,8 @@
   };
   const getPrimaryBlocker = (
     recommendation: DashboardRecommendation
-  ): DashboardRecommendationBlocker => recommendation.blockers[0] ?? { type: 'ready' };
+  ): DashboardRecommendationBlocker =>
+    getPrimaryDashboardRecommendationBlocker(recommendation.blockers);
   const sectionLabel = computed(() => {
     if (mode.value === 'complete') return t('page.dashboard.focus.title.complete');
     if (mode.value === 'blocked') return t('page.dashboard.focus.title.blocked');

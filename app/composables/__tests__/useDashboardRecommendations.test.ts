@@ -191,6 +191,35 @@ describe('useDashboardRecommendations', () => {
     expect(recommendations.primaryRecommendation.value?.reason).toBe('filter-hidden');
     expect(recommendations.hiddenAvailableCount.value).toBe(1);
   });
+  it('reports zero remaining when all counted objectives are complete but hand-in is still pending', async () => {
+    const tasks: Task[] = [
+      {
+        id: 'task-hand-in',
+        name: 'Hand In Task',
+        factionName: 'Any',
+        objectives: [{ id: 'hand-in-1', taskId: 'task-hand-in' }],
+      },
+    ];
+    const progressStore = createProgressStore({
+      tasksCompletions: { 'task-hand-in': { self: false } },
+      tasksFailed: { 'task-hand-in': { self: false } },
+      unlockedTasks: { 'task-hand-in': { self: true } },
+    });
+    const tarkovStore = createTarkovStore({
+      completedObjectives: new Set(['hand-in-1']),
+    });
+    const recommendations = await setup({
+      progressStore,
+      tasks,
+      tarkovStore,
+    });
+    expect(recommendations.mode.value).toBe('actionable');
+    expect(recommendations.primaryRecommendation.value?.progress).toMatchObject({
+      completed: 1,
+      remaining: 0,
+      total: 1,
+    });
+  });
   it('chooses the closest blocked task when nothing is actionable', async () => {
     const tasks: Task[] = [
       {

@@ -206,32 +206,73 @@ describe('useTaskDeepLink', () => {
     expect(trackFocusedTaskVisible).toHaveBeenCalledWith('task-visible');
     expect(replace).toHaveBeenCalledWith({ query: {} });
   });
-  it('keeps the task query intact until the target task is available to focus', async () => {
-    metadataTasks.value = [
-      {
-        id: 'task-delayed',
-        name: 'Delayed Task',
-        requiredKeys: [],
-      },
-    ];
-    applyRouteQuery({ task: 'task-delayed' });
-    const { useTaskDeepLink } = await import('@/composables/useTaskDeepLink');
-    const filteredTasks = ref<Task[]>(metadataTasks.value);
-    const taskDeepLink = useTaskDeepLink({
-      searchQuery: ref(''),
-      filteredTasks,
-      leafletMapRef: ref(null),
-    });
-    await taskDeepLink.handleTaskQueryParam();
-    expect(taskDeepLink.pinnedTaskId.value).toBe('task-delayed');
-    expect(replace).not.toHaveBeenCalled();
-    const taskElement = document.createElement('div');
-    taskElement.id = 'task-task-delayed';
-    taskElement.scrollIntoView = vi.fn();
-    document.body.appendChild(taskElement);
-    await taskDeepLink.handleTaskQueryParam();
-    expect(taskDeepLink.pinnedTaskId.value).toBe('task-delayed');
-    expect(trackFocusedTaskVisible).toHaveBeenCalledWith('task-delayed');
-    expect(replace).toHaveBeenCalledWith({ query: {} });
+  it('waits for the task element to mount before clearing the deep-link query', async () => {
+    vi.useFakeTimers();
+    try {
+      metadataTasks.value = [
+        {
+          id: 'task-delayed',
+          name: 'Delayed Task',
+          requiredKeys: [],
+        },
+      ];
+      applyRouteQuery({ task: 'task-delayed' });
+      const { useTaskDeepLink } = await import('@/composables/useTaskDeepLink');
+      const filteredTasks = ref<Task[]>(metadataTasks.value);
+      const taskDeepLink = useTaskDeepLink({
+        searchQuery: ref(''),
+        filteredTasks,
+        leafletMapRef: ref(null),
+      });
+      const handleTaskQueryParamPromise = taskDeepLink.handleTaskQueryParam();
+      await vi.advanceTimersByTimeAsync(50);
+      const taskElement = document.createElement('div');
+      taskElement.id = 'task-task-delayed';
+      taskElement.scrollIntoView = vi.fn();
+      document.body.appendChild(taskElement);
+      await vi.advanceTimersByTimeAsync(25);
+      await handleTaskQueryParamPromise;
+      expect(taskDeepLink.pinnedTaskId.value).toBe('task-delayed');
+      expect(taskElement.scrollIntoView).toHaveBeenCalled();
+      expect(trackFocusedTaskVisible).toHaveBeenCalledWith('task-delayed');
+      expect(replace).toHaveBeenCalledWith({ query: {} });
+    } finally {
+      vi.useRealTimers();
+    }
+  });
+  it('waits for filtered tasks to settle before bailing on a deep link', async () => {
+    vi.useFakeTimers();
+    try {
+      metadataTasks.value = [
+        {
+          id: 'task-filter-delay',
+          name: 'Delayed By Filters',
+          requiredKeys: [],
+        },
+      ];
+      applyRouteQuery({ task: 'task-filter-delay' });
+      const { useTaskDeepLink } = await import('@/composables/useTaskDeepLink');
+      const filteredTasks = ref<Task[]>([]);
+      const taskDeepLink = useTaskDeepLink({
+        searchQuery: ref(''),
+        filteredTasks,
+        leafletMapRef: ref(null),
+      });
+      const taskElement = document.createElement('div');
+      taskElement.id = 'task-task-filter-delay';
+      taskElement.scrollIntoView = vi.fn();
+      const handleTaskQueryParamPromise = taskDeepLink.handleTaskQueryParam();
+      await vi.advanceTimersByTimeAsync(50);
+      filteredTasks.value = metadataTasks.value;
+      document.body.appendChild(taskElement);
+      await vi.advanceTimersByTimeAsync(25);
+      await handleTaskQueryParamPromise;
+      expect(taskDeepLink.pinnedTaskId.value).toBe('task-filter-delay');
+      expect(taskElement.scrollIntoView).toHaveBeenCalled();
+      expect(trackFocusedTaskVisible).toHaveBeenCalledWith('task-filter-delay');
+      expect(replace).toHaveBeenCalledWith({ query: {} });
+    } finally {
+      vi.useRealTimers();
+    }
   });
 });

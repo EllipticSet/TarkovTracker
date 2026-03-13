@@ -142,13 +142,38 @@ export function useTaskDeepLink({
       objectiveHighlightTimeout.value = null;
     }, 3500);
   };
+  const waitForTaskToRender = async (taskId: string, maxAttempts = 10) => {
+    for (let attempt = 0; attempt < maxAttempts; attempt++) {
+      await nextTick();
+      if (filteredTasks.value.some((task) => task.id === taskId)) {
+        return true;
+      }
+      if (attempt < maxAttempts - 1) {
+        await new Promise((resolve) => setTimeout(resolve, 25));
+      }
+    }
+    return filteredTasks.value.some((task) => task.id === taskId);
+  };
+  const waitForTaskElement = async (taskId: string, maxAttempts = 40) => {
+    for (let attempt = 0; attempt < maxAttempts; attempt++) {
+      await nextTick();
+      const taskElement = document.getElementById(`task-${taskId}`);
+      if (taskElement) {
+        return taskElement;
+      }
+      if (attempt < maxAttempts - 1) {
+        await new Promise((resolve) => setTimeout(resolve, 25));
+      }
+    }
+    return document.getElementById(`task-${taskId}`);
+  };
   const scrollToTask = async (taskId: string) => {
-    await nextTick();
-    const taskIndex = filteredTasks.value.findIndex((t) => t.id === taskId);
+    const didRenderTask = await waitForTaskToRender(taskId);
+    if (!didRenderTask) return false;
+    const taskIndex = filteredTasks.value.findIndex((task) => task.id === taskId);
     if (taskIndex === -1) return false;
     pinnedTaskId.value = taskId;
-    await nextTick();
-    const focusedTaskElement = document.getElementById(`task-${taskId}`);
+    const focusedTaskElement = await waitForTaskElement(taskId);
     if (!focusedTaskElement) return false;
     focusedTaskElement.scrollIntoView({ behavior: 'smooth', block: 'center' });
     highlightTask(focusedTaskElement);

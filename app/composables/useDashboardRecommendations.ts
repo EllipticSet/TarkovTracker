@@ -63,6 +63,15 @@ export interface DashboardRecommendation {
   tone: DashboardRecommendationTone;
   unlockTraderName?: string;
 }
+const DASHBOARD_RECOMMENDATION_BLOCKER_PRIORITY: DashboardRecommendationBlocker['type'][] = [
+  'trader-unlock',
+  'level',
+  'fence',
+  'prerequisite',
+  'filters',
+  'complete',
+  'ready',
+];
 const COMPLETE_STATUSES = ['complete', 'completed'];
 const ACTIVE_STATUSES = ['accept', 'accepted', 'active'];
 const FAILED_STATUSES = ['failed'];
@@ -75,6 +84,30 @@ const normalizeRequirementStatuses = (statuses?: string[]) =>
   (statuses ?? []).map((status) => status.toLowerCase());
 const hasRequirementStatus = (statuses: string[], values: string[]) =>
   values.some((value) => statuses.includes(value));
+const getDashboardRecommendationBlockerPriority = (blocker: DashboardRecommendationBlocker) => {
+  const index = DASHBOARD_RECOMMENDATION_BLOCKER_PRIORITY.indexOf(blocker.type);
+  return index === -1 ? DASHBOARD_RECOMMENDATION_BLOCKER_PRIORITY.length : index;
+};
+export const compareDashboardRecommendationBlockers = (
+  left: DashboardRecommendationBlocker,
+  right: DashboardRecommendationBlocker
+) =>
+  getDashboardRecommendationBlockerPriority(left) -
+  getDashboardRecommendationBlockerPriority(right);
+export const getPrimaryDashboardRecommendationBlocker = (
+  blockers: DashboardRecommendationBlocker[]
+): DashboardRecommendationBlocker => {
+  let primaryBlocker: DashboardRecommendationBlocker | null = null;
+  let primaryPriority = Number.POSITIVE_INFINITY;
+  for (const blocker of blockers) {
+    const priority = getDashboardRecommendationBlockerPriority(blocker);
+    if (priority < primaryPriority) {
+      primaryBlocker = blocker;
+      primaryPriority = priority;
+    }
+  }
+  return primaryBlocker ?? { type: 'ready' };
+};
 export function useDashboardRecommendations(): {
   availableActionCount: ComputedRef<number>;
   filtersActive: ComputedRef<boolean>;
@@ -166,7 +199,7 @@ export function useDashboardRecommendations(): {
       (objective) => objective.id && tarkovStore.isTaskObjectiveComplete(objective.id)
     ).length;
     const total = objectives.length || 1;
-    const remaining = Math.max(0, total - completed) || (isTaskSuccessful(task.id) ? 0 : 1);
+    const remaining = Math.max(0, total - completed);
     return {
       completed: Math.min(completed, total),
       remaining,
@@ -252,7 +285,7 @@ export function useDashboardRecommendations(): {
     if (!blockers.length) {
       blockers.push({ type: 'ready' });
     }
-    return blockers;
+    return blockers.sort(compareDashboardRecommendationBlockers);
   };
   const getRecommendationTone = (task: Task | null, reason: DashboardRecommendationReason) => {
     if (reason === 'filter-hidden') return 'info';
@@ -269,11 +302,11 @@ export function useDashboardRecommendations(): {
     blockers: DashboardRecommendationBlocker[],
     unlockTraderName?: string
   ): DashboardRecommendationReason => {
-    if (blockers.some((blocker) => blocker.type === 'trader-unlock'))
-      return 'blocked-trader-unlock';
-    if (blockers.some((blocker) => blocker.type === 'level')) return 'blocked-level';
-    if (blockers.some((blocker) => blocker.type === 'fence')) return 'blocked-fence';
-    if (blockers.some((blocker) => blocker.type === 'prerequisite')) return 'blocked-prerequisite';
+    const primaryBlocker = getPrimaryDashboardRecommendationBlocker(blockers);
+    if (primaryBlocker.type === 'trader-unlock') return 'blocked-trader-unlock';
+    if (primaryBlocker.type === 'level') return 'blocked-level';
+    if (primaryBlocker.type === 'fence') return 'blocked-fence';
+    if (primaryBlocker.type === 'prerequisite') return 'blocked-prerequisite';
     if (unlockTraderName) return 'unlock-trader';
     if (impact > 0) return 'impact';
     if (task.lightkeeperRequired) return 'lightkeeper';

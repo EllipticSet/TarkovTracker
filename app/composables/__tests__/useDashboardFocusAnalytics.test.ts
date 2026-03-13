@@ -46,6 +46,28 @@ describe('useDashboardFocusAnalytics', () => {
       variant: 'primary',
     });
   });
+  it('clears stored attribution when a recommendation click does not target a task', () => {
+    const { trackFocusedTaskVisible, trackRecommendationClick } = useDashboardFocusAnalytics();
+    trackRecommendationClick({
+      recommendationId: 'available-task-1',
+      reason: 'impact',
+      taskId: 'task-1',
+      variant: 'primary',
+    });
+    trackRecommendationClick({
+      recommendationId: 'filters-hidden',
+      reason: 'filter-hidden',
+      variant: 'secondary',
+    });
+    expect(window.sessionStorage.getItem(STORAGE_KEYS.dashboardFocusAttribution)).toBeNull();
+    trackFocusedTaskVisible('task-1');
+    expect(window.gtag).not.toHaveBeenCalledWith(
+      'event',
+      'dashboard_recommendation_task_visible',
+      expect.any(Object)
+    );
+    expect(window.sessionStorage.getItem(STORAGE_KEYS.dashboardFocusAttribution)).toBeNull();
+  });
   it('tracks the focused task funnel and clears attribution after completion', () => {
     const {
       trackFocusedTaskAction,

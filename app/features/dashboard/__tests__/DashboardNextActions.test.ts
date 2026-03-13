@@ -26,6 +26,8 @@ const translations: Record<string, string> = {
   'page.dashboard.focus.heading.start': 'Start {task}',
   'page.dashboard.focus.proof.blocked_level_one': 'Closest unlock: only 1 level away.',
   'page.dashboard.focus.proof.blocked_level_other': 'Closest unlock: only {count} levels away.',
+  'page.dashboard.focus.proof.blocked_trader_unlock':
+    'Closest unlock: finish {task} to unlock {trader}.',
   'page.dashboard.focus.proof.complete': 'No visible work remains in this dashboard scope.',
   'page.dashboard.focus.proof.impact_one': 'Highest payoff: opens 1 follow-up task.',
   'page.dashboard.focus.proof.impact_other': 'Highest payoff: opens {count} follow-up tasks.',
@@ -40,6 +42,9 @@ const translations: Record<string, string> = {
   'page.dashboard.focus.stat.why': 'Why it won',
   'page.dashboard.focus.status.level_other': 'Reach level {required} ({count} more levels to go).',
   'page.dashboard.focus.status.ready_other': 'Ready now. {count} objectives left.',
+  'page.dashboard.focus.status.trader_unlock': 'Complete {task} to unlock {trader}.',
+  'page.dashboard.focus.summary.blocked_trader_unlock':
+    '{task} is blocked until a trader unlock is complete.',
   'page.dashboard.focus.summary.blocked_level_other':
     '{task} is your closest unlock, but you still need {count} more levels.',
   'page.dashboard.focus.summary.impact':
@@ -182,5 +187,40 @@ describe('DashboardNextActions', () => {
       taskId: 'task-impact',
       variant: 'primary',
     });
+  });
+  it('uses blocker priority instead of insertion order for blocked cards', async () => {
+    const wrapper = await mountWithRecommendation(
+      createRecommendation({
+        blockers: [
+          {
+            count: 2,
+            required: 15,
+            type: 'level',
+          },
+          {
+            taskName: 'Getting Acquainted',
+            traderName: 'Lightkeeper',
+            type: 'trader-unlock',
+          },
+        ],
+        progress: {
+          completed: 0,
+          remaining: 1,
+          total: 1,
+        },
+        reason: 'blocked-trader-unlock',
+        score: -12,
+        taskName: 'Top Secret',
+        tone: 'warning',
+      }),
+      'blocked'
+    );
+    expect(wrapper.text()).toContain('Top Secret is blocked until a trader unlock is complete.');
+    expect(wrapper.text()).toContain(
+      'Closest unlock: finish Getting Acquainted to unlock Lightkeeper.'
+    );
+    expect(wrapper.text()).toContain('Complete Getting Acquainted to unlock Lightkeeper.');
+    expect(wrapper.text()).not.toContain('only 2 levels away');
+    expect(wrapper.text()).not.toContain('Reach level 15');
   });
 });
