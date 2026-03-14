@@ -81,6 +81,7 @@ export interface PreferencesState {
   neededItemsSortBy: 'priority' | 'name' | 'category' | 'count' | null;
   neededItemsSortDirection: 'asc' | 'desc' | null;
   neededItemsHideOwned: boolean;
+  neededItemsHideCollected: boolean;
   neededItemsCardStyle: 'compact' | 'expanded' | null;
   itemsHideNonFIR: boolean;
   hideGlobalTasks: boolean;
@@ -161,6 +162,7 @@ export const preferencesDefaultState: PreferencesState = {
   neededItemsSortBy: 'priority',
   neededItemsSortDirection: 'desc',
   neededItemsHideOwned: false,
+  neededItemsHideCollected: false,
   neededItemsCardStyle: 'expanded',
   itemsHideNonFIR: false,
   hideGlobalTasks: false,
@@ -490,6 +492,9 @@ export const usePreferencesStore = defineStore('preferences', {
     getNeededItemsHideOwned: (state) => {
       return state.neededItemsHideOwned ?? false;
     },
+    getNeededItemsHideCollected: (state) => {
+      return state.neededItemsHideCollected ?? false;
+    },
     getNeededItemsCardStyle: (state) => {
       return state.neededItemsCardStyle ?? 'expanded';
     },
@@ -728,6 +733,9 @@ export const usePreferencesStore = defineStore('preferences', {
     setNeededItemsHideOwned(hide: boolean) {
       this.neededItemsHideOwned = hide;
     },
+    setNeededItemsHideCollected(hide: boolean) {
+      this.neededItemsHideCollected = hide;
+    },
     setNeededItemsCardStyle(style: 'compact' | 'expanded') {
       this.neededItemsCardStyle = style;
     },
@@ -934,6 +942,7 @@ export const usePreferencesStore = defineStore('preferences', {
       'neededItemsSortBy',
       'neededItemsSortDirection',
       'neededItemsHideOwned',
+      'neededItemsHideCollected',
       'neededItemsCardStyle',
       'itemsHideNonFIR',
       'hideGlobalTasks',
