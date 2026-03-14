@@ -1,3 +1,10 @@
+# [1.26.0](https://github.com/tarkovtracker-org/TarkovTracker/compare/v1.25.6...v1.26.0) (2026-03-14)
+
+
+### Features
+
+* add sanitized debug export ([cd768df](https://github.com/tarkovtracker-org/TarkovTracker/commit/cd768df5b3fe206d66355b29d9bf9022ee37d525))
+
 ## [1.25.6](https://github.com/tarkovtracker-org/TarkovTracker/compare/v1.25.5...v1.25.6) (2026-03-14)
 
 
