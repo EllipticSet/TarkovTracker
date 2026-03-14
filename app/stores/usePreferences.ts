@@ -230,10 +230,20 @@ const hasLegacyOnlyTasksWithSuggestedKeys = (
 ): boolean => {
   return 'onlyTasksWithSuggestedKeys' in persistedState;
 };
+const clonePreferencesSnapshot = <T>(value: T): T => {
+  const rawValue = value !== null && typeof value === 'object' ? toRaw(value) : value;
+  try {
+    return structuredClone(rawValue);
+  } catch {
+    return JSON.parse(JSON.stringify(rawValue)) as T;
+  }
+};
 const sanitizePersistedPreferencesState = (
   persistedState: PersistedPreferencesStateWithLegacy = {}
 ): PersistedPreferencesState => {
-  const sanitizedState = structuredClone(persistedState) as PersistedPreferencesStateWithLegacy;
+  const sanitizedState = clonePreferencesSnapshot(
+    persistedState
+  ) as PersistedPreferencesStateWithLegacy;
   if (
     typeof sanitizedState.onlyTasksWithRequiredKeys !== 'boolean' &&
     typeof sanitizedState.onlyTasksWithSuggestedKeys === 'boolean'
@@ -268,7 +278,7 @@ let pendingResetPreferencesSnapshot: PersistedPreferencesSnapshot | null = null;
 export const getPersistedPreferencesState = (
   state: Partial<PreferencesState>
 ): PersistedPreferencesState => {
-  const clonedState = structuredClone(state) as PersistedPreferencesStateWithLegacy;
+  const clonedState = clonePreferencesSnapshot(state) as PersistedPreferencesStateWithLegacy;
   if ('saving' in clonedState) {
     delete clonedState.saving;
   }
@@ -277,7 +287,7 @@ export const getPersistedPreferencesState = (
 const buildPreferencesState = (
   persistedState: PersistedPreferencesStateWithLegacy = {}
 ): PreferencesState => {
-  const state = structuredClone(preferencesDefaultState);
+  const state = clonePreferencesSnapshot(preferencesDefaultState);
   Object.assign(state, sanitizePersistedPreferencesState(persistedState));
   state.mapMarkerColors = normalizeMapMarkerColors(state.mapMarkerColors);
   state.saving = { ...initialSavingState };

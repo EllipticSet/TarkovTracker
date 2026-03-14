@@ -2,6 +2,7 @@ import { createPinia, setActivePinia } from 'pinia';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import {
   clearPendingResetPreferencesSnapshot,
+  getPersistedPreferencesState,
   preferencesDefaultState,
   readPendingResetPreferencesSnapshot,
   resetPreferencesStoreForSessionTransition,
@@ -155,6 +156,21 @@ describe('usePreferencesStore', () => {
     });
   });
   describe('Migration Logic', () => {
+    it('serializes reactive store state without throwing', () => {
+      const store = usePreferencesStore();
+      store.localeOverride = 'de';
+      store.saving.streamerMode = true;
+      let persistedState: ReturnType<typeof getPersistedPreferencesState> | null = null;
+      expect(() => {
+        persistedState = getPersistedPreferencesState(store.$state);
+      }).not.toThrow();
+      expect(persistedState).toEqual(
+        expect.objectContaining({
+          localeOverride: 'de',
+        })
+      );
+      expect(persistedState).not.toHaveProperty('saving');
+    });
     it('should migrate onlyTasksWithSuggestedKeys to onlyTasksWithRequiredKeys', () => {
       const persistedState = {
         onlyTasksWithSuggestedKeys: true,
