@@ -1,3 +1,10 @@
+## [1.25.4](https://github.com/tarkovtracker-org/TarkovTracker/compare/v1.25.3...v1.25.4) (2026-03-14)
+
+
+### Bug Fixes
+
+* force all filter in task graph view ([f106b0f](https://github.com/tarkovtracker-org/TarkovTracker/commit/f106b0fa0f4070976ecabc45dc64439e45f345c8))
+
 ## [1.25.3](https://github.com/tarkovtracker-org/TarkovTracker/compare/v1.25.2...v1.25.3) (2026-03-14)
 
 
