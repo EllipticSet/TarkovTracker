@@ -1,3 +1,10 @@
+## [1.25.2](https://github.com/tarkovtracker-org/TarkovTracker/compare/v1.25.1...v1.25.2) (2026-03-14)
+
+
+### Bug Fixes
+
+* **metadata:** defer startup hydration until app mount ([23886eb](https://github.com/tarkovtracker-org/TarkovTracker/commit/23886ebfc300c7bc72cde5e6091541b816da07c3))
+
 ## [1.25.1](https://github.com/tarkovtracker-org/TarkovTracker/compare/v1.25.0...v1.25.1) (2026-03-14)
 
 
