@@ -215,9 +215,7 @@
             </span>
           </UButton>
           <UButton
-            v-if="
-              !isGraphView && preferencesStore.getShowCompletedFilter && statusCounts.completed > 0
-            "
+            v-if="showCompletedFilterButton"
             variant="ghost"
             color="neutral"
             size="sm"
@@ -238,7 +236,7 @@
             </span>
           </UButton>
           <UButton
-            v-if="!isGraphView && preferencesStore.getShowFailedFilter && statusCounts.failed > 0"
+            v-if="showFailedFilterButton"
             variant="ghost"
             color="neutral"
             size="sm"
@@ -496,6 +494,12 @@
   const showAllStatusButton = computed(
     () => isGraphView.value || preferencesStore.getShowAllFilter
   );
+  const showCompletedFilterButton = computed(() => {
+    return !isGraphView.value && preferencesStore.getShowCompletedFilter;
+  });
+  const showFailedFilterButton = computed(() => {
+    return !isGraphView.value && preferencesStore.getShowFailedFilter;
+  });
   // Helper to get teammate display name
   const getTeammateDisplayName = (teamId: string): string => {
     return progressStore.getDisplayName(teamId);
