@@ -1,3 +1,16 @@
+# [1.28.0](https://github.com/tarkovtracker-org/TarkovTracker/compare/v1.27.2...v1.28.0) (2026-03-16)
+
+
+### Bug Fixes
+
+* address PR [#235](https://github.com/tarkovtracker-org/TarkovTracker/issues/235) review feedback ([4828911](https://github.com/tarkovtracker-org/TarkovTracker/commit/482891181ee2f98d443a2f9d87b2335bf49018f2))
+* complete preferences legacy migration ([96b79f1](https://github.com/tarkovtracker-org/TarkovTracker/commit/96b79f1cad8d79aba2e080cdc1039e1ddfa588e9))
+
+
+### Features
+
+* add hide collected filter to needed items (Issue 88) ([85d5f2c](https://github.com/tarkovtracker-org/TarkovTracker/commit/85d5f2c7c758a2eed8ca99457a5e2ad49f42ea8d))
+
 ## [1.27.2](https://github.com/tarkovtracker-org/TarkovTracker/compare/v1.27.1...v1.27.2) (2026-03-15)
 
 
