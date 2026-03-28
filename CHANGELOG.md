@@ -1,3 +1,10 @@
+## [1.28.2](https://github.com/tarkovtracker-org/TarkovTracker/compare/v1.28.1...v1.28.2) (2026-03-28)
+
+
+### Bug Fixes
+
+* **app:** preserve storyline progress sync ([3c40103](https://github.com/tarkovtracker-org/TarkovTracker/commit/3c4010359446ab91b21fd0067dc173d809e3ac86))
+
 ## [1.28.1](https://github.com/tarkovtracker-org/TarkovTracker/compare/v1.28.0...v1.28.1) (2026-03-25)
 
 
