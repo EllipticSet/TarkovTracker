@@ -1029,7 +1029,7 @@
     privacy_policy: 'Privacy Policy',
     credits: 'Credits',
     analytics_preferences: 'Analytics Preferences',
-    game_attribution: 'Game content and materials are trademarks and copyrights of Battlestate Games and its licensors. All rights reserved.',
+    game_attribution: 'Escape from Tarkov and related game content and materials are trademarks and copyrighted works of Battlestate Games Limited and its licensors. All rights reserved. TarkovTracker is an unofficial fan project and is not affiliated with or endorsed by Battlestate Games.',
   },
   navigation_drawer: {
     main_navigation: 'Main Navigation',
