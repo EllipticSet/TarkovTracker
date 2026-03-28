@@ -151,6 +151,7 @@ Automated via Dependabot (`.github/dependabot.yml`):
 **Features:**
 
 - Weekly npm update batches across the app root and `workers/api-gateway`
+- Monthly grouped npm batches for `.claude-plugin` MCP tooling
 - Monthly grouped GitHub Actions updates
 - Cooldown windows to avoid immediate churn from fresh releases
 - Grouped minor/patch updates for low-risk tooling families
@@ -166,11 +167,14 @@ Automated via Dependabot (`.github/dependabot.yml`):
 - tailwind tooling
 - cloudflare tooling
 - release tooling
+- remaining npm minor/patch updates
+- claude-plugin MCP runtime and dev tooling
 
 **Review strategy:**
 
 - Let Dependabot batch low-risk tooling updates for scheduled review windows
-- Keep major upgrades and unmatched runtime dependencies more explicit
+- Keep major upgrades explicit
+- Keep `.claude-plugin` updates out of the main app queue; review them monthly as isolated tooling maintenance
 - Review security PRs promptly; they remain separate from the scheduled version-update batches unless GitHub grouped security updates are enabled in repository settings
 
 ## Development Environment Setup
