@@ -1,3 +1,10 @@
+## [1.28.5](https://github.com/tarkovtracker-org/TarkovTracker/compare/v1.28.4...v1.28.5) (2026-03-29)
+
+
+### Bug Fixes
+
+* **app:** preserve newer local preferences during sync ([#240](https://github.com/tarkovtracker-org/TarkovTracker/issues/240)) ([5ce73bf](https://github.com/tarkovtracker-org/TarkovTracker/commit/5ce73bf5a3be21a8642932235c5a49b538fd7474))
+
 ## [1.28.4](https://github.com/tarkovtracker-org/TarkovTracker/compare/v1.28.3...v1.28.4) (2026-03-28)
 
 
