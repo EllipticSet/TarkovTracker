@@ -1,3 +1,10 @@
+## [1.28.7](https://github.com/tarkovtracker-org/TarkovTracker/compare/v1.28.6...v1.28.7) (2026-04-05)
+
+
+### Bug Fixes
+
+* improve auth diagnostics and refresh project docs ([2f909b3](https://github.com/tarkovtracker-org/TarkovTracker/commit/2f909b330a3689a10a35a4651a7e17a47c3a3eca))
+
 ## [1.28.6](https://github.com/tarkovtracker-org/TarkovTracker/compare/v1.28.5...v1.28.6) (2026-04-03)
 
 
