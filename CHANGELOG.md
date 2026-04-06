@@ -1,3 +1,19 @@
+# [1.30.0](https://github.com/tarkovtracker-org/TarkovTracker/compare/v1.29.0...v1.30.0) (2026-04-06)
+
+
+### Bug Fixes
+
+* **ui:** address help guide accessibility and locale fallbacks ([f451baf](https://github.com/tarkovtracker-org/TarkovTracker/commit/f451baff3f5db21c3c6748abb67de4811fb6d4c7))
+* **ui:** finalize drawer focus restoration ([2870479](https://github.com/tarkovtracker-org/TarkovTracker/commit/2870479e56faf36bf9464961ef4bf898e6432b27))
+* **ui:** finish page-help production hardening ([158b050](https://github.com/tarkovtracker-org/TarkovTracker/commit/158b0504cf6eddd71718fe5e09adc5115a90dabd))
+* **ui:** harden help overlay behavior ([2651c68](https://github.com/tarkovtracker-org/TarkovTracker/commit/2651c68efe090ef0b62daf7741fc784ff077590d))
+* **workers:** sync api-gateway lockfile with deps ([20eab30](https://github.com/tarkovtracker-org/TarkovTracker/commit/20eab30752249a1ea2586a7956aa7624ceb85da3))
+
+
+### Features
+
+* **help:** add page guidance and onboarding flows ([ceb7373](https://github.com/tarkovtracker-org/TarkovTracker/commit/ceb737353394de054d9ddf9d0b65cdc889a3b761))
+
 # [1.29.0](https://github.com/tarkovtracker-org/TarkovTracker/compare/v1.28.8...v1.29.0) (2026-04-06)
 
 
