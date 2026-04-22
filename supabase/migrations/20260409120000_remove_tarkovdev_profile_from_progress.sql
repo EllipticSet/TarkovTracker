@@ -103,7 +103,20 @@ AS $$
       'skills',
       CASE
         WHEN jsonb_typeof(payload->'skills') = 'object'
-        THEN payload->'skills'
+        THEN (
+          SELECT COALESCE(
+            jsonb_object_agg(
+              skill.key,
+              CASE
+                WHEN skill.value ~ '^-?[0-9]+(\.[0-9]+)?$'
+                THEN to_jsonb(least(51, greatest(0, trunc((skill.value)::numeric)::int)))
+                ELSE to_jsonb(0)
+              END
+            ),
+            '{}'::jsonb
+          )
+          FROM jsonb_each_text(payload->'skills') AS skill(key, value)
+        )
         ELSE '{}'::jsonb
       END,
       'storyChapters',
@@ -178,6 +191,33 @@ BEGIN
   IF sanitized ? 'tarkovDevProfile' THEN
     RAISE EXCEPTION
       'sanitize_user_progress_mode_data regression: tarkovDevProfile should not be preserved';
+  END IF;
+
+  IF sanitized->'skills'->>'Endurance' <> '10' THEN
+    RAISE EXCEPTION
+      'sanitize_user_progress_mode_data regression: in-range skills should be preserved';
+  END IF;
+
+  sanitized := public.sanitize_user_progress_mode_data(
+    jsonb_build_object(
+      'skills',
+      jsonb_build_object('Endurance', 99, 'Strength', -5, 'Intellect', 'bad')
+    )
+  );
+
+  IF sanitized->'skills'->>'Endurance' <> '51' THEN
+    RAISE EXCEPTION
+      'sanitize_user_progress_mode_data regression: high skill values should be clamped';
+  END IF;
+
+  IF sanitized->'skills'->>'Strength' <> '0' THEN
+    RAISE EXCEPTION
+      'sanitize_user_progress_mode_data regression: negative skill values should be clamped';
+  END IF;
+
+  IF sanitized->'skills'->>'Intellect' <> '0' THEN
+    RAISE EXCEPTION
+      'sanitize_user_progress_mode_data regression: invalid skill values should normalize to 0';
   END IF;
 END;
 $$;

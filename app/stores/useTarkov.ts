@@ -1172,6 +1172,8 @@ export function resetTarkovSync(
   syncUserId = null;
   shownLocalIgnoreReasons.clear();
   lastLocalSyncTime = 0;
+  deprecatedRemoteCleanupInFlight = false;
+  lastDeprecatedRemoteCleanupAttemptAt = 0;
   recentLocalSyncTimes.length = 0;
   lastApiUpdateIds.pvp = null;
   lastApiUpdateIds.pve = null;
@@ -1629,6 +1631,8 @@ export async function initializeTarkovSync() {
 // Realtime channel for multi-device sync
 let realtimeChannel: unknown = null;
 let lastLocalSyncTime = 0; // Track when we last synced locally to filter self-origin updates
+let deprecatedRemoteCleanupInFlight = false;
+let lastDeprecatedRemoteCleanupAttemptAt = 0;
 const recentLocalSyncTimes: number[] = [];
 const recordLocalSyncTime = () => {
   const now = Date.now();
@@ -1863,15 +1867,33 @@ function setupRealtimeListener() {
           pve: merged.pve ?? localState.pve,
         };
         const cleanupDeprecatedRemoteProgress = async () => {
+          if (deprecatedRemoteCleanupInFlight) {
+            return;
+          }
+          const now = Date.now();
+          if (
+            lastDeprecatedRemoteCleanupAttemptAt > 0 &&
+            now - lastDeprecatedRemoteCleanupAttemptAt < SELF_ORIGIN_THRESHOLD_MS
+          ) {
+            return;
+          }
+          deprecatedRemoteCleanupInFlight = true;
+          lastDeprecatedRemoteCleanupAttemptAt = now;
           recordLocalSyncTime();
-          const { error } = await $supabase.client
-            .from('user_progress')
-            .upsert(buildUpsertPayload(currentUserId, nextState));
-          if (error) {
-            logger.error(
-              '[TarkovStore] Failed to clean deprecated remote progress payload:',
-              error
-            );
+          try {
+            const { error } = await $supabase.client
+              .from('user_progress')
+              .upsert(buildUpsertPayload(currentUserId, nextState));
+            if (error) {
+              logger.error(
+                '[TarkovStore] Failed to clean deprecated remote progress payload:',
+                error
+              );
+              return;
+            }
+            lastDeprecatedRemoteCleanupAttemptAt = 0;
+          } finally {
+            deprecatedRemoteCleanupInFlight = false;
           }
         };
         const stateUnchanged = deepEqual(nextState, localState);

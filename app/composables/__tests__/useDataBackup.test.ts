@@ -1221,7 +1221,7 @@ describe('useDataBackup', () => {
     it('ignores legacy tarkovUidMode metadata in backup payloads', async () => {
       const legacyBackup = {
         ...validBackup,
-        tarkovUidMode: 'pve',
+        tarkovUidMode: 'pvp',
       };
       const { parseBackupFile, confirmBackupImport } = await loadComposable();
       await parseBackupFile(createFile(JSON.stringify(legacyBackup)));

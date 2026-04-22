@@ -1390,6 +1390,40 @@ describe('useTarkov sync integration', () => {
     });
     expect(showApiUpdated).toHaveBeenCalledTimes(2);
   });
+  it('avoids overlapping deprecated remote cleanup writes during realtime sync', async () => {
+    single.mockResolvedValue({
+      data: createRemoteRow(),
+      error: null,
+    });
+    let pendingUpsertResolve: (value: { error: null }) => void = () => {};
+    const pendingUpsert = new Promise<{ error: null }>((resolve) => {
+      pendingUpsertResolve = resolve;
+    });
+    upsert.mockImplementationOnce(() => pendingUpsert);
+    await initializeTarkovSync();
+    const callback = getRealtimeCallback();
+    expect(callback).toBeTypeOf('function');
+    upsert.mockClear();
+    const payload = {
+      current_game_mode: 'pvp',
+      game_edition: 1,
+      tarkov_uid: null,
+      pvp_data: withLegacyTarkovDevProfile(progressWithLevel(2), 12345),
+      pve_data: progressWithLevel(1),
+      updated_at: '2000-01-01T00:00:00.000Z',
+    };
+    callback?.({
+      new: payload,
+      old: {},
+    });
+    callback?.({
+      new: payload,
+      old: {},
+    });
+    expect(upsert).toHaveBeenCalledTimes(1);
+    pendingUpsertResolve({ error: null });
+    await waitForBackgroundTasks();
+  });
   it('shows load_failed and aborts sync for multi-provider account with no progress row', async () => {
     supabaseContext.user.providers = ['discord', 'google'];
     single.mockResolvedValue({
