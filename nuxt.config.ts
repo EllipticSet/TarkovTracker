@@ -22,6 +22,16 @@ const appVersion = packageJson.version ?? 'dev';
 const isNonProduction = process.env.NODE_ENV !== 'production';
 const CONFIGURED_NITRO_PRESET = process.env.NITRO_PRESET;
 const NITRO_PRESET = resolveNitroPreset(CONFIGURED_NITRO_PRESET);
+const PUBLIC_APP_URL = resolvePublicAppUrl(process.env);
+const IS_PRODUCTION_BUILD = process.env.NODE_ENV === 'production';
+const GOOGLE_ANALYTICS_MEASUREMENT_ID =
+  process.env.NUXT_PUBLIC_GA_MEASUREMENT_ID ||
+  process.env.NUXT_PUBLIC_GOOGLE_ANALYTICS_MEASUREMENT_ID ||
+  '';
+const MICROSOFT_CLARITY_PROJECT_ID =
+  process.env.NUXT_PUBLIC_CLARITY_PROJECT_ID ||
+  process.env.NUXT_PUBLIC_MICROSOFT_CLARITY_PROJECT_ID ||
+  '';
 const {
   privateAnonKey: PRIVATE_SUPABASE_ANON_KEY,
   privateUrl: PRIVATE_SUPABASE_URL,
@@ -46,14 +56,8 @@ if (
 }
 const cspRouteRules = buildContentSecurityPolicyRouteRules({
   clientLogSinkUrl: process.env.NUXT_PUBLIC_CLIENT_LOG_SINK_URL || '/api/logs/client',
-  clarityInstrumentationKey:
-    process.env.NUXT_PUBLIC_CLARITY_PROJECT_ID ||
-    process.env.NUXT_PUBLIC_MICROSOFT_CLARITY_PROJECT_ID ||
-    '',
-  gaMeasurementId:
-    process.env.NUXT_PUBLIC_GA_MEASUREMENT_ID ||
-    process.env.NUXT_PUBLIC_GOOGLE_ANALYTICS_MEASUREMENT_ID ||
-    '',
+  clarityInstrumentationKey: IS_PRODUCTION_BUILD ? MICROSOFT_CLARITY_PROJECT_ID : '',
+  gaMeasurementId: IS_PRODUCTION_BUILD ? GOOGLE_ANALYTICS_MEASUREMENT_ID : '',
   supabaseUrl: PUBLIC_SUPABASE_URL,
 });
 const webApplicationSchema = {
@@ -156,16 +160,10 @@ export default defineNuxtConfig({
     public: {
       NODE_ENV: process.env.NODE_ENV || 'production',
       VITE_LOG_LEVEL: process.env.NUXT_PUBLIC_LOG_LEVEL || process.env.VITE_LOG_LEVEL || '',
-      appUrl: resolvePublicAppUrl(process.env),
+      appUrl: PUBLIC_APP_URL,
       appVersion,
-      googleAnalyticsMeasurementId:
-        process.env.NUXT_PUBLIC_GA_MEASUREMENT_ID ||
-        process.env.NUXT_PUBLIC_GOOGLE_ANALYTICS_MEASUREMENT_ID ||
-        '',
-      microsoftClarityProjectId:
-        process.env.NUXT_PUBLIC_CLARITY_PROJECT_ID ||
-        process.env.NUXT_PUBLIC_MICROSOFT_CLARITY_PROJECT_ID ||
-        '',
+      googleAnalyticsMeasurementId: IS_PRODUCTION_BUILD ? GOOGLE_ANALYTICS_MEASUREMENT_ID : '',
+      microsoftClarityProjectId: IS_PRODUCTION_BUILD ? MICROSOFT_CLARITY_PROJECT_ID : '',
       supabaseAnonKey: PUBLIC_SUPABASE_ANON_KEY,
       supabaseUrl: PUBLIC_SUPABASE_URL,
       clientLogSinkUrl: process.env.NUXT_PUBLIC_CLIENT_LOG_SINK_URL || '/api/logs/client',

@@ -23,6 +23,11 @@ Automated CI/CD and maintenance workflows for TarkovTracker.
 
 **Trigger:** PR opened/updated/reopened
 **Jobs:** `PR Meta` (labels, size, commit validation, Lighthouse gating), `Lighthouse` (conditional on UI file changes or `ui`/`performance` labels)
+**Lighthouse server:** Builds the Cloudflare Pages app and serves it with `wrangler pages dev`
+so `/api/*` routes are available during audits.
+**Lighthouse thresholds:** Calibrated to the real full-data Pages preview baseline. Raise
+`lighthouserc.json` score floors after performance/accessibility work instead of treating
+the current floors as long-term targets.
 
 ### Dependabot Auto Merge (`dependabot-auto-merge.yml`)
 
