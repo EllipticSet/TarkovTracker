@@ -1,3 +1,10 @@
+## [1.31.2](https://github.com/tarkovtracker-org/TarkovTracker/compare/v1.31.1...v1.31.2) (2026-04-24)
+
+
+### Bug Fixes
+
+* **config:** restrict analytics to canonical production hosts ([2b0554e](https://github.com/tarkovtracker-org/TarkovTracker/commit/2b0554eb9318d17a45b2e3191661ce87f9766848))
+
 ## [1.31.1](https://github.com/tarkovtracker-org/TarkovTracker/compare/v1.31.0...v1.31.1) (2026-04-22)
 
 
