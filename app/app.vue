@@ -1,6 +1,5 @@
 <template>
   <UApp :tooltip="{ delayDuration: 300 }">
-    <!-- Loading Screen (shows while initial data is loading) -->
     <LoadingScreen />
     <NuxtRouteAnnouncer />
     <NuxtLayout>
@@ -21,12 +20,12 @@
         </template>
       </NuxtErrorBoundary>
     </NuxtLayout>
-    <!-- Portal target for modals -->
     <div id="modals"></div>
   </UApp>
 </template>
 <script setup lang="ts">
   import { useAppInitialization } from '@/composables/useAppInitialization';
+  import { SETTINGS_ROUTE_PATHS } from '@/features/drawer/navigation';
   import { logger } from '@/utils/logger';
   const CHUNK_ERROR_PATTERNS = [
     /ChunkLoadError/i,
@@ -49,7 +48,32 @@
   const { locale, t } = useI18n();
   const { public: publicConfig } = useRuntimeConfig();
   const siteUrl = (publicConfig.appUrl || 'https://tarkovtracker.org').replace(/\/$/, '');
-  useHeadSafe(() => ({
+  const settingsHashCanonicalPaths: Record<string, string> = {
+    '#progression': '/progression',
+    '#settings-progression': '/progression',
+    '#prestige': '/prestige',
+    '#settings-prestige': '/prestige',
+    '#preferences': '/preferences',
+    '#settings-preferences': '/preferences',
+    '#account': '/account',
+    '#settings-account': '/account',
+    '#imports': '/settings',
+    '#settings-imports': '/settings',
+    '#backup-restore': '/settings',
+    '#settings-backup-restore': '/settings',
+    '#api': '/settings',
+  };
+  const canonicalPath = computed(() => {
+    if (SETTINGS_ROUTE_PATHS.has(route.path)) {
+      if (!route.hash) {
+        return route.path === '/settings' ? '/progression' : route.path;
+      }
+      const normalizedHash = route.hash.startsWith('#') ? route.hash : `#${route.hash}`;
+      return settingsHashCanonicalPaths[normalizedHash] ?? route.path;
+    }
+    return route.path;
+  });
+  useHead(() => ({
     htmlAttrs: {
       lang: locale.value,
     },
@@ -65,12 +89,12 @@
       },
       {
         rel: 'canonical',
-        href: `${siteUrl}${route.path}`,
+        href: `${siteUrl}${canonicalPath.value}`,
       },
     ],
   }));
   useSeoMeta({
-    ogUrl: computed(() => `${siteUrl}${route.path}`),
+    ogUrl: computed(() => `${siteUrl}${canonicalPath.value}`),
     ogLocale: computed(() => locale.value),
   });
   const handlePageError = (error: unknown) => {

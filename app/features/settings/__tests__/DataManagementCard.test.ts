@@ -11,6 +11,7 @@ const {
   tarkovDevState,
   toastAddMock,
   tarkovStoreState,
+  mockLogger,
 } = vi.hoisted(() => ({
   backupFns: {
     confirmBackupImport: vi.fn(async () => undefined),
@@ -32,14 +33,22 @@ const {
   tarkovDevFns: {
     confirmImport: vi.fn(async () => undefined),
     parseFile: vi.fn(async () => undefined),
+    parseProfileUrl: vi.fn<
+      (profileUrl: string) => Promise<{
+        mode: 'pvp' | 'pve' | null;
+        profileJsonUrl: string;
+        tarkovUid: number;
+      } | null>
+    >(async () => null),
     reset: vi.fn(),
+    setError: vi.fn<(message: string) => void>(),
   },
   tarkovDevState: {
     importError: { __v_isRef: true as const, value: null as string | null },
     previewData: { __v_isRef: true as const, value: null as Record<string, unknown> | null },
     importState: {
       __v_isRef: true as const,
-      value: 'idle' as 'idle' | 'preview' | 'success' | 'error',
+      value: 'idle' as 'idle' | 'loading' | 'preview' | 'success' | 'error',
     },
   },
   eftLogsFns: {
@@ -58,13 +67,23 @@ const {
     },
   },
   toastAddMock: vi.fn(),
+  mockLogger: {
+    debug: vi.fn(),
+    error: vi.fn(),
+    info: vi.fn(),
+    warn: vi.fn(),
+  },
   tarkovStoreState: {
     currentMode: 'pvp' as 'pvp' | 'pve',
+    setTarkovUid: vi.fn<(uid: number | null) => void>(),
     tarkovUid: null as number | null,
   },
 }));
 mockNuxtImport('useToast', () => () => ({
   add: toastAddMock,
+}));
+vi.mock('@/utils/logger', () => ({
+  logger: mockLogger,
 }));
 vi.mock('@/composables/useDataBackup', () => ({
   useDataBackup: () => ({
@@ -86,7 +105,9 @@ vi.mock('@/composables/useTarkovDevImport', () => ({
     previewData: tarkovDevState.previewData,
     importError: tarkovDevState.importError,
     parseFile: tarkovDevFns.parseFile,
+    parseProfileUrl: tarkovDevFns.parseProfileUrl,
     confirmImport: tarkovDevFns.confirmImport,
+    setError: tarkovDevFns.setError,
     reset: tarkovDevFns.reset,
   }),
 }));
@@ -129,6 +150,7 @@ vi.mock('@/stores/useTarkov', () => ({
     getPvEProgressData: () => ({}),
     getPvPProgressData: () => ({}),
     getTarkovUid: () => tarkovStoreState.tarkovUid,
+    setTarkovUid: tarkovStoreState.setTarkovUid,
   }),
 }));
 vi.mock('vue-i18n', async (importOriginal) => ({
@@ -144,7 +166,7 @@ vi.mock('vue-i18n', async (importOriginal) => ({
 }));
 const UButton = {
   template: '<button :disabled="disabled" @click="$emit(\'click\')"><slot /></button>',
-  props: ['disabled', 'href', 'target', 'rel'],
+  props: ['disabled', 'href', 'loading', 'target', 'rel'],
   emits: ['click'],
 };
 const findButtonByText = (wrapper: ReturnType<typeof mount>, text: string) => {
@@ -160,13 +182,20 @@ describe('DataManagementCard', () => {
     backupFns.resetImport.mockReset();
     tarkovDevFns.confirmImport.mockReset();
     tarkovDevFns.parseFile.mockReset();
+    tarkovDevFns.parseProfileUrl.mockReset();
     tarkovDevFns.reset.mockReset();
+    tarkovDevFns.setError.mockReset();
     eftLogsFns.confirmImport.mockReset();
     eftLogsFns.parseFile.mockReset();
     eftLogsFns.parseFiles.mockReset();
     eftLogsFns.reset.mockReset();
     eftLogsFns.setIncludedVersions.mockReset();
+    tarkovStoreState.setTarkovUid.mockClear();
+    tarkovStoreState.setTarkovUid.mockImplementation((uid: number | null) => {
+      tarkovStoreState.tarkovUid = uid;
+    });
     toastAddMock.mockReset();
+    mockLogger.error.mockReset();
     backupState.debugExportError.value = null;
     backupState.exportError.value = null;
     backupState.importError.value = null;
@@ -180,9 +209,15 @@ describe('DataManagementCard', () => {
     eftLogsState.previewData.value = null;
     tarkovStoreState.currentMode = 'pvp';
     tarkovStoreState.tarkovUid = null;
+    tarkovDevFns.setError.mockImplementation((message: string) => {
+      tarkovDevState.importError.value = message;
+      tarkovDevState.importState.value = 'error';
+      tarkovDevState.previewData.value = null;
+    });
   });
-  const createWrapper = () =>
+  const createWrapper = (props: { view?: 'all' | 'imports' | 'backup' } = {}) =>
     mount(DataManagementCard, {
+      props,
       global: {
         mocks: {
           $t: (key: string) => key,
@@ -192,14 +227,20 @@ describe('DataManagementCard', () => {
           GenericCard: {
             template: '<div><slot name="content" /></div>',
           },
+          'i18n-t': {
+            template: '<p><slot name="link" /></p>',
+          },
           ResetProgressSection: true,
-          UAlert: true,
+          UAlert: {
+            props: ['description', 'title'],
+            template: '<div><span>{{ title }}</span><span>{{ description }}</span></div>',
+          },
           UButton,
           UIcon: true,
           UInput: {
             template:
-              '<input :value="modelValue" @input="$emit(\'update:modelValue\', $event.target.value)" />',
-            props: ['modelValue'],
+              '<input :value="modelValue" :disabled="disabled" @input="$emit(\'update:modelValue\', $event.target.value)" />',
+            props: ['disabled', 'modelValue'],
             emits: ['update:modelValue'],
           },
           UTooltip: {
@@ -215,6 +256,26 @@ describe('DataManagementCard', () => {
         },
       },
     });
+  it('limits the imports view to profile and log import actions', () => {
+    const wrapper = createWrapper({ view: 'imports' });
+    expect(findButtonByText(wrapper, 'settings.tarkov_dev_import.fetch_profile')).toBeTruthy();
+    expect(
+      findButtonByText(wrapper, 'settings.data_management.import_eft_logs_folder_button')
+    ).toBeTruthy();
+    expect(findButtonByText(wrapper, 'settings.data_management.export_button')).toBeUndefined();
+    expect(
+      findButtonByText(wrapper, 'settings.data_management.debug_export_button')
+    ).toBeUndefined();
+  });
+  it('limits the backup view to backup and debug actions', () => {
+    const wrapper = createWrapper({ view: 'backup' });
+    expect(findButtonByText(wrapper, 'settings.data_management.export_button')).toBeTruthy();
+    expect(findButtonByText(wrapper, 'settings.data_management.debug_export_button')).toBeTruthy();
+    expect(findButtonByText(wrapper, 'settings.tarkov_dev_import.fetch_profile')).toBeUndefined();
+    expect(
+      findButtonByText(wrapper, 'settings.data_management.import_eft_logs_folder_button')
+    ).toBeUndefined();
+  });
   it('shows toast when export fails', async () => {
     backupState.exportError.value = 'Export failed';
     backupFns.exportProgress.mockImplementation(async () => {
@@ -263,6 +324,247 @@ describe('DataManagementCard', () => {
         title: 'settings.data_management.import_success_title',
       })
     );
+  });
+  it('fetches tarkov.dev profile url and uses the url mode for import preview', async () => {
+    tarkovDevFns.parseProfileUrl.mockResolvedValue({
+      mode: 'pve',
+      profileJsonUrl: 'https://players.tarkov.dev/pve/8560316.json',
+      tarkovUid: 8560316,
+    });
+    const wrapper = createWrapper();
+    const vm = asVm<{
+      handleTarkovDevProfileUrlSubmit: () => Promise<void>;
+      tarkovDevProfileUrlInput: string;
+      tarkovDevTargetMode: 'pvp' | 'pve';
+    }>(wrapper.vm);
+    vm.tarkovDevProfileUrlInput = 'https://tarkov.dev/players/pve/8560316';
+    await vm.handleTarkovDevProfileUrlSubmit();
+    expect(tarkovDevFns.parseProfileUrl).toHaveBeenCalledWith(
+      'https://tarkov.dev/players/pve/8560316'
+    );
+    expect(vm.tarkovDevTargetMode).toBe('pve');
+  });
+  it('keeps the current tarkov.dev target mode when the fetched source has no mode', async () => {
+    tarkovDevFns.parseProfileUrl.mockResolvedValue({
+      mode: null,
+      profileJsonUrl: 'https://players.tarkov.dev/profile/8560316.json',
+      tarkovUid: 8560316,
+    });
+    const wrapper = createWrapper();
+    const vm = asVm<{
+      handleTarkovDevProfileUrlSubmit: () => Promise<void>;
+      tarkovDevProfileUrlInput: string;
+      tarkovDevTargetMode: 'pvp' | 'pve';
+    }>(wrapper.vm);
+    vm.tarkovDevTargetMode = 'pve';
+    vm.tarkovDevProfileUrlInput = 'https://players.tarkov.dev/profile/8560316.json';
+    await vm.handleTarkovDevProfileUrlSubmit();
+    expect(tarkovDevFns.parseProfileUrl).toHaveBeenCalledWith(
+      'https://players.tarkov.dev/profile/8560316.json'
+    );
+    expect(vm.tarkovDevTargetMode).toBe('pve');
+  });
+  it('disables import actions while tarkov.dev profile fetch is loading', () => {
+    tarkovDevState.importState.value = 'loading';
+    const wrapper = createWrapper();
+    expect(
+      findButtonByText(wrapper, 'settings.data_management.import_backup_button')?.attributes(
+        'disabled'
+      )
+    ).toBeDefined();
+    expect(
+      findButtonByText(
+        wrapper,
+        'settings.data_management.import_eft_logs_folder_button'
+      )?.attributes('disabled')
+    ).toBeDefined();
+    expect(
+      findButtonByText(wrapper, 'settings.tarkov_dev_import.fetch_profile')?.attributes('disabled')
+    ).toBeDefined();
+    expect(wrapper.find('input:not([type="file"])').attributes('disabled')).toBeDefined();
+    expect(asVm<{ isAnyImportActive: boolean }>(wrapper.vm).isAnyImportActive).toBe(true);
+    expect(asVm<{ isAnyImportPreviewActive: boolean }>(wrapper.vm).isAnyImportPreviewActive).toBe(
+      false
+    );
+  });
+  it('blocks backup controls while a shared imports flow is loading', () => {
+    tarkovDevState.importState.value = 'loading';
+    const wrapper = createWrapper({ view: 'backup' });
+    expect(wrapper.text()).toContain('settings.data_management.active_flow_blocked_title');
+    expect(wrapper.text()).toContain(
+      'settings.data_management.active_flow_blocked_description:{"flow":"settings.data_management.flow_tarkov_dev"}'
+    );
+    expect(findButtonByText(wrapper, 'settings.data_management.import_backup_button')).toBe(
+      undefined
+    );
+  });
+  it('blocks imports controls while a shared backup restore is active', () => {
+    backupState.importState.value = 'preview';
+    const wrapper = createWrapper({ view: 'imports' });
+    expect(wrapper.text()).toContain('settings.data_management.active_flow_blocked_title');
+    expect(wrapper.text()).toContain(
+      'settings.data_management.active_flow_blocked_description:{"flow":"settings.data_management.flow_backup"}'
+    );
+    expect(findButtonByText(wrapper, 'settings.tarkov_dev_import.fetch_profile')).toBeUndefined();
+    expect(
+      findButtonByText(wrapper, 'settings.data_management.import_eft_logs_folder_button')
+    ).toBeUndefined();
+  });
+  it('puts tarkov.dev submit failures into a safe error state', async () => {
+    tarkovDevFns.parseProfileUrl.mockRejectedValue(new Error('submit failed'));
+    const wrapper = createWrapper();
+    const vm = asVm<{
+      handleTarkovDevProfileUrlSubmit: () => Promise<void>;
+      tarkovDevProfileUrlInput: string;
+    }>(wrapper.vm);
+    vm.tarkovDevProfileUrlInput = 'https://tarkov.dev/players/regular/8560316';
+    await vm.handleTarkovDevProfileUrlSubmit();
+    expect(tarkovDevFns.setError).toHaveBeenCalledWith(
+      'settings.tarkov_dev_import.errors.unexpected_profile_flow'
+    );
+    expect(mockLogger.error).toHaveBeenCalledWith(
+      'DataManagementCard: Tarkov.dev profile flow failed',
+      expect.objectContaining({
+        action: 'profile_url_submit',
+        feature: 'settings.data_management',
+      })
+    );
+  });
+  it('puts tarkov.dev refetch failures into a safe error state', async () => {
+    tarkovDevFns.parseProfileUrl.mockRejectedValue(new Error('refetch failed'));
+    tarkovStoreState.tarkovUid = 123456;
+    const wrapper = createWrapper();
+    await asVm<{ handleTarkovDevRefetch: () => Promise<void> }>(
+      wrapper.vm
+    ).handleTarkovDevRefetch();
+    expect(tarkovDevFns.setError).toHaveBeenCalledWith(
+      'settings.tarkov_dev_import.errors.unexpected_profile_flow'
+    );
+    expect(mockLogger.error).toHaveBeenCalledWith(
+      'DataManagementCard: Tarkov.dev profile flow failed',
+      expect.objectContaining({
+        action: 'profile_refetch',
+        feature: 'settings.data_management',
+      })
+    );
+  });
+  it('refetches a linked tarkov.dev profile from the selected source mode', async () => {
+    tarkovDevFns.parseProfileUrl.mockResolvedValue({
+      mode: 'pve',
+      profileJsonUrl: 'https://players.tarkov.dev/pve/123456.json',
+      tarkovUid: 123456,
+    });
+    tarkovStoreState.currentMode = 'pvp';
+    tarkovStoreState.tarkovUid = 123456;
+    const wrapper = createWrapper();
+    expect(findButtonByText(wrapper, 'settings.tarkov_dev_import.fetch_profile')).toBeUndefined();
+    await findButtonByText(wrapper, 'settings.tarkov_dev_import.refetch_mode_pve')!.trigger(
+      'click'
+    );
+    await asVm<{ handleTarkovDevRefetch: () => Promise<void> }>(
+      wrapper.vm
+    ).handleTarkovDevRefetch();
+    expect(tarkovDevFns.parseProfileUrl).toHaveBeenCalledWith(
+      'https://tarkov.dev/players/pve/123456'
+    );
+    expect(asVm<{ tarkovDevTargetMode: 'pvp' | 'pve' }>(wrapper.vm).tarkovDevTargetMode).toBe(
+      'pve'
+    );
+  });
+  it('shows the locked tarkov.dev target mode after refetching a mode-specific profile', async () => {
+    tarkovDevState.importState.value = 'preview';
+    tarkovDevState.previewData.value = {
+      displayName: 'Tester',
+      gameEditionGuess: null,
+      pmcFaction: 'USEC',
+      prestigeLevel: 0,
+      skills: {},
+      tarkovUid: 123456,
+      totalXP: 0,
+    };
+    tarkovDevFns.parseProfileUrl.mockImplementation(async () => {
+      return {
+        mode: 'pve',
+        profileJsonUrl: 'https://players.tarkov.dev/pve/123456.json',
+        tarkovUid: 123456,
+      };
+    });
+    tarkovStoreState.tarkovUid = 123456;
+    const wrapper = createWrapper();
+    asVm<{ selectTarkovDevRefetchMode: (mode: 'pve') => void }>(
+      wrapper.vm
+    ).selectTarkovDevRefetchMode('pve');
+    await asVm<{ handleTarkovDevRefetch: () => Promise<void> }>(
+      wrapper.vm
+    ).handleTarkovDevRefetch();
+    await wrapper.vm.$nextTick();
+    expect(wrapper.text()).toContain(
+      'settings.tarkov_dev_import.import_target_notice:{"mode":"settings.game_settings.pve"}'
+    );
+    expect(wrapper.text()).not.toContain('settings.tarkov_dev_import.import_to_mode');
+  });
+  it('shows arena as disabled for linked tarkov.dev refetches', () => {
+    tarkovStoreState.tarkovUid = 123456;
+    const wrapper = createWrapper();
+    const arenaButton = findButtonByText(wrapper, 'settings.tarkov_dev_import.refetch_mode_arena');
+    expect(arenaButton?.attributes('disabled')).toBeDefined();
+  });
+  it('unlinks a tarkov.dev profile without resetting imported tracker data', () => {
+    tarkovStoreState.tarkovUid = 123456;
+    const wrapper = createWrapper();
+    asVm<{ handleTarkovDevUnlink: () => void }>(wrapper.vm).handleTarkovDevUnlink();
+    expect(tarkovStoreState.setTarkovUid).toHaveBeenCalledWith(null);
+    expect(tarkovStoreState.tarkovUid).toBeNull();
+    expect(backupFns.resetImport).not.toHaveBeenCalled();
+    expect(tarkovDevFns.reset).not.toHaveBeenCalled();
+  });
+  it('unlink resets refetch mode back to the current game mode', () => {
+    tarkovStoreState.tarkovUid = 123456;
+    const wrapper = createWrapper();
+    asVm<{ selectTarkovDevRefetchMode: (mode: 'pve') => void }>(
+      wrapper.vm
+    ).selectTarkovDevRefetchMode('pve');
+    expect(tarkovStoreState.currentMode).toBe('pvp');
+    asVm<{ handleTarkovDevUnlink: () => void }>(wrapper.vm).handleTarkovDevUnlink();
+    // The unlink handler resets refetchMode to currentGameMode (pvp).
+    expect(tarkovStoreState.setTarkovUid).toHaveBeenCalledWith(null);
+  });
+  it('resetTarkovDevImport clears fixed target mode and resets import state', () => {
+    tarkovDevState.importState.value = 'preview';
+    const wrapper = createWrapper();
+    const vm = asVm<{
+      tarkovDevFixedTargetMode: 'pvp' | 'pve' | null;
+      resetTarkovDevImport: () => void;
+    }>(wrapper.vm);
+    vm.tarkovDevFixedTargetMode = 'pve';
+    vm.resetTarkovDevImport();
+    expect(vm.tarkovDevFixedTargetMode).toBeNull();
+    expect(tarkovDevFns.reset).toHaveBeenCalled();
+  });
+  it('keeps parsed tarkov.dev skill values collapsed behind preview details', () => {
+    tarkovDevState.importState.value = 'preview';
+    tarkovDevState.previewData.value = {
+      displayName: 'Tester',
+      gameEditionGuess: null,
+      pmcFaction: 'USEC',
+      prestigeLevel: 0,
+      skills: {
+        Strength: 12,
+        Endurance: 5,
+        MyUnknownSkill: 2,
+      },
+      tarkovUid: 123456,
+      totalXP: 0,
+    };
+    const wrapper = createWrapper();
+    const skillDetails = wrapper.find('details');
+    expect(skillDetails.exists()).toBe(true);
+    expect(skillDetails.attributes('open')).toBeUndefined();
+    expect(wrapper.text()).toContain('settings.tarkov_dev_import.skills_details_toggle');
+    expect(wrapper.text()).toContain('Endurance');
+    expect(wrapper.text()).toContain('Strength');
+    expect(wrapper.text()).toContain('MyUnknownSkill');
+    expect(wrapper.text()).toContain('12');
   });
   it('forwards tarkov.dev confirmation using current target mode', async () => {
     tarkovStoreState.currentMode = 'pve';
