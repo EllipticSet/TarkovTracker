@@ -21,7 +21,7 @@
 - `app/plugins/` Nuxt plugins (Supabase, i18n, Vuetify, store init).
 - `app/server/api/` server API routes.
 - `app/server/api/tarkov/` tarkov.dev proxy handlers.
-- `app/locales/` JSON5 locale files.
+- `app/locales/` JSON locale files.
 - `app/assets/` shared styles/assets (if present).
 - `public/` static assets served as-is.
 - `docs/` project documentation.
@@ -50,7 +50,7 @@
 - `npm run lint:fix` auto-fixes lint issues in `app/`.
 - `npm run format` runs Prettier then ESLint fixes.
 - `npm run typecheck` runs Nuxt/Vue TypeScript checking.
-- Prettier targets `app/**/*.{js,ts,tsx,vue,json,json5,css,md}`.
+- Prettier targets `app/**/*.{js,ts,tsx,vue,json,css,md}`.
 - Prettier also formats `docs/**/*.{md,markdown}` and top-level configs.
 - Formatting uses `prettier-plugin-tailwindcss` for class sorting.
 - `printWidth` 100, `tabWidth` 2, `singleQuote` true, `semi` true.
@@ -164,7 +164,12 @@
 
 ## Localization
 
-- Locale files live in `app/locales/*.json5`.
+- Locale files live in `app/locales/*.json`.
+- `app/locales/en.json` is the source locale and the only locale file developers/AI should edit during normal feature work.
+- Crowdin owns non-English locale files (`de`, `es`, `fr`, `ru`, `uk`, `zh`); do not manually translate or bulk-edit them unless explicitly fixing a Crowdin export PR.
+- When adding or changing user-facing copy, update `en.json`, keep keys stable, then run `npm run i18n:check`.
+- If source keys changed and target files need matching structure, run `npm run i18n:sync`; this may add English fallback values for Crowdin to translate later and should not be treated as final translation work.
+- Treat PRs that add unsupported locale files or replace translated values with English source text as broken Crowdin exports.
 - Add keys consistently with existing namespace patterns.
 - Locale keys must be snake_case.
 - Provide safe fallback strings where appropriate.
