@@ -34,8 +34,18 @@ jobs:
       - name: Test with coverage
         run: npm run test:coverage
 
+      - name: Check CodeAnt token
+        id: codeant-token
+        if: github.event_name != 'pull_request' || github.event.pull_request.head.repo.full_name == github.repository
+        run: |
+          if [ -n "$CODEANT_ACCESS_TOKEN" ]; then
+            echo "available=true" >> "$GITHUB_OUTPUT"
+          fi
+        env:
+          CODEANT_ACCESS_TOKEN: ${{ secrets.ACCESS_TOKEN_GITHUB }}
+
       - name: Upload coverage to CodeAnt AI
-        if: (github.event_name != 'pull_request' || github.event.pull_request.head.repo.full_name == github.repository) && github.secret_source == 'Actions'
+        if: steps.codeant-token.outputs.available == 'true'
         uses: CodeAnt-AI/codeant-coverage-action@0d670ed6f27284867ef4373f2a9a568a5aeffce2
         with:
           access_token: ${{ secrets.ACCESS_TOKEN_GITHUB }}
