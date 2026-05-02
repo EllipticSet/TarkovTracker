@@ -193,6 +193,8 @@ describe('ComponentName', () => {
 ## Localization
 
 - Locale files: `app/locales/*.json`
+- `app/locales/en.json` is the source locale and should be reviewed for key structure, placeholders, and source copy.
+- Non-English locale files are Crowdin-owned generated exports. Do not review placeholder or untranslated values there unless the PR is explicitly fixing a Crowdin export problem.
 - Add keys consistently with existing namespace patterns
 - Never hard-code user-facing strings in components
 - Provide safe fallback strings

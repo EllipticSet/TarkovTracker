@@ -2,8 +2,19 @@ language: en-US
 reviews:
   auto_review:
     enabled: true
+  path_filters:
+    - '!app/locales/de.json'
+    - '!app/locales/es.json'
+    - '!app/locales/fr.json'
+    - '!app/locales/ru.json'
+    - '!app/locales/uk.json'
+    - '!app/locales/zh.json'
   path_instructions:
-    - path: "**/*.{ts,tsx,vue,js,jsx}"
+    - path: 'app/locales/en.json'
+      instructions: |
+        Review this as the source locale only. Check key names, structure, interpolation placeholders,
+        and whether source copy belongs in existing namespaces.
+    - path: '**/*.{ts,tsx,vue,js,jsx}'
       instructions: |
         IMPORTANT: If a suggestion conflicts with ESLint/Prettier/AGENTS.md rules, do not suggest it.
         Treat those style suggestions as non-actionable.
