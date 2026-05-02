@@ -1,3 +1,10 @@
+## [1.33.4](https://github.com/tarkovtracker-org/TarkovTracker/compare/v1.33.3...v1.33.4) (2026-05-02)
+
+
+### Bug Fixes
+
+* **app:** address analysis findings ([fa928bb](https://github.com/tarkovtracker-org/TarkovTracker/commit/fa928bbae4b872cc7abe5251dc09ac01a5119a06))
+
 ## [1.33.3](https://github.com/tarkovtracker-org/TarkovTracker/compare/v1.33.2...v1.33.3) (2026-05-01)
 
 
