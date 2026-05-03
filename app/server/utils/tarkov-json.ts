@@ -28,6 +28,21 @@ const DEFAULT_TIMEOUT_MS = 30000;
 const DEFAULT_MAX_RETRIES = 3;
 const ENGLISH_LANGUAGE = 'en';
 const PRESTIGE_SOURCE_GAME_MODE = 'regular';
+const MAX_DETAILED_OBJECTIVE_ITEMS = 24;
+const HIDEOUT_SKILL_REQUIREMENT_SKILLS: Record<string, { id: string; name: string }> = {
+  '5d388e97081959000a123acf-2-3': { id: 'Endurance', name: 'Endurance' },
+  '5d473c1e081959000e530190-3-5': { id: 'Strength', name: 'Strength' },
+  '5d484fb3654e7600681d9314-2-1': { id: 'Endurance', name: 'Endurance' },
+  '5d484fc8654e760065037abf-2-3': { id: 'Attention', name: 'Attention' },
+  '5d484fcd654e7668ec2ec322-2-2': { id: 'Health', name: 'Health' },
+  '5d484fcd654e7668ec2ec322-3-8': { id: 'Vitality', name: 'Vitality' },
+  '5d484fd1654e76006732bf2e-3-4': { id: 'Metabolism', name: 'Metabolism' },
+  '5d484fdf654e7600691aadf8-2-7': { id: 'Attention', name: 'Attention' },
+  '5d494a0e5b56502f18c98a02-1-2': {
+    id: 'HideoutManagement',
+    name: 'Hideout Management',
+  },
+};
 type JsonRecord = Record<string, unknown>;
 type TarkovJsonEndpoint = 'hideout' | 'items' | 'maps' | 'tasks' | 'traders';
 type TarkovJsonEnvelope<T = unknown> = {
@@ -352,6 +367,58 @@ function adaptItemRef(value: unknown, context: AdapterContext): TarkovItem {
     properties: rawProperties,
   }) as TarkovItem;
 }
+function adaptObjectiveItemRef(value: unknown, context: AdapterContext): TarkovItem {
+  const id = stringId(value) ?? '';
+  const raw = readRecordRef(value, context.itemsById, context.questItemsById);
+  if (!raw) return { id };
+  const rawProperties = isRecord(raw.properties) ? raw.properties : undefined;
+  const rawDefaultPreset = isRecord(rawProperties?.defaultPreset)
+    ? rawProperties.defaultPreset
+    : readRecordRef(rawProperties?.defaultPreset, context.itemsById);
+  const defaultPreset = rawDefaultPreset
+    ? compactObject({
+        id: stringId(rawDefaultPreset),
+        iconLink:
+          typeof rawDefaultPreset.iconLink === 'string' ? rawDefaultPreset.iconLink : undefined,
+        image512pxLink:
+          typeof rawDefaultPreset.image512pxLink === 'string'
+            ? rawDefaultPreset.image512pxLink
+            : undefined,
+        backgroundColor:
+          typeof rawDefaultPreset.backgroundColor === 'string'
+            ? rawDefaultPreset.backgroundColor
+            : undefined,
+      })
+    : undefined;
+  return compactObject({
+    id: typeof raw.id === 'string' ? raw.id : id,
+    shortName: typeof raw.shortName === 'string' ? raw.shortName : undefined,
+    name: typeof raw.name === 'string' ? raw.name : undefined,
+    normalizedName: typeof raw.normalizedName === 'string' ? raw.normalizedName : undefined,
+    link: typeof raw.link === 'string' ? raw.link : undefined,
+    wikiLink: typeof raw.wikiLink === 'string' ? raw.wikiLink : undefined,
+    image512pxLink: typeof raw.image512pxLink === 'string' ? raw.image512pxLink : undefined,
+    image8xLink: typeof raw.image8xLink === 'string' ? raw.image8xLink : undefined,
+    gridImageLink: typeof raw.gridImageLink === 'string' ? raw.gridImageLink : undefined,
+    baseImageLink: typeof raw.baseImageLink === 'string' ? raw.baseImageLink : undefined,
+    iconLink: typeof raw.iconLink === 'string' ? raw.iconLink : undefined,
+    backgroundColor: typeof raw.backgroundColor === 'string' ? raw.backgroundColor : undefined,
+    properties: defaultPreset ? { defaultPreset } : undefined,
+  }) as TarkovItem;
+}
+function adaptObjectiveItemRefs(
+  values: unknown,
+  context: AdapterContext
+): TarkovItem[] | undefined {
+  if (!Array.isArray(values)) return undefined;
+  return values
+    .map((item, index) => {
+      if (index < MAX_DETAILED_OBJECTIVE_ITEMS) return adaptObjectiveItemRef(item, context);
+      const id = stringId(item);
+      return id ? ({ id } as TarkovItem) : undefined;
+    })
+    .filter((item): item is TarkovItem => Boolean(item?.id));
+}
 function adaptItem(raw: JsonRecord, context: AdapterContext, lite = false): TarkovItem {
   const categories = Array.isArray(raw.categories)
     ? raw.categories.map((category) => adaptCategoryRef(category, context)).filter(Boolean)
@@ -432,7 +499,7 @@ function adaptRequiredKeys(value: unknown, context: AdapterContext): TarkovItem[
   return value
     .map((group) => {
       const rawGroup = Array.isArray(group) ? group : [group];
-      return rawGroup.map((item) => adaptItemRef(item, context)).filter((item) => item.id);
+      return rawGroup.map((item) => adaptObjectiveItemRef(item, context)).filter((item) => item.id);
     })
     .filter((group) => group.length > 0);
 }
@@ -467,27 +534,25 @@ function adaptObjective(raw: JsonRecord, context: AdapterContext): TaskObjective
       ? raw.possibleLocations.map((location) => adaptMapWithPositions(location, context))
       : undefined,
     requiredKeys: adaptRequiredKeys(raw.requiredKeys, context),
-    item: raw.item ? adaptItemRef(raw.item, context) : undefined,
-    items: Array.isArray(raw.items)
-      ? raw.items.map((item) => adaptItemRef(item, context))
-      : undefined,
-    markerItem: raw.markerItem ? adaptItemRef(raw.markerItem, context) : undefined,
+    item: raw.item ? adaptObjectiveItemRef(raw.item, context) : undefined,
+    items: adaptObjectiveItemRefs(raw.items, context),
+    markerItem: raw.markerItem ? adaptObjectiveItemRef(raw.markerItem, context) : undefined,
     questItem: raw.questItem ? adaptItemRef(raw.questItem, context) : undefined,
     containsAll: Array.isArray(raw.containsAll)
-      ? raw.containsAll.map((item) => adaptItemRef(item, context))
+      ? raw.containsAll.map((item) => adaptObjectiveItemRef(item, context))
       : undefined,
     useAny: Array.isArray(raw.useAny)
-      ? raw.useAny.map((item) => adaptItemRef(item, context))
+      ? raw.useAny.map((item) => adaptObjectiveItemRef(item, context))
       : undefined,
-    usingWeapon: raw.usingWeapon ? adaptItemRef(raw.usingWeapon, context) : undefined,
+    usingWeapon: raw.usingWeapon ? adaptObjectiveItemRef(raw.usingWeapon, context) : undefined,
     usingWeaponMods: Array.isArray(raw.usingWeaponMods)
-      ? raw.usingWeaponMods.map((item) => adaptItemRef(item, context))
+      ? raw.usingWeaponMods.map((item) => adaptObjectiveItemRef(item, context))
       : undefined,
     wearing: Array.isArray(raw.wearing)
-      ? raw.wearing.map((item) => adaptItemRef(item, context))
+      ? raw.wearing.map((item) => adaptObjectiveItemRef(item, context))
       : undefined,
     notWearing: Array.isArray(raw.notWearing)
-      ? raw.notWearing.map((item) => adaptItemRef(item, context))
+      ? raw.notWearing.map((item) => adaptObjectiveItemRef(item, context))
       : undefined,
     hideoutStation: stationValue ? adaptHideoutRef(stationValue, context) : undefined,
     skillLevel:
@@ -635,11 +700,34 @@ function adaptHideoutRequirement(raw: unknown, context: AdapterContext) {
         value: String(value),
       }))
     : raw.attributes;
+  const skillValue = raw.skill;
+  const skillFallback =
+    typeof raw.id === 'string' ? HIDEOUT_SKILL_REQUIREMENT_SKILLS[raw.id] : undefined;
+  const skillName =
+    isRecord(skillValue) && typeof skillValue.name === 'string'
+      ? skillValue.name
+      : typeof skillValue === 'string'
+        ? skillValue
+        : typeof raw.name === 'string'
+          ? raw.name
+          : skillFallback?.name;
+  const skillId =
+    isRecord(skillValue) && typeof skillValue.id === 'string'
+      ? skillValue.id
+      : skillFallback?.id || skillName;
   return compactObject({
     ...raw,
     attributes,
     item: raw.item ? adaptItemRef(raw.item, context) : undefined,
+    name: skillName,
     quantity: typeof raw.quantity === 'number' ? raw.quantity : raw.count,
+    skill:
+      skillName && skillId
+        ? {
+            id: skillId,
+            name: skillName,
+          }
+        : undefined,
     station: raw.station ? adaptHideoutRef(raw.station, context) : undefined,
     trader: raw.trader ? adaptTraderRef(raw.trader, context) : undefined,
   });
@@ -872,51 +960,67 @@ export function createTarkovJsonMapSpawnsFetcher(options: TarkovJsonOptions) {
 }
 export function createTarkovJsonTaskObjectivesFetcher(options: TarkovJsonOptions) {
   return async () => {
-    const [tasksPayload, itemsPayload, mapsPayload, hideoutPayload, tradersPayload] =
-      await Promise.all([
+    try {
+      const [tasksPayload, hideoutPayload, tradersPayload] = await Promise.all([
         fetchTarkovJsonEndpoint<JsonTasksPayload>('tasks', options),
-        fetchTarkovJsonEndpoint<JsonItemsPayload>('items', options),
-        fetchTarkovJsonEndpoint<JsonMapsPayload>('maps', options),
         fetchTarkovJsonEndpoint<unknown>('hideout', options),
         fetchTarkovJsonEndpoint<unknown>('traders', options),
       ]);
-    return adaptTaskObjectivesResponse(tasksPayload, {
-      hideoutPayload,
-      itemsPayload,
-      mapsPayload,
-      tradersPayload,
-    });
+      return adaptTaskObjectivesResponse(tasksPayload, {
+        hideoutPayload,
+        tradersPayload,
+      });
+    } catch (error) {
+      logger.error('Failed to build task objectives payload from tasks, hideout, and traders', {
+        error,
+      });
+      throw error;
+    }
   };
 }
 export function createTarkovJsonTaskRewardsFetcher(options: TarkovJsonOptions) {
   return async () => {
-    const [tasksPayload, itemsPayload, tradersPayload] = await Promise.all([
-      fetchTarkovJsonEndpoint<JsonTasksPayload>('tasks', options),
-      fetchTarkovJsonEndpoint<JsonItemsPayload>('items', options),
-      fetchTarkovJsonEndpoint<unknown>('traders', options),
-    ]);
-    return adaptTaskRewardsResponse(tasksPayload, { itemsPayload, tradersPayload });
+    try {
+      const [tasksPayload, tradersPayload] = await Promise.all([
+        fetchTarkovJsonEndpoint<JsonTasksPayload>('tasks', options),
+        fetchTarkovJsonEndpoint<unknown>('traders', options),
+      ]);
+      return adaptTaskRewardsResponse(tasksPayload, { tradersPayload });
+    } catch (error) {
+      logger.error('Failed to build task rewards payload from tasks and traders', { error });
+      throw error;
+    }
   };
 }
 export function createTarkovJsonHideoutFetcher(options: TarkovJsonOptions) {
   return async () => {
-    const [hideoutPayload, itemsPayload, tradersPayload] = await Promise.all([
-      fetchTarkovJsonEndpoint<unknown>('hideout', options),
-      fetchTarkovJsonEndpoint<JsonItemsPayload>('items', options),
-      fetchTarkovJsonEndpoint<unknown>('traders', options),
-    ]);
-    return adaptHideoutResponse(hideoutPayload, { itemsPayload, tradersPayload });
+    try {
+      const [hideoutPayload, tradersPayload] = await Promise.all([
+        fetchTarkovJsonEndpoint<unknown>('hideout', options),
+        fetchTarkovJsonEndpoint<unknown>('traders', options),
+      ]);
+      return adaptHideoutResponse(hideoutPayload, { tradersPayload });
+    } catch (error) {
+      logger.error('Failed to build hideout payload from hideout and traders', { error });
+      throw error;
+    }
   };
 }
 export function createTarkovJsonPrestigeFetcher(options: TarkovJsonPrestigeOptions) {
   const regularOptions: TarkovJsonOptions = { ...options, gameMode: PRESTIGE_SOURCE_GAME_MODE };
   return async () => {
-    const [tasksPayload, itemsPayload, hideoutPayload, tradersPayload] = await Promise.all([
-      fetchTarkovJsonEndpoint<JsonTasksPayload>('tasks', regularOptions),
-      fetchTarkovJsonEndpoint<JsonItemsPayload>('items', regularOptions),
-      fetchTarkovJsonEndpoint<unknown>('hideout', regularOptions),
-      fetchTarkovJsonEndpoint<unknown>('traders', regularOptions),
-    ]);
-    return adaptPrestigeResponse(tasksPayload, { hideoutPayload, itemsPayload, tradersPayload });
+    try {
+      const [tasksPayload, hideoutPayload, tradersPayload] = await Promise.all([
+        fetchTarkovJsonEndpoint<JsonTasksPayload>('tasks', regularOptions),
+        fetchTarkovJsonEndpoint<unknown>('hideout', regularOptions),
+        fetchTarkovJsonEndpoint<unknown>('traders', regularOptions),
+      ]);
+      return adaptPrestigeResponse(tasksPayload, { hideoutPayload, tradersPayload });
+    } catch (error) {
+      logger.error('Failed to build prestige payload from tasks, hideout, and traders', {
+        error,
+      });
+      throw error;
+    }
   };
 }

@@ -261,6 +261,7 @@ describe('tarkov JSON adapters', () => {
         image512pxLink: 'image.webp',
         backgroundColor: 'blue',
         categories: ['cat1'],
+        properties: { cures: ['LightBleeding'], useTime: 3 },
       },
       item2: { id: 'item2', name: 'Roubles' },
     },
@@ -292,7 +293,15 @@ describe('tarkov JSON adapters', () => {
             { id: 'req1', item: 'item1', count: 1, attributes: { foundInRaid: true } },
           ],
           stationLevelRequirements: [],
-          skillRequirements: [],
+          skillRequirements: [
+            { id: '5d494a0e5b56502f18c98a02-1-2', level: 5 },
+            {
+              id: 'skill-req2',
+              level: 3,
+              name: 'Skill requirement label',
+              skill: { id: 'Strength', name: 'Strength' },
+            },
+          ],
           traderRequirements: [{ id: 'trader-req1', trader: 'trader1', value: 1 }],
         },
       ],
@@ -331,7 +340,7 @@ describe('tarkov JSON adapters', () => {
           {
             id: 'objective1',
             type: 'giveItem',
-            items: ['item1'],
+            items: ['item1', ...Array.from({ length: 25 }, (_, index) => `bulk-item-${index}`)],
             maps: ['map1'],
             count: 1,
             requiredKeys: [['item1'], ['item2', 'missing-item']],
@@ -380,7 +389,31 @@ describe('tarkov JSON adapters', () => {
       spawns: [{ zoneName: 'spawn-a' }],
     });
   });
-  it('adapts task objectives and rewards', () => {
+  it('adapts task objectives and rewards without items/maps lookups', () => {
+    const objectives = adaptTaskObjectivesResponse(tasksPayload, {
+      hideoutPayload,
+      tradersPayload,
+    }).data.tasks[0];
+    expect(objectives?.objectives?.[0]?.maps).toEqual([{ id: 'map1' }]);
+    expect(objectives?.objectives?.[0]?.requiredKeys).toEqual([
+      [{ id: 'item1' }],
+      [{ id: 'item2' }, { id: 'missing-item' }],
+    ]);
+    expect(objectives?.objectives?.[0]?.__typename).toBe('TaskObjectiveItem');
+    expect(objectives?.objectives?.[0]?.items?.[0]).toEqual({ id: 'item1' });
+    expect(objectives?.objectives?.[0]?.items?.[24]).toEqual({ id: 'bulk-item-23' });
+    expect(objectives?.objectives?.[0]?.items?.[25]).toEqual({ id: 'bulk-item-24' });
+    expect(objectives?.objectives?.[1]).toMatchObject({
+      __typename: 'TaskObjectiveQuestItem',
+      questItem: { id: 'questItem1', name: 'Bronze pocket watch' },
+    });
+    const rewards = adaptTaskRewardsResponse(tasksPayload, { tradersPayload }).data.tasks[0];
+    expect(rewards?.finishRewards?.items?.[0]?.item).toEqual({ id: 'item1' });
+    expect(rewards?.failureOutcome?.skillLevelReward?.[0]?.skill).toMatchObject({
+      name: 'Strength',
+    });
+  });
+  it('adapts task objectives with full item/map lookups when provided', () => {
     const objectives = adaptTaskObjectivesResponse(tasksPayload, {
       hideoutPayload,
       itemsPayload,
@@ -389,34 +422,31 @@ describe('tarkov JSON adapters', () => {
     }).data.tasks[0];
     expect(objectives?.objectives?.[0]).toMatchObject({
       __typename: 'TaskObjectiveItem',
-      items: [{ id: 'item1', name: 'Salewa' }],
       maps: [{ id: 'map1', name: 'Customs' }],
-      requiredKeys: [
-        [{ id: 'item1', name: 'Salewa' }],
-        [{ id: 'item2', name: 'Roubles' }, { id: 'missing-item' }],
-      ],
-    });
-    expect(objectives?.objectives?.[1]).toMatchObject({
-      __typename: 'TaskObjectiveQuestItem',
-      questItem: { id: 'questItem1', name: 'Bronze pocket watch' },
-    });
-    const rewards = adaptTaskRewardsResponse(tasksPayload, { itemsPayload, tradersPayload }).data
-      .tasks[0];
-    expect(rewards?.finishRewards?.items?.[0]?.item).toMatchObject({ id: 'item1' });
-    expect(rewards?.failureOutcome?.skillLevelReward?.[0]?.skill).toMatchObject({
-      name: 'Strength',
+      items: expect.arrayContaining([expect.objectContaining({ id: 'item1', name: 'Salewa' })]),
     });
   });
-  it('adapts hideout and prestige data', () => {
-    const hideout = adaptHideoutResponse(hideoutPayload, { itemsPayload, tradersPayload }).data;
+  it('adapts hideout and prestige data without items lookup', () => {
+    const hideout = adaptHideoutResponse(hideoutPayload, { tradersPayload }).data;
     expect(hideout.hideoutStations[0]?.levels[0]?.itemRequirements[0]).toMatchObject({
-      item: { id: 'item1', name: 'Salewa' },
+      item: { id: 'item1' },
       quantity: 1,
       attributes: [{ name: 'foundInRaid', type: 'foundInRaid', value: 'true' }],
     });
+    expect(hideout.hideoutStations[0]?.levels[0]?.skillRequirements[0]).toMatchObject({
+      id: '5d494a0e5b56502f18c98a02-1-2',
+      level: 5,
+      name: 'Hideout Management',
+      skill: { id: 'HideoutManagement', name: 'Hideout Management' },
+    });
+    expect(hideout.hideoutStations[0]?.levels[0]?.skillRequirements[1]).toMatchObject({
+      id: 'skill-req2',
+      level: 3,
+      name: 'Strength',
+      skill: { id: 'Strength', name: 'Strength' },
+    });
     const prestige = adaptPrestigeResponse(tasksPayload, {
       hideoutPayload,
-      itemsPayload,
       tradersPayload,
     }).data.prestige[0];
     expect(prestige?.conditions?.map((condition) => condition.__typename)).toEqual([
