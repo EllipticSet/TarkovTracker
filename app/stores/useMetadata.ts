@@ -201,6 +201,7 @@ type MutablePromiseStore = {
   -readonly [K in keyof PromiseStore]: PromiseStore[K];
 };
 const storePromises = new WeakMap<object, MutablePromiseStore>();
+const storePromiseRequestKeys = new WeakMap<object, Partial<Record<PromiseKey, string>>>();
 function getPromiseStore(storeInstance: object): MutablePromiseStore {
   let promises = storePromises.get(storeInstance);
   if (!promises) {
@@ -222,6 +223,14 @@ function getPromiseStore(storeInstance: object): MutablePromiseStore {
     storePromises.set(storeInstance, promises);
   }
   return promises;
+}
+function getPromiseRequestKeyStore(storeInstance: object): Partial<Record<PromiseKey, string>> {
+  let keys = storePromiseRequestKeys.get(storeInstance);
+  if (!keys) {
+    keys = {};
+    storePromiseRequestKeys.set(storeInstance, keys);
+  }
+  return keys;
 }
 // Helper type to safely access item properties that might be missing in older type definitions
 type ObjectiveWithItems = TaskObjective & {
@@ -776,19 +785,35 @@ export const useMetadataStore = defineStore('metadata', {
       logName: string;
       forceRefresh?: boolean;
       promiseKey?: PromiseKey;
+      promiseRequestKey?: string;
       throwOnError?: boolean;
     }): Promise<void> {
-      const { promiseKey, forceRefresh = false } = config;
+      const { promiseKey, promiseRequestKey, forceRefresh = false } = config;
       if (promiseKey) {
         const promises = getPromiseStore(this);
+        const requestKeys = getPromiseRequestKeyStore(this);
         const existing = promises[promiseKey];
-        if (existing && !forceRefresh) return existing;
+        if (
+          existing &&
+          !forceRefresh &&
+          (!promiseRequestKey || requestKeys[promiseKey] === promiseRequestKey)
+        ) {
+          return existing;
+        }
         const promise = this._doFetchWithCache<T>(config);
         promises[promiseKey] = promise;
+        if (promiseRequestKey) {
+          requestKeys[promiseKey] = promiseRequestKey;
+        } else {
+          requestKeys[promiseKey] = undefined;
+        }
         try {
           await promise;
         } finally {
-          promises[promiseKey] = null;
+          if (promises[promiseKey] === promise) {
+            promises[promiseKey] = null;
+            requestKeys[promiseKey] = undefined;
+          }
         }
         return;
       }
@@ -821,6 +846,7 @@ export const useMetadataStore = defineStore('metadata', {
       logName: string;
       forceRefresh?: boolean;
       promiseKey?: PromiseKey;
+      promiseRequestKey?: string;
       throwOnError?: boolean;
     }): Promise<void> {
       const perfTimer = perfStart(`[Metadata] fetch ${config.logName}`, {
@@ -1366,89 +1392,109 @@ export const useMetadataStore = defineStore('metadata', {
      * Fetch lightweight items data for early UI hydration
      */
     async fetchItemsLiteData(forceRefresh = false) {
-      const apiGameMode = this.getApiGameMode();
+      const requestLanguage = this.languageCode;
+      const requestGameMode = this.getApiGameMode();
+      const requestKey = `${requestLanguage}-${requestGameMode}`;
       if (
         this.itemsFullLoaded &&
-        this.itemsLanguage === this.languageCode &&
-        this.itemsGameMode === apiGameMode &&
+        this.itemsLanguage === requestLanguage &&
+        this.itemsGameMode === requestGameMode &&
         !forceRefresh
       )
         return;
       if (
         this.items.length > 0 &&
-        this.itemsLanguage === this.languageCode &&
-        this.itemsGameMode === apiGameMode &&
+        this.itemsLanguage === requestLanguage &&
+        this.itemsGameMode === requestGameMode &&
         !forceRefresh
       )
         return;
       await this.fetchWithCache<TarkovItemsQueryResult>({
         cacheType: 'items-lite' as CacheType,
-        cacheKey: `${ITEMS_CACHE_VERSION}-${apiGameMode}`,
+        cacheKey: `${ITEMS_CACHE_VERSION}-${requestGameMode}`,
+        cacheLanguage: requestLanguage,
         endpoint: '/api/tarkov/items-lite',
-        queryParams: { gameMode: apiGameMode, lang: this.languageCode },
+        queryParams: { gameMode: requestGameMode, lang: requestLanguage },
         cacheTTL: CACHE_CONFIG.MAX_TTL,
         loadingKey: 'itemsLoading',
         errorKey: 'itemsError',
         processData: (data) => {
+          if (this.languageCode !== requestLanguage || this.getApiGameMode() !== requestGameMode) {
+            return;
+          }
           this.items = markRaw(data.items || []);
           this.rebuildItemsIndex();
-          this.itemsLanguage = this.languageCode;
-          this.itemsGameMode = apiGameMode;
+          this.itemsLanguage = requestLanguage;
+          this.itemsGameMode = requestGameMode;
           this.itemsFullLoaded = false;
           this.hydrateTaskItems();
           this.hydrateHideoutItems();
         },
         onEmpty: () => {
+          if (this.languageCode !== requestLanguage || this.getApiGameMode() !== requestGameMode) {
+            return;
+          }
           this.items = markRaw([]);
           this.itemsById = markRaw(new Map<string, TarkovItem>());
-          this.itemsLanguage = this.languageCode;
-          this.itemsGameMode = apiGameMode;
+          this.itemsLanguage = requestLanguage;
+          this.itemsGameMode = requestGameMode;
           this.itemsFullLoaded = false;
         },
         logName: 'Items (lite)',
         forceRefresh,
         promiseKey: 'itemsLitePromise',
+        promiseRequestKey: requestKey,
       });
     },
     /**
      * Fetch full items data for the active language and game mode
      */
     async fetchItemsFullData(forceRefresh = false) {
-      const apiGameMode = this.getApiGameMode();
+      const requestLanguage = this.languageCode;
+      const requestGameMode = this.getApiGameMode();
+      const requestKey = `${requestLanguage}-${requestGameMode}`;
       if (
         this.itemsFullLoaded &&
-        this.itemsLanguage === this.languageCode &&
-        this.itemsGameMode === apiGameMode &&
+        this.itemsLanguage === requestLanguage &&
+        this.itemsGameMode === requestGameMode &&
         !forceRefresh
       )
         return;
       await this.fetchWithCache<TarkovItemsQueryResult>({
         cacheType: 'items' as CacheType,
-        cacheKey: `${ITEMS_CACHE_VERSION}-${apiGameMode}`,
+        cacheKey: `${ITEMS_CACHE_VERSION}-${requestGameMode}`,
+        cacheLanguage: requestLanguage,
         endpoint: '/api/tarkov/items',
-        queryParams: { gameMode: apiGameMode, lang: this.languageCode },
+        queryParams: { gameMode: requestGameMode, lang: requestLanguage },
         cacheTTL: CACHE_CONFIG.MAX_TTL,
         loadingKey: 'itemsLoading',
         errorKey: 'itemsError',
         processData: (data) => {
+          if (this.languageCode !== requestLanguage || this.getApiGameMode() !== requestGameMode) {
+            return;
+          }
           this.items = markRaw(data.items || []);
           this.rebuildItemsIndex();
-          this.itemsLanguage = this.languageCode;
-          this.itemsGameMode = apiGameMode;
+          this.itemsLanguage = requestLanguage;
+          this.itemsGameMode = requestGameMode;
           this.itemsFullLoaded = true;
           this.hydrateTaskItems();
           this.hydrateHideoutItems();
         },
         onEmpty: () => {
+          if (this.languageCode !== requestLanguage || this.getApiGameMode() !== requestGameMode) {
+            return;
+          }
           this.items = markRaw([]);
           this.itemsById = markRaw(new Map<string, TarkovItem>());
-          this.itemsLanguage = this.languageCode;
-          this.itemsGameMode = apiGameMode;
+          this.itemsLanguage = requestLanguage;
+          this.itemsGameMode = requestGameMode;
           this.itemsFullLoaded = false;
         },
         logName: 'Items (full)',
         forceRefresh,
         promiseKey: 'itemsFullPromise',
+        promiseRequestKey: requestKey,
       });
     },
     /**

@@ -41,6 +41,26 @@ describe('fetchTarkovJsonEndpoint', () => {
     );
     expect(result.items.item1?.name).toBe('Bandage');
   });
+  it('supports an overridden JSON base URL', async () => {
+    const fetcher = createFetcher({
+      'https://json-mirror.example/regular/items': {
+        data: { items: { item1: { id: 'item1', name: 'item.name' } } },
+        translations: ['$.data.items.*.name'],
+      },
+      'https://json-mirror.example/regular/items_en': {
+        data: { 'item.name': 'Bandage' },
+      },
+    });
+    const result = await fetchTarkovJsonEndpoint<{ items: Record<string, { name: string }> }>(
+      'items',
+      {
+        baseUrl: 'https://json-mirror.example/',
+        deps: { fetcher },
+        lang: 'en',
+      }
+    );
+    expect(result.items.item1?.name).toBe('Bandage');
+  });
   it('falls back to English translations when the primary language is missing a key', async () => {
     const fetcher = createFetcher({
       'https://json.tarkov.dev/regular/tasks': {

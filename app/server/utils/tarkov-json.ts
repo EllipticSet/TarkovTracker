@@ -1,5 +1,6 @@
 import { JSONPath } from 'jsonpath-plus';
 import { $fetch } from 'ofetch';
+import { useRuntimeConfig } from '#imports';
 import { createLogger } from '@/server/utils/logger';
 import type { ValidGameMode } from '@/server/utils/tarkov-cache-config';
 import type {
@@ -52,6 +53,7 @@ type TarkovJsonDependencies = {
 type TarkovJsonOptions = {
   gameMode?: ValidGameMode;
   lang?: string;
+  baseUrl?: string;
   maxRetries?: number;
   timeoutMs?: number;
   deps?: TarkovJsonDependencies;
@@ -132,6 +134,23 @@ function validateEnvelope<T>(payload: unknown, path: string): TarkovJsonEnvelope
   }
   return payload as TarkovJsonEnvelope<T>;
 }
+function normalizeBaseUrl(value: string | undefined): string {
+  const baseUrl = value?.trim().replace(/\/+$/, '');
+  return baseUrl || TARKOV_JSON_BASE_URL;
+}
+function getRuntimeBaseUrl(): string | undefined {
+  try {
+    const runtimeConfig = useRuntimeConfig();
+    return typeof runtimeConfig.tarkovJsonBaseUrl === 'string'
+      ? runtimeConfig.tarkovJsonBaseUrl
+      : undefined;
+  } catch {
+    return undefined;
+  }
+}
+function resolveBaseUrl(options: TarkovJsonOptions): string {
+  return normalizeBaseUrl(options.baseUrl || getRuntimeBaseUrl());
+}
 async function fetchEnvelope<T>(
   path: string,
   options: TarkovJsonOptions
@@ -151,7 +170,7 @@ async function fetchEnvelope<T>(
     ? Math.max(1000, Math.floor(options.timeoutMs ?? DEFAULT_TIMEOUT_MS))
     : DEFAULT_TIMEOUT_MS;
   let lastError: Error | null = null;
-  const url = `${TARKOV_JSON_BASE_URL}/${path}`;
+  const url = `${resolveBaseUrl(options)}/${path}`;
   for (let attempt = 1; attempt <= maxRetries; attempt++) {
     try {
       const payload = await fetcher<TarkovJsonEnvelope<T>>(url, {
