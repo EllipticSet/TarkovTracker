@@ -798,7 +798,7 @@ export const useMetadataStore = defineStore('metadata', {
           !forceRefresh &&
           (!promiseRequestKey || requestKeys[promiseKey] === promiseRequestKey)
         ) {
-          return existing;
+          return await existing;
         }
         const promise = this._doFetchWithCache<T>(config);
         promises[promiseKey] = promise;
@@ -817,7 +817,7 @@ export const useMetadataStore = defineStore('metadata', {
         }
         return;
       }
-      return this._doFetchWithCache<T>(config);
+      return await this._doFetchWithCache<T>(config);
     },
     async _doFetchWithCache<T>(config: {
       cacheType: CacheType;
@@ -876,8 +876,14 @@ export const useMetadataStore = defineStore('metadata', {
         onEmpty,
         logName,
         forceRefresh = false,
+        promiseKey,
+        promiseRequestKey,
         throwOnError = false,
       } = config;
+      const isCurrentRequestContext = (): boolean => {
+        if (!promiseKey || !promiseRequestKey) return true;
+        return getPromiseRequestKeyStore(this)[promiseKey] === promiseRequestKey;
+      };
       // Reset error state if tracking errors
       if (errorKey) {
         this.$patch({ [errorKey]: null });
@@ -961,7 +967,7 @@ export const useMetadataStore = defineStore('metadata', {
         }
       } catch (err) {
         logger.error(`[MetadataStore] Error fetching ${logName} data:`, err);
-        if (errorKey) {
+        if (errorKey && isCurrentRequestContext()) {
           this.$patch({ [errorKey]: err as Error });
         }
         if (onEmpty) {
@@ -972,7 +978,7 @@ export const useMetadataStore = defineStore('metadata', {
           throw err;
         }
       } finally {
-        if (loadingKey) {
+        if (loadingKey && isCurrentRequestContext()) {
           this.$patch({ [loadingKey]: false });
         }
         endPerf({ error: hadError });

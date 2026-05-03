@@ -47,16 +47,19 @@ describe('useMetadataStore fetchItemsData', () => {
     const deRequest = store.fetchItemsLiteData();
     await flushPromises();
     expect(fetchMock).toHaveBeenCalledTimes(2);
+    expect(store.itemsLoading).toBe(true);
     enResponse.resolve({ data: { items: [createItem('en-item', 'English item')] } });
     await enRequest;
     expect(store.itemsLanguage).toBe('stale');
     expect(store.items).toEqual([]);
+    expect(store.itemsLoading).toBe(true);
     deResponse.resolve({ data: { items: [createItem('de-item', 'German item')] } });
     await deRequest;
     expect(store.items.map((item) => item.id)).toEqual(['de-item']);
     expect(store.itemsLanguage).toBe('de');
     expect(store.itemsGameMode).toBe('regular');
     expect(store.itemsFullLoaded).toBe(false);
+    expect(store.itemsLoading).toBe(false);
   });
   it('does not reuse or apply an in-flight full items response after a locale switch', async () => {
     const store = useMetadataStore();
@@ -83,5 +86,27 @@ describe('useMetadataStore fetchItemsData', () => {
     expect(store.itemsLanguage).toBe('de');
     expect(store.itemsGameMode).toBe('regular');
     expect(store.itemsFullLoaded).toBe(true);
+  });
+  it('does not let a stale item request set the active error state', async () => {
+    const store = useMetadataStore();
+    const enResponse = createDeferred<{ data: TarkovItemsQueryResult }>();
+    const deResponse = createDeferred<{ data: TarkovItemsQueryResult }>();
+    const fetchMock = vi.fn((_: string, options?: { query?: Record<string, string> }) => {
+      return options?.query?.lang === 'de' ? deResponse.promise : enResponse.promise;
+    });
+    vi.stubGlobal('$fetch', fetchMock);
+    const enRequest = store.fetchItemsLiteData();
+    await flushPromises();
+    store.languageCode = 'de';
+    const deRequest = store.fetchItemsLiteData();
+    await flushPromises();
+    enResponse.reject(new Error('old locale failed'));
+    await enRequest;
+    expect(store.itemsError).toBeNull();
+    expect(store.itemsLoading).toBe(true);
+    deResponse.resolve({ data: { items: [createItem('de-item', 'German item')] } });
+    await deRequest;
+    expect(store.itemsError).toBeNull();
+    expect(store.items.map((item) => item.id)).toEqual(['de-item']);
   });
 });

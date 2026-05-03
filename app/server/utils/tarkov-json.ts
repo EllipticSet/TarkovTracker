@@ -172,13 +172,13 @@ async function fetchEnvelope<T>(
   let lastError: Error | null = null;
   const url = `${resolveBaseUrl(options)}/${path}`;
   for (let attempt = 1; attempt <= maxRetries; attempt++) {
+    let payload: unknown;
     try {
-      const payload = await fetcher<TarkovJsonEnvelope<T>>(url, {
+      payload = await fetcher<unknown>(url, {
         headers: { Accept: 'application/json' },
         timeout: timeoutMs,
         retry: 0,
       });
-      return validateEnvelope<T>(payload, path);
     } catch (error) {
       lastError = error instanceof Error ? error : new Error(String(error));
       const isLastAttempt = attempt === maxRetries;
@@ -195,7 +195,9 @@ async function fetchEnvelope<T>(
         );
         await sleep(delayMs);
       }
+      continue;
     }
+    return validateEnvelope<T>(payload, path);
   }
   throw lastError || new Error(`Failed to fetch ${path}`);
 }

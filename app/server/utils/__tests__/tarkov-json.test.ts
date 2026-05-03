@@ -172,13 +172,16 @@ describe('fetchTarkovJsonEndpoint', () => {
       'https://json.tarkov.dev/regular/items': { nope: true },
       'https://json.tarkov.dev/regular/items_en': { data: {} },
     });
+    const sleep = vi.fn(async () => undefined);
     await expect(
       fetchTarkovJsonEndpoint('items', {
-        deps: { fetcher, logger: { error: vi.fn(), warn: vi.fn() } },
+        deps: { fetcher, logger: { error: vi.fn(), warn: vi.fn() }, sleep },
         lang: 'en',
-        maxRetries: 1,
+        maxRetries: 3,
       })
     ).rejects.toThrow('missing data');
+    expect(fetcher).toHaveBeenCalledTimes(1);
+    expect(sleep).not.toHaveBeenCalled();
   });
 });
 describe('tarkov JSON adapters', () => {
