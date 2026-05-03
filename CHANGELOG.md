@@ -1,3 +1,13 @@
+## [1.34.3](https://github.com/tarkovtracker-org/TarkovTracker/compare/v1.34.2...v1.34.3) (2026-05-03)
+
+
+### Bug Fixes
+
+* **app:** address PR [#341](https://github.com/tarkovtracker-org/TarkovTracker/issues/341) review feedback ([585ec1c](https://github.com/tarkovtracker-org/TarkovTracker/commit/585ec1c0eb130525599f9b39ad44c38e36d61284))
+* **app:** address production review blockers ([3a60844](https://github.com/tarkovtracker-org/TarkovTracker/commit/3a608448d39ad6a45be1c97e8401edc8e9a08782))
+* address review feedback hardening ([63d5fb0](https://github.com/tarkovtracker-org/TarkovTracker/commit/63d5fb0a1a29f14a64ed0953845f0a952fbd671d))
+* **app:** guard auth migration generations ([de01967](https://github.com/tarkovtracker-org/TarkovTracker/commit/de019677505ae83c75e01385c74bbb2ec72722cc))
+
 ## [1.34.2](https://github.com/tarkovtracker-org/TarkovTracker/compare/v1.34.1...v1.34.2) (2026-05-03)
 
 
