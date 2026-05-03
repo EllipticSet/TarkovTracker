@@ -1,3 +1,10 @@
+## [1.34.1](https://github.com/tarkovtracker-org/TarkovTracker/compare/v1.34.0...v1.34.1) (2026-05-03)
+
+
+### Bug Fixes
+
+* **api:** slim task objectives payload ([#339](https://github.com/tarkovtracker-org/TarkovTracker/issues/339)) ([8601e9b](https://github.com/tarkovtracker-org/TarkovTracker/commit/8601e9b08dbde50c0689a89f5854b7b01aa34077))
+
 # [1.34.0](https://github.com/tarkovtracker-org/TarkovTracker/compare/v1.33.4...v1.34.0) (2026-05-03)
 
 
