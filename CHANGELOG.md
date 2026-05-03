@@ -1,3 +1,14 @@
+## [1.34.4](https://github.com/tarkovtracker-org/TarkovTracker/compare/v1.34.3...v1.34.4) (2026-05-03)
+
+
+### Bug Fixes
+
+* **app:** address architecture review feedback ([20cfc5b](https://github.com/tarkovtracker-org/TarkovTracker/commit/20cfc5b739a1e1e69deed56d163ff1ede89573c1))
+* **app:** address architecture review feedback ([82bf641](https://github.com/tarkovtracker-org/TarkovTracker/commit/82bf6419733d98308e1f0368bf97f69c8228acf5))
+* **app:** address PR [#343](https://github.com/tarkovtracker-org/TarkovTracker/issues/343) review feedback ([f988b69](https://github.com/tarkovtracker-org/TarkovTracker/commit/f988b694c9e1113da49bb16d0c11badcc8e3c7e1))
+* **api:** allow unauthenticated access to cache-meta endpoint ([f5e2a75](https://github.com/tarkovtracker-org/TarkovTracker/commit/f5e2a75e70a5c4c1634a3d79944fc0b7c0ca47af))
+* **app:** tighten map objective review fixes ([07ba4ea](https://github.com/tarkovtracker-org/TarkovTracker/commit/07ba4ea0908c2fd830b99a790143a7deadf4c24a))
+
 ## [1.34.3](https://github.com/tarkovtracker-org/TarkovTracker/compare/v1.34.2...v1.34.3) (2026-05-03)
 
 
