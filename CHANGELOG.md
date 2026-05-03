@@ -1,3 +1,10 @@
+## [1.34.2](https://github.com/tarkovtracker-org/TarkovTracker/compare/v1.34.1...v1.34.2) (2026-05-03)
+
+
+### Bug Fixes
+
+* **api:** reduce task objective payload size ([2d02562](https://github.com/tarkovtracker-org/TarkovTracker/commit/2d02562152476bce80cb50e914915208f40ecffc))
+
 ## [1.34.1](https://github.com/tarkovtracker-org/TarkovTracker/compare/v1.34.0...v1.34.1) (2026-05-03)
 
 
