@@ -69,15 +69,14 @@ type IdleTask = {
   reject: (error: unknown) => void;
   expiresAt: number;
 };
-const JSON_STATIC_DATA_CACHE_VERSION = 'json-v1';
-const BOOTSTRAP_CACHE_VERSION = JSON_STATIC_DATA_CACHE_VERSION;
-const TASKS_CORE_CACHE_VERSION = JSON_STATIC_DATA_CACHE_VERSION;
-const MAP_SPAWNS_CACHE_VERSION = JSON_STATIC_DATA_CACHE_VERSION;
-const TASK_OBJECTIVES_CACHE_VERSION = 'json-v2';
-const TASK_REWARDS_CACHE_VERSION = JSON_STATIC_DATA_CACHE_VERSION;
-const HIDEOUT_CACHE_VERSION = JSON_STATIC_DATA_CACHE_VERSION;
-const PRESTIGE_CACHE_VERSION = JSON_STATIC_DATA_CACHE_VERSION;
-const ITEMS_CACHE_VERSION = JSON_STATIC_DATA_CACHE_VERSION;
+const BOOTSTRAP_CACHE_VERSION = 'json-v1';
+const TASKS_CORE_CACHE_VERSION = 'json-v1';
+const MAP_SPAWNS_CACHE_VERSION = 'json-v1';
+const ITEMS_CACHE_VERSION = 'json-v1';
+const TASK_OBJECTIVES_CACHE_VERSION = 'json-v3';
+const TASK_REWARDS_CACHE_VERSION = 'json-v2';
+const HIDEOUT_CACHE_VERSION = 'json-v3';
+const PRESTIGE_CACHE_VERSION = 'json-v2';
 const idleQueue: IdleTask[] = [];
 let idleRunnerActive = false;
 const CACHE_PURGE_STORAGE_KEY = STORAGE_KEYS.cachePurgeAt;
@@ -1494,6 +1493,7 @@ export const useMetadataStore = defineStore('metadata', {
           this.itemsFullLoaded = false;
           this.hydrateTaskItems();
           this.hydrateHideoutItems();
+          this.hydratePrestigeItems();
         },
         onEmpty: () => {
           if (this.languageCode !== requestLanguage || this.getApiGameMode() !== requestGameMode) {
@@ -1545,6 +1545,7 @@ export const useMetadataStore = defineStore('metadata', {
           this.itemsFullLoaded = true;
           this.hydrateTaskItems();
           this.hydrateHideoutItems();
+          this.hydratePrestigeItems();
         },
         onEmpty: () => {
           if (this.languageCode !== requestLanguage || this.getApiGameMode() !== requestGameMode) {
@@ -1600,6 +1601,7 @@ export const useMetadataStore = defineStore('metadata', {
         errorKey: 'prestigeError',
         processData: (data) => {
           this.prestigeLevels = markRaw(data.prestige || []);
+          this.hydratePrestigeItems();
         },
         onEmpty: () => {
           this.prestigeLevels = markRaw([]);
@@ -1723,6 +1725,7 @@ export const useMetadataStore = defineStore('metadata', {
       }
       if (!this.prestigeLevels.length) {
         this.prestigeLevels = markRaw(cachedData.prestige.prestige || []);
+        this.hydratePrestigeItems();
       }
       if (!this.editions.length) {
         this.editions = markRaw(cachedData.editions.editions || []);
@@ -2156,6 +2159,28 @@ export const useMetadataStore = defineStore('metadata', {
       // Rebuild hideout-derived data now that items are hydrated
       this.processHideoutData({ hideoutStations: this.hideoutStations });
       perfEnd(perfTimer, { stations: this.hideoutStations.length });
+    },
+    hydratePrestigeItems() {
+      if (!this.items.length || !this.prestigeLevels.length) return;
+      const itemsById = this.itemsById.size
+        ? this.itemsById
+        : new Map(this.items.map((item) => [item.id, item]));
+      const { pickItemLite, pickItemArray } = createItemPicker(itemsById);
+      this.prestigeLevels = markRaw(
+        this.prestigeLevels.map((prestige) => ({
+          ...prestige,
+          conditions: prestige.conditions?.map((condition) => {
+            const objective = condition as ObjectiveWithItems;
+            return {
+              ...objective,
+              item: pickItemLite(objective.item),
+              items: pickItemArray(objective.items),
+              containsAll: pickItemArray(objective.containsAll),
+              useAny: pickItemArray(objective.useAny),
+            } as TaskObjective;
+          }),
+        }))
+      );
     },
     /**
      * Process tasks data and build derived structures using the graph builder composable
