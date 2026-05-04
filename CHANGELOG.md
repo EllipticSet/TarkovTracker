@@ -1,3 +1,10 @@
+# [1.35.0](https://github.com/tarkovtracker-org/TarkovTracker/compare/v1.34.5...v1.35.0) (2026-05-04)
+
+
+### Features
+
+* **ui:** add promoted Twitch embed for Glorious_E ([a1856b7](https://github.com/tarkovtracker-org/TarkovTracker/commit/a1856b7d90b0c6e6d5b312e42503647681883888))
+
 ## [1.34.5](https://github.com/tarkovtracker-org/TarkovTracker/compare/v1.34.4...v1.34.5) (2026-05-03)
 
 
