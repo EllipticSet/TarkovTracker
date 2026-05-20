@@ -1,3 +1,11 @@
+## [1.37.4](https://github.com/tarkovtracker-org/TarkovTracker/compare/v1.37.3...v1.37.4) (2026-05-20)
+
+
+### Bug Fixes
+
+* **deps:** eliminate deprecated vue-i18n v10 nested dependency ([#383](https://github.com/tarkovtracker-org/TarkovTracker/issues/383)) ([9a3b95d](https://github.com/tarkovtracker-org/TarkovTracker/commit/9a3b95d6976c4db83c7f6ae47289dcad86c52744))
+* **ci:** sync workers/api-gateway lockfile with package.json ([#377](https://github.com/tarkovtracker-org/TarkovTracker/issues/377)) ([7af1846](https://github.com/tarkovtracker-org/TarkovTracker/commit/7af184647d82358d9ed4ede4339095d8062db51e))
+
 ## [1.37.3](https://github.com/tarkovtracker-org/TarkovTracker/compare/v1.37.2...v1.37.3) (2026-05-15)
 
 
