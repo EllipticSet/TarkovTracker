@@ -24,6 +24,10 @@ const mockToast = {
 const mockSkillCalculation = {
   migrateLegacySkillOffsets: vi.fn(),
 };
+const supporterTierRef = ref<string | null>(null);
+const mockUseSupporter = vi.fn(() => ({
+  activeTier: supporterTierRef,
+}));
 const mockMetadataStore = reactive({
   loading: false,
   hideoutLoading: false,
@@ -72,6 +76,9 @@ vi.mock('@vueuse/core', async (importOriginal) => ({
   useWindowSize: () => ({
     width: ref(1280),
   }),
+}));
+vi.mock('@/composables/useSupporter', () => ({
+  useSupporter: () => mockUseSupporter(),
 }));
 vi.mock('@/stores/useApp', () => ({
   useAppStore: () => ({
@@ -164,6 +171,8 @@ describe('AppBar locale switching', () => {
       mockPreferencesStore.getLocaleOverride = value;
     });
     mockSkillCalculation.migrateLegacySkillOffsets.mockClear();
+    supporterTierRef.value = null;
+    mockUseSupporter.mockClear();
     mockTarkovStore.getCurrentGameMode.mockClear();
     mockTarkovStore.getCurrentGameMode.mockReturnValue('pvp');
     mockTarkovStore.getDisplayName.mockClear();
@@ -309,6 +318,31 @@ describe('AppBar logged out actions', () => {
     const wrapper = await mountAppBar();
     expect(wrapper.find('[aria-label="navigation_drawer.settings"]').exists()).toBe(true);
     expect(wrapper.text()).toContain('navigation_drawer.login');
+    wrapper.unmount();
+  });
+});
+describe('AppBar supporter badge', () => {
+  beforeEach(() => {
+    supporterTierRef.value = null;
+  });
+  it('renders the green Support Development CTA when there is no active tier', async () => {
+    const wrapper = await mountAppBar();
+    expect(wrapper.text()).toContain('footer.support_button');
+    expect(wrapper.text()).not.toContain('page.supporter.tier_chad_name');
+    wrapper.unmount();
+  });
+  it('renders the chad tier badge for active chad subscribers', async () => {
+    supporterTierRef.value = 'chad';
+    const wrapper = await mountAppBar();
+    // te() mock returns false, so AppBar falls back to the capitalized tier name
+    expect(wrapper.text()).toContain('Chad');
+    expect(wrapper.text()).not.toContain('footer.support_button');
+    wrapper.unmount();
+  });
+  it('falls back to the generic Supporter label for past supporters', async () => {
+    supporterTierRef.value = 'supporter';
+    const wrapper = await mountAppBar();
+    expect(wrapper.text()).toContain('app_bar.supporter_badge_label');
     wrapper.unmount();
   });
 });

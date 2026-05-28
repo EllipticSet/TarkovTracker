@@ -17,8 +17,15 @@ const loading = ref(false);
 const error = ref<string | null>(null);
 let channel: RealtimeChannel | null = null;
 let channelUserId: string | null = null;
+let statusRequestVersion = 0;
 export function useSupporter() {
   const { $supabase } = useNuxtApp();
+  const isCurrentStatusRequest = (userId: string, requestVersion: number) => {
+    if (requestVersion !== statusRequestVersion) return false;
+    if ($supabase.user?.loggedIn === false) return false;
+    const currentUserId = $supabase.user?.id ?? null;
+    return !currentUserId || currentUserId === userId;
+  };
   const isSupporter = computed(() => supporterState.value?.hasEverSupported === true);
   const isActiveSubscriber = computed(
     () =>
@@ -41,6 +48,7 @@ export function useSupporter() {
   });
   async function fetchStatus(userId: string) {
     if (!$supabase || !userId) return;
+    const requestVersion = ++statusRequestVersion;
     loading.value = true;
     error.value = null;
     try {
@@ -51,9 +59,11 @@ export function useSupporter() {
         .maybeSingle();
       if (err) {
         logger.error('Failed to fetch supporter status', { userId, err });
+        if (!isCurrentStatusRequest(userId, requestVersion)) return;
         error.value = err.message;
         return;
       }
+      if (!isCurrentStatusRequest(userId, requestVersion)) return;
       if (data) {
         supporterState.value = {
           tier: data.tier,
@@ -68,10 +78,13 @@ export function useSupporter() {
       }
     } catch (e: unknown) {
       logger.error('fetchStatus threw', { userId, err: e });
+      if (!isCurrentStatusRequest(userId, requestVersion)) return;
       error.value = e instanceof Error ? e.message : 'Failed to load supporter status';
       supporterState.value = null;
     } finally {
-      loading.value = false;
+      if (isCurrentStatusRequest(userId, requestVersion)) {
+        loading.value = false;
+      }
     }
   }
   function subscribe(userId: string) {
@@ -108,18 +121,35 @@ export function useSupporter() {
       channelUserId = null;
     }
   }
+  function reset() {
+    statusRequestVersion += 1;
+    unsubscribe();
+    supporterState.value = null;
+    error.value = null;
+    loading.value = false;
+  }
   async function createCheckout(params: {
     mode: 'payment' | 'subscription';
     tier?: string;
     interval?: string;
     amount?: number;
   }): Promise<string | null> {
+    return postWithAuth<{ url: string }>('/api/stripe/checkout', params).then(
+      (r) => r?.url ?? null
+    );
+  }
+  async function openBillingPortal(returnUrl?: string): Promise<string | null> {
+    return postWithAuth<{ url: string }>('/api/stripe/portal', returnUrl ? { returnUrl } : {}).then(
+      (r) => r?.url ?? null
+    );
+  }
+  async function postWithAuth<T>(path: string, body: Record<string, unknown>): Promise<T | null> {
     if (!$supabase) {
       error.value = 'Supabase client not available';
       return null;
     }
     try {
-      // Stripe checkout requires authentication: the server reads the user id
+      // Stripe endpoints require authentication: the server reads the user id
       // from the session, not the request body, so we must forward the
       // bearer token. Refresh once if the cached session is missing/stale.
       let token: string | null = null;
@@ -134,21 +164,16 @@ export function useSupporter() {
         error.value = message;
         return null;
       }
-      const { url } = await $fetch<{ url: string }>('/api/stripe/checkout', {
+      const result = await $fetch(path, {
         method: 'POST',
         headers: { Authorization: `Bearer ${token}` },
-        body: params,
+        body,
       });
-      return url;
+      return result as T;
     } catch (e: unknown) {
-      const message = e instanceof Error ? e.message : 'Checkout failed';
+      const message = e instanceof Error ? e.message : 'Request failed';
       error.value = message;
-      logger.error('createCheckout failed', {
-        mode: params.mode,
-        tier: params.tier,
-        interval: params.interval,
-        error: e,
-      });
+      logger.error('Supporter request failed', { path, error: e });
       return null;
     }
   }
@@ -163,6 +188,8 @@ export function useSupporter() {
     fetchStatus,
     subscribe,
     unsubscribe,
+    reset,
     createCheckout,
+    openBillingPortal,
   };
 }
