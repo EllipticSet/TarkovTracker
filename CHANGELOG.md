@@ -1,3 +1,10 @@
+## [1.45.2](https://github.com/tarkovtracker-org/TarkovTracker/compare/v1.45.1...v1.45.2) (2026-05-31)
+
+
+### Bug Fixes
+
+* switch from fr to dev TrackerBot link ([dbe337d](https://github.com/tarkovtracker-org/TarkovTracker/commit/dbe337dbf1fcb65c0a4acbd8326a2995c7b0fef2))
+
 ## [1.45.1](https://github.com/tarkovtracker-org/TarkovTracker/compare/v1.45.0...v1.45.1) (2026-05-30)
 
 
