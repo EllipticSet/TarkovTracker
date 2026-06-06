@@ -1,3 +1,10 @@
+## [1.45.5](https://github.com/tarkovtracker-org/TarkovTracker/compare/v1.45.4...v1.45.5) (2026-06-06)
+
+
+### Bug Fixes
+
+* **api:** reconcile stale clamped lastApiUpdate.at from history ([#429](https://github.com/tarkovtracker-org/TarkovTracker/issues/429)) ([1a74023](https://github.com/tarkovtracker-org/TarkovTracker/commit/1a7402350ef25c07749676e873f863e571c35835))
+
 ## [1.45.4](https://github.com/tarkovtracker-org/TarkovTracker/compare/v1.45.3...v1.45.4) (2026-06-06)
 
 
