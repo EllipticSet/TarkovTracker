@@ -34,10 +34,17 @@ All jobs run in parallel; the `Workers` job no longer waits for `Validate` to fi
 **Trigger:** PR opened/updated/reopened
 **Jobs:** `PR Meta` (labels, size, commit validation, Lighthouse gating), `Lighthouse` (conditional on UI file changes or `ui`/`performance` labels)
 **Lighthouse server:** Builds the Cloudflare Pages app and serves it with `wrangler pages dev`
-so `/api/*` routes are available during audits.
-**Lighthouse thresholds:** Calibrated to the real full-data Pages preview baseline. Raise
-`lighthouserc.json` score floors after performance/accessibility work instead of treating
-the current floors as long-term targets.
+so `/api/*` routes are available during audits. The build sets
+`NUXT_PUBLIC_PROMOTED_TWITCH_ENABLED=false` so audits measure the app itself rather than the
+promoted Twitch embed, whose heavy third-party iframe (script eval, layout shift, third-party
+cookies) loads only when the streamer is live and previously made scores non-deterministic.
+**Lighthouse thresholds:** Calibrated to the real full-data Pages preview baseline with the
+promoted Twitch embed disabled (see above). Best-practices, SEO, and accessibility floors are
+`error`-level at 0.9 since the embed-free audits clear them comfortably (best-practices and SEO
+median 1.0, accessibility 0.92-0.96). Performance floors stay conservative: `/hideout` sits at
+0.22 with no margin and `/` can dip on cold starts, so those need real layout-shift (CLS ~1.38)
+and main-thread (TBT ~2.3s) work before raising. Raise `lighthouserc.json` score floors after
+performance/accessibility work instead of treating the current floors as long-term targets.
 
 ### Dependabot Auto Merge (`dependabot-auto-merge.yml`)
 
