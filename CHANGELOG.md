@@ -1,3 +1,10 @@
+# [1.47.0](https://github.com/tarkovtracker-org/TarkovTracker/compare/v1.46.0...v1.47.0) (2026-06-12)
+
+
+### Features
+
+* **ui:** omnibar global search, activity log, and configurable keybinds ([#443](https://github.com/tarkovtracker-org/TarkovTracker/issues/443)) ([62b849b](https://github.com/tarkovtracker-org/TarkovTracker/commit/62b849be85c60c3ddbf56202181f5e53f3934910))
+
 # [1.46.0](https://github.com/tarkovtracker-org/TarkovTracker/compare/v1.45.5...v1.46.0) (2026-06-07)
 
 
