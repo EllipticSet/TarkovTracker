@@ -1,3 +1,10 @@
+## [1.48.3](https://github.com/tarkovtracker-org/TarkovTracker/compare/v1.48.2...v1.48.3) (2026-06-17)
+
+
+### Bug Fixes
+
+* **deps:** patch dependabot security alerts via overrides ([#461](https://github.com/tarkovtracker-org/TarkovTracker/issues/461)) ([8e89a36](https://github.com/tarkovtracker-org/TarkovTracker/commit/8e89a3630a78eca4c60f37662ad403d510cf6f0e))
+
 ## [1.48.2](https://github.com/tarkovtracker-org/TarkovTracker/compare/v1.48.1...v1.48.2) (2026-06-17)
 
 
