@@ -1,3 +1,10 @@
+# [1.49.0](https://github.com/tarkovtracker-org/TarkovTracker/compare/v1.48.5...v1.49.0) (2026-06-22)
+
+
+### Features
+
+* **settings:** add antifandom.com wiki link option ([130d1a0](https://github.com/tarkovtracker-org/TarkovTracker/commit/130d1a0ea1a154ad21667ab8917493e7750364f8))
+
 ## [1.48.5](https://github.com/tarkovtracker-org/TarkovTracker/compare/v1.48.4...v1.48.5) (2026-06-18)
 
 
