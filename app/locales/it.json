@@ -73,6 +73,43 @@
     "supporter_badge_label": "Supporter",
     "supporter_badge_aria": "Gestisci il tuo abbonamento supporter ({tier})"
   },
+  "omnibar": {
+    "title": "Cerca",
+    "description": "Cerca missioni, oggetti necessari e stazioni nascondiglio",
+    "trigger_label": "Cerca...",
+    "open_aria": "Apri ricerca globale",
+    "aria_label": "Ricerca globale",
+    "placeholder": "Cerca missioni, oggetti necessari, stazioni nascondiglio...",
+    "hint_min_chars": "Digita almeno due caratteri...",
+    "no_results": "Nessun risultato trovato per \"{query}\".",
+    "group_tasks": "Attività / Missioni",
+    "group_items": "Oggetti",
+    "group_hideout": "Stazioni Nascondiglio"
+  },
+  "activity_log": {
+    "title": "Registro attività",
+    "aria_label": "Registro attività",
+    "unread_indicator": "Hai attività non lette",
+    "mark_read": "Segna come letto",
+    "clear": "Cancella",
+    "empty": "Nessuna attività ancora registrata.",
+    "badge_api": "Sync API",
+    "badge_manual": "Manuale",
+    "api_synced": "Progresso API sincronizzato",
+    "more_count": "+{count}",
+    "unknown_time": "Sconosciuta",
+    "entry": {
+      "completed": "Missione completata: {name}",
+      "uncompleted": "Missione non completata: {name}",
+      "failed": "Missione fallita: {name}",
+      "reset_failed": "{name} ripristinata",
+      "available": "Missione sbloccata: {name}",
+      "undo_completed": "Reset completamento: {name}",
+      "undo_uncompleted": "Reset non completamento: {name}",
+      "undo_reset_failed": "{name} ripristinata",
+      "undo_failed": "{name} ripristinata"
+    }
+  },
   "promoted_stream": {
     "close": "Chiudi lo stream",
     "expand": "Apri lo stream",
@@ -167,6 +204,12 @@
     "clipboard_error": {
       "title": "Copia non riuscita",
       "description": "Impossibile copiare \"{value}\" negli appunti."
+    },
+    "action_undone": {
+      "title": "Azione annullata: {description}"
+    },
+    "action_undo_failed": {
+      "title": "Impossibile annullare l'azione: {description}"
     }
   },
   "common": {
@@ -573,7 +616,14 @@
         "set_loyalty_level": "Imposta il livello fedeltà a {level}",
         "rep_progress_label": "→ LF{level}",
         "scav_karma": "Scav Karma",
-        "unlock_required": "Sblocco richiesto:"
+        "unlock_required": "Sblocco richiesto:",
+        "sort": {
+          "aria_label": "Ordina i trader",
+          "direction_aria_label": "Inverti ordinamento",
+          "default": "Predefinito",
+          "progress": "Progresso",
+          "level": "Livello"
+        }
       },
       "stats": {
         "failed": {
@@ -1279,7 +1329,9 @@
       "error_description": "L'autenticazione è stata annullata o non riuscita. Per favore riprova.",
       "success_title": "Accesso effettuato",
       "success_description": "Accesso effettuato con {provider}.",
-      "login_options": "Opzioni accesso"
+      "login_options": "Opzioni accesso",
+      "meta_title": "Accedi",
+      "meta_description": "Accedi a TarkovTracker per sincronizzare i tuoi progressi e collaborare con il tuo team."
     },
     "profile": {
       "title": "Profilo Utente",
@@ -1686,6 +1738,11 @@
           "pmc_spawn": "Spawn PMC"
         }
       },
+      "links": {
+        "title": "Link Wiki",
+        "antifandom": "Usa antifandom.com",
+        "antifandom_hint": "Apri i link su antifanfom.com, un mirror community-run di Fandom con meno pubblicità, invece di fandom.com."
+      },
       "misc": {
         "title": "Varie"
       }
@@ -1969,6 +2026,22 @@
         "ingame": "In gioco"
       }
     },
+    "keybinds": {
+      "title": "Scorciatoie tastiera",
+      "omnibar_label": "Ricerca globale (Omnibar)",
+      "omnibar_description": "Premi questa scorciatoia per aprire la ricerca globale.",
+      "undo_label": "Annulla l'ultima azione",
+      "undo_description": "Premi questa scorciatoia per ripristinare i tuoi progressi più recenti.",
+      "record_placeholder": "Clicca per registrare...",
+      "recording": "Premi combinazione tasti...",
+      "reset": "Reset",
+      "reset_aria": "Ripristina",
+      "conflict_omnibar": "La scorciatoia è in conflitto con la combinazione di tasti Annulla.",
+      "conflict_undo": "La scorciatoia è in conflitto con la combinazione di tasti Ricerca.",
+      "conflict_rejected": "Già usato da {action}. Scegli una combinazione diversa.",
+      "warn_system_omnibar": "Attenzione: Può essere in conflitto con le scorciatoie del sistema/browser (ad esempio Ctrl+T, Ctrl+W, Alt+Tab).",
+      "warn_system_undo": "Attenzione: Può essere in conflitto con le scorciatoie del sistema/browser (ad esempio Ctrl+W, Ctrl+T, Alt+Tab)."
+    },
     "experience": {
       "title": "Esperienza & Livello",
       "auto_level_title": "Calcolo automatico del livello",
@@ -2166,6 +2239,9 @@
       "increase_hideout_count": "Aumenta il conteggio per {station_name}"
     },
     "item": "Oggetto",
+    "any_of_items": "Ognuno di questi {count} elementi conta",
+    "any_of_items_short": "Tutti e {count}",
+    "view_accepted_items": "Visualizza tutti i {count} elementi accettati",
     "not_collected": "Non raccolto",
     "click_to_collect": "Clicca per raccogliere",
     "click_to_uncollect": "Clicca per annullare la raccolta",
@@ -2190,6 +2266,7 @@
   },
   "oauth": {
     "consent": {
+      "meta_title": "Consenso OAuth - TarkovTracker",
       "authorize": "Autorizza Applicazione",
       "loading": "Caricamento...",
       "error": "{error}",
