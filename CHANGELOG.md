@@ -1,3 +1,10 @@
+## [1.50.1](https://github.com/tarkovtracker-org/TarkovTracker/compare/v1.50.0...v1.50.1) (2026-06-29)
+
+
+### Performance Improvements
+
+* **api:** skip kappa overlay polling while hidden ([#481](https://github.com/tarkovtracker-org/TarkovTracker/issues/481)) ([30066f8](https://github.com/tarkovtracker-org/TarkovTracker/commit/30066f82fb35e938e0ed1c4253bbc119088637fa))
+
 # [1.50.0](https://github.com/tarkovtracker-org/TarkovTracker/compare/v1.49.1...v1.50.0) (2026-06-29)
 
 
