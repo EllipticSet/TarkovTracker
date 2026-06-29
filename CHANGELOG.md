@@ -1,3 +1,10 @@
+# [1.50.0](https://github.com/tarkovtracker-org/TarkovTracker/compare/v1.49.1...v1.50.0) (2026-06-29)
+
+
+### Features
+
+* add korean to supported locales ([#475](https://github.com/tarkovtracker-org/TarkovTracker/issues/475)) ([ddaa53b](https://github.com/tarkovtracker-org/TarkovTracker/commit/ddaa53bf92815fe7c56ef5323e473a6e1e40c6ef))
+
 ## [1.49.1](https://github.com/tarkovtracker-org/TarkovTracker/compare/v1.49.0...v1.49.1) (2026-06-24)
 
 
