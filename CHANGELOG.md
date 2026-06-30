@@ -1,3 +1,10 @@
+## [1.50.2](https://github.com/tarkovtracker-org/TarkovTracker/compare/v1.50.1...v1.50.2) (2026-06-30)
+
+
+### Bug Fixes
+
+* **config:** harden SECURITY DEFINER functions and capture handle_new_user baseline ([#482](https://github.com/tarkovtracker-org/TarkovTracker/issues/482)) ([5fe69b2](https://github.com/tarkovtracker-org/TarkovTracker/commit/5fe69b266f97f44407107e14d2f0ee9912061024))
+
 ## [1.50.1](https://github.com/tarkovtracker-org/TarkovTracker/compare/v1.50.0...v1.50.1) (2026-06-29)
 
 
