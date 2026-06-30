@@ -1,3 +1,10 @@
+## [1.50.7](https://github.com/tarkovtracker-org/TarkovTracker/compare/v1.50.6...v1.50.7) (2026-06-30)
+
+
+### Bug Fixes
+
+* **config:** reconcile production schema drift into migrations ([#488](https://github.com/tarkovtracker-org/TarkovTracker/issues/488)) ([36d2a88](https://github.com/tarkovtracker-org/TarkovTracker/commit/36d2a8818a1e203b7c1b3b5c8f82de3e26be6d8c))
+
 ## [1.50.6](https://github.com/tarkovtracker-org/TarkovTracker/compare/v1.50.5...v1.50.6) (2026-06-30)
 
 
