@@ -1,3 +1,10 @@
+## [1.50.6](https://github.com/tarkovtracker-org/TarkovTracker/compare/v1.50.5...v1.50.6) (2026-06-30)
+
+
+### Performance Improvements
+
+* **config:** drop unused supporters and game_mode indexes ([#487](https://github.com/tarkovtracker-org/TarkovTracker/issues/487)) ([cef1746](https://github.com/tarkovtracker-org/TarkovTracker/commit/cef1746f3bcfc9f61633f629607cc1d5475d0f2d))
+
 ## [1.50.5](https://github.com/tarkovtracker-org/TarkovTracker/compare/v1.50.4...v1.50.5) (2026-06-30)
 
 
