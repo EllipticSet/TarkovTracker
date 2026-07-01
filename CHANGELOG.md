@@ -1,3 +1,10 @@
+# [1.52.0](https://github.com/tarkovtracker-org/TarkovTracker/compare/v1.51.0...v1.52.0) (2026-07-01)
+
+
+### Features
+
+* **ui:** remember map panel collapsed state ([cad8df4](https://github.com/tarkovtracker-org/TarkovTracker/commit/cad8df4f5359958379034dcd9e67ce70e4bfd656))
+
 # [1.51.0](https://github.com/tarkovtracker-org/TarkovTracker/compare/v1.50.8...v1.51.0) (2026-07-01)
 
 
