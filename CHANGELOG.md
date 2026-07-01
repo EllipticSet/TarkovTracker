@@ -1,3 +1,10 @@
+# [1.51.0](https://github.com/tarkovtracker-org/TarkovTracker/compare/v1.50.8...v1.51.0) (2026-07-01)
+
+
+### Features
+
+* **app:** rework supporter perks, one-time UX, and legal copy ([#494](https://github.com/tarkovtracker-org/TarkovTracker/issues/494)) ([a18a5f9](https://github.com/tarkovtracker-org/TarkovTracker/commit/a18a5f9974860f8b90d2532db5fbd64dcb7c9821))
+
 ## [1.50.8](https://github.com/tarkovtracker-org/TarkovTracker/compare/v1.50.7...v1.50.8) (2026-06-30)
 
 
