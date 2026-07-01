@@ -3,8 +3,10 @@ import {
   calcBaseMonthly,
   calcIntervalMonths,
   calcOneTimeCharge,
+  calcStripeFee,
   calcSubscriptionCharge,
   discountPercent,
+  parseContributionAmount,
   STRIPE_FIXED,
   STRIPE_ONETIME_RATE,
   TIERS,
@@ -75,6 +77,31 @@ describe('supporterPricing', () => {
       const charge = calcOneTimeCharge(base);
       const stripeFee = charge * STRIPE_ONETIME_RATE + STRIPE_FIXED;
       expect(charge - stripeFee).toBeGreaterThanOrEqual(base - 0.01);
+    });
+  });
+  describe('calcStripeFee', () => {
+    it('is the rate-plus-fixed cut Stripe takes from a charge', () => {
+      expect(calcStripeFee(10)).toBeCloseTo(10 * STRIPE_ONETIME_RATE + STRIPE_FIXED, 10);
+    });
+    it('leaves the full base as net when applied to the covered charge', () => {
+      const base = 3;
+      const charge = calcOneTimeCharge(base);
+      expect(charge - calcStripeFee(charge)).toBeGreaterThanOrEqual(base - 0.01);
+    });
+  });
+  describe('parseContributionAmount', () => {
+    it('parses plain and two-decimal amounts', () => {
+      expect(parseContributionAmount('3')).toBe(3);
+      expect(parseContributionAmount('12.50')).toBe(12.5);
+      expect(parseContributionAmount('  7.05 ')).toBe(7.05);
+    });
+    it('rejects malformed decimals instead of silently truncating', () => {
+      expect(parseContributionAmount('12.34.56')).toBeNaN();
+      expect(parseContributionAmount('12.999')).toBeNaN();
+      expect(parseContributionAmount('1,000')).toBeNaN();
+      expect(parseContributionAmount('abc')).toBeNaN();
+      expect(parseContributionAmount('')).toBeNaN();
+      expect(parseContributionAmount('-5')).toBeNaN();
     });
   });
 });

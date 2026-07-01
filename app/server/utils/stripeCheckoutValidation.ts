@@ -3,7 +3,7 @@ export const VALID_TIERS = ['supporter', 'scav', 'timmy', 'chad'] as const;
 export const VALID_INTERVALS = ['monthly', '6month', 'yearly'] as const;
 export const VALID_MODES = ['payment', 'subscription'] as const;
 export const MIN_ONE_TIME_CENTS = 300;
-export const MAX_ONE_TIME_CENTS = 100_000;
+export const MAX_ONE_TIME_CENTS = 52_000;
 export type CheckoutTier = (typeof VALID_TIERS)[number];
 export type CheckoutInterval = (typeof VALID_INTERVALS)[number];
 export type CheckoutMode = (typeof VALID_MODES)[number];
@@ -68,7 +68,11 @@ export function validateOneTimeAmount(amount: number | undefined): number {
   if (!Number.isFinite(amountFloat)) {
     throw createError({ statusCode: 400, message: 'Invalid amount' });
   }
-  const amountCents = Math.round(amountFloat * 100);
+  const amountCentsExact = amountFloat * 100;
+  if (Math.abs(amountCentsExact - Math.round(amountCentsExact)) > 1e-9) {
+    throw createError({ statusCode: 400, message: 'Amount must be in whole cents' });
+  }
+  const amountCents = Math.round(amountCentsExact);
   if (amountCents < MIN_ONE_TIME_CENTS) {
     throw createError({
       statusCode: 400,
