@@ -1,3 +1,10 @@
+## [1.52.1](https://github.com/tarkovtracker-org/TarkovTracker/compare/v1.52.0...v1.52.1) (2026-07-06)
+
+
+### Bug Fixes
+
+* **api:** precompute tasks-core to KV to eliminate Error 1102 on cold colos ([#502](https://github.com/tarkovtracker-org/TarkovTracker/issues/502)) ([dedc523](https://github.com/tarkovtracker-org/TarkovTracker/commit/dedc523e467334e07beabe48897a648fe91cad82))
+
 # [1.52.0](https://github.com/tarkovtracker-org/TarkovTracker/compare/v1.51.0...v1.52.0) (2026-07-01)
 
 
