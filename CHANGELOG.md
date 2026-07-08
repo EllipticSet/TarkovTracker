@@ -1,3 +1,10 @@
+## [1.55.1](https://github.com/tarkovtracker-org/TarkovTracker/compare/v1.55.0...v1.55.1) (2026-07-08)
+
+
+### Bug Fixes
+
+* **api:** atomic progress writes via merge_progress_data rpc ([#501](https://github.com/tarkovtracker-org/TarkovTracker/issues/501)) ([e67ddd3](https://github.com/tarkovtracker-org/TarkovTracker/commit/e67ddd3d0d44c841282473f0ff32629bd7b4f144))
+
 # [1.55.0](https://github.com/tarkovtracker-org/TarkovTracker/compare/v1.54.3...v1.55.0) (2026-07-08)
 
 
