@@ -1,3 +1,10 @@
+## [1.54.3](https://github.com/tarkovtracker-org/TarkovTracker/compare/v1.54.2...v1.54.3) (2026-07-08)
+
+
+### Bug Fixes
+
+* **tasks:** gate task availability on requiredPrestige from tarkov.dev ([#513](https://github.com/tarkovtracker-org/TarkovTracker/issues/513)) ([31d690c](https://github.com/tarkovtracker-org/TarkovTracker/commit/31d690cb02b028bf777532b8cad5fb56157f3f4f)), closes [#508](https://github.com/tarkovtracker-org/TarkovTracker/issues/508)
+
 ## [1.54.2](https://github.com/tarkovtracker-org/TarkovTracker/compare/v1.54.1...v1.54.2) (2026-07-08)
 
 
