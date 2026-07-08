@@ -1,3 +1,10 @@
+# [1.54.0](https://github.com/tarkovtracker-org/TarkovTracker/compare/v1.53.0...v1.54.0) (2026-07-08)
+
+
+### Features
+
+* **tasks:** search task reward items ([#497](https://github.com/tarkovtracker-org/TarkovTracker/issues/497)) ([c09a2ba](https://github.com/tarkovtracker-org/TarkovTracker/commit/c09a2ba8e7c93723cba823c2babbbdc80aa1c6e3))
+
 # [1.53.0](https://github.com/tarkovtracker-org/TarkovTracker/compare/v1.52.1...v1.53.0) (2026-07-08)
 
 
