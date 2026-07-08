@@ -1,3 +1,10 @@
+## [1.54.2](https://github.com/tarkovtracker-org/TarkovTracker/compare/v1.54.1...v1.54.2) (2026-07-08)
+
+
+### Bug Fixes
+
+* **tasks:** enforce trader level and reputation requirements in task availability ([#514](https://github.com/tarkovtracker-org/TarkovTracker/issues/514)) ([782699a](https://github.com/tarkovtracker-org/TarkovTracker/commit/782699a2bf0bb036874defab0ae51b54af4eb6c3)), closes [#512](https://github.com/tarkovtracker-org/TarkovTracker/issues/512)
+
 ## [1.54.1](https://github.com/tarkovtracker-org/TarkovTracker/compare/v1.54.0...v1.54.1) (2026-07-08)
 
 
