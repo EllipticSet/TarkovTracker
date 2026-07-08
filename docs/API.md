@@ -334,6 +334,21 @@ The `returnUrl` host must match the configured app URL host. Mismatched hosts fa
 
 ---
 
+## Rate Limits (API Gateway)
+
+Progress API requests (`api.tarkovtracker.org`, `/api/v2/*`) are subject to tiered quotas keyed by user account (not per token). Daily quotas reset at 00:00 UTC; burst limits use a 60-second sliding window so batch updates near a minute boundary are not spuriously throttled.
+
+| Tier  | Reads/day | Writes/day | Burst/min |
+| ----- | --------- | ---------- | --------- |
+| Free  | 1,000     | 100        | 30        |
+| Scav  | 2,000     | 250        | 60        |
+| Timmy | 3,000     | 400        | 90        |
+| Chad  | 5,000     | 600        | 120       |
+
+Every gateway response includes `X-RateLimit-Limit`, `X-RateLimit-Remaining`, and `X-RateLimit-Reset` (Unix seconds) for the daily quota, plus `Retry-After` on `429` responses. On burst `429`s the `X-RateLimit-*` headers still describe the daily quota (burst-throttled requests do not consume it) while `Retry-After` indicates when burst capacity frees. When a free-tier user exhausts a daily quota, the `429` body includes an upgrade link. Admins can inspect the top consumers via `GET /api/admin/api-usage`; usage is bucketed by UTC day, so the report covers the current and previous UTC day (the `since` field gives the exact starting day).
+
+---
+
 ## Error Responses
 
 All endpoints return errors in this format:
