@@ -1,3 +1,10 @@
+# [1.53.0](https://github.com/tarkovtracker-org/TarkovTracker/compare/v1.52.1...v1.53.0) (2026-07-08)
+
+
+### Features
+
+* **api:** add tiered daily rate limits and burst smoothing ([#499](https://github.com/tarkovtracker-org/TarkovTracker/issues/499)) ([4d6f6e2](https://github.com/tarkovtracker-org/TarkovTracker/commit/4d6f6e24cdcfe2b42fad9240e2bb0aa9d1f54b39))
+
 ## [1.52.1](https://github.com/tarkovtracker-org/TarkovTracker/compare/v1.52.0...v1.52.1) (2026-07-06)
 
 
