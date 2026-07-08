@@ -1,3 +1,10 @@
+## [1.54.1](https://github.com/tarkovtracker-org/TarkovTracker/compare/v1.54.0...v1.54.1) (2026-07-08)
+
+
+### Bug Fixes
+
+* **maps:** align Labs tile map and add tile-map floor switching ([#467](https://github.com/tarkovtracker-org/TarkovTracker/issues/467)) ([1b538b4](https://github.com/tarkovtracker-org/TarkovTracker/commit/1b538b438c6498e561e4ef4e65fbd1410af862a9)), closes [#276](https://github.com/tarkovtracker-org/TarkovTracker/issues/276)
+
 # [1.54.0](https://github.com/tarkovtracker-org/TarkovTracker/compare/v1.53.0...v1.54.0) (2026-07-08)
 
 
