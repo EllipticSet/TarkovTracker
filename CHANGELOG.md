@@ -1,3 +1,10 @@
+# [1.55.0](https://github.com/tarkovtracker-org/TarkovTracker/compare/v1.54.3...v1.55.0) (2026-07-08)
+
+
+### Features
+
+* **test:** add zero-dep page-load measurement scripts ([#507](https://github.com/tarkovtracker-org/TarkovTracker/issues/507)) ([f522a39](https://github.com/tarkovtracker-org/TarkovTracker/commit/f522a39e51123738c4b714dbd6568fbba3635f6a))
+
 ## [1.54.3](https://github.com/tarkovtracker-org/TarkovTracker/compare/v1.54.2...v1.54.3) (2026-07-08)
 
 
