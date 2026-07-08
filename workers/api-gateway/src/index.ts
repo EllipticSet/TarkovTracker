@@ -83,6 +83,9 @@ const DAY_MS = 86400000;
 function nextUtcMidnight(now: number): number {
   return Math.floor(now / DAY_MS) * DAY_MS + DAY_MS;
 }
+// RFC 9745 Deprecation header value: structured-field Date for
+// 2026-07-06T00:00:00Z, when the api.tarkovtracker.org migration shipped.
+const LEGACY_API_DEPRECATION_DATE = '@1783296000';
 export class ApiGatewayRateLimiter {
   private data?: RateLimitState;
   constructor(private state: DurableObjectState) {}
@@ -664,6 +667,23 @@ export default {
       const apiMatch = path.match(/^\/api(?:\/v2)?(.*)$/);
       if (apiMatch) {
         apiPath = apiMatch[1] || '/';
+        // Host migration: once LEGACY_API_REDIRECT is flipped to "true",
+        // legacy /api and /api/v2 routes permanently redirect to the api
+        // subdomain. Clients should migrate proactively: some HTTP stacks
+        // (e.g. .NET HttpClient) drop Authorization on cross-host redirects.
+        if ((env.LEGACY_API_REDIRECT || '').trim().toLowerCase() === 'true') {
+          const target = `https://${apiHost}${apiPath}${url.search}`;
+          return new Response(null, {
+            status: 308,
+            headers: {
+              ...headers,
+              Location: target,
+              Deprecation: LEGACY_API_DEPRECATION_DATE,
+              Link: `<${target}>; rel="successor-version"`,
+              'Cache-Control': 'no-store',
+            },
+          });
+        }
       }
     }
     if (!apiPath) {
