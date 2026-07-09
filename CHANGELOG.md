@@ -1,3 +1,10 @@
+## [1.55.2](https://github.com/tarkovtracker-org/TarkovTracker/compare/v1.55.1...v1.55.2) (2026-07-09)
+
+
+### Bug Fixes
+
+* **app:** stop syncPvpPrestigeLevel bumping progressEpoch to preserve storyline across devices ([#515](https://github.com/tarkovtracker-org/TarkovTracker/issues/515)) ([abd47ad](https://github.com/tarkovtracker-org/TarkovTracker/commit/abd47ad79b0b91d9f2439becf792b513de18edc9))
+
 ## [1.55.1](https://github.com/tarkovtracker-org/TarkovTracker/compare/v1.55.0...v1.55.1) (2026-07-08)
 
 
