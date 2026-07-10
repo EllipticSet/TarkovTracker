@@ -1,3 +1,10 @@
+## [1.55.4](https://github.com/tarkovtracker-org/TarkovTracker/compare/v1.55.3...v1.55.4) (2026-07-10)
+
+
+### Bug Fixes
+
+* **app:** tighten fuzzy search matching ([#519](https://github.com/tarkovtracker-org/TarkovTracker/issues/519)) ([78759f0](https://github.com/tarkovtracker-org/TarkovTracker/commit/78759f09fdb9e30596266d88911405254483fc40))
+
 ## [1.55.3](https://github.com/tarkovtracker-org/TarkovTracker/compare/v1.55.2...v1.55.3) (2026-07-10)
 
 
