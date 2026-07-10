@@ -93,6 +93,11 @@ export const orderedStoryObjectives = (objectives: StoryObjectiveInput): StoryOb
     return a.id.localeCompare(b.id);
   });
 };
+export const getAutoCompletableObjectiveIds = (objectives: StoryObjectiveInput): string[] => {
+  return orderedStoryObjectives(objectives)
+    .filter((objective) => !objective.mutuallyExclusiveWith?.length)
+    .map((objective) => objective.id);
+};
 export const normalizeStoryChapter = (chapter: StoryChapter): StoryChapter => {
   return {
     ...chapter,

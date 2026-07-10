@@ -252,7 +252,10 @@
   import { calculatePercentageNum, useLocaleNumberFormatter } from '@/utils/formatters';
   import { logger } from '@/utils/logger';
   import { computeInvalidProgress } from '@/utils/progressInvalidation';
-  import { orderedStoryObjectives } from '@/utils/storylineObjectives';
+  import {
+    getAutoCompletableObjectiveIds,
+    orderedStoryObjectives,
+  } from '@/utils/storylineObjectives';
   import { buildTarkovDevProfileUrl } from '@/utils/tarkovDevProfileUrl';
   import { getCompletionFlags, type RawTaskCompletion } from '@/utils/taskStatus';
   import { filterTasksByTypeSettings, type TaskTypeFilterOptions } from '@/utils/taskTypeFilters';
@@ -810,7 +813,24 @@
     if (isViewingSharedProfile.value) {
       return;
     }
-    tarkovStore.toggleStoryChapterComplete(chapterId);
+    const isComplete = storyChapterCompletionState.value[chapterId] === true;
+    const chapter = metadataStore.storyChapters.find((value) => value.id === chapterId);
+    const objectiveIds = chapter ? getAutoCompletableObjectiveIds(chapter.objectives) : [];
+    if (isComplete) {
+      tarkovStore.setStoryChapterUncomplete(chapterId);
+      for (const objectiveId of objectiveIds) {
+        if (storyObjectiveCompletionState.value[chapterId]?.[objectiveId] === true) {
+          tarkovStore.setStoryObjectiveUncomplete(chapterId, objectiveId);
+        }
+      }
+    } else {
+      tarkovStore.setStoryChapterComplete(chapterId);
+      for (const objectiveId of objectiveIds) {
+        if (storyObjectiveCompletionState.value[chapterId]?.[objectiveId] !== true) {
+          tarkovStore.setStoryObjectiveComplete(chapterId, objectiveId);
+        }
+      }
+    }
   };
   const handleStoryObjectiveToggle = (chapterId: string, objectiveId: string) => {
     if (isViewingSharedProfile.value) {
