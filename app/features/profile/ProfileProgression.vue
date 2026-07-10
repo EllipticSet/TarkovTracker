@@ -214,6 +214,7 @@
           :story-chapter-completion-state="storyChapterCompletionState"
           :story-objective-completion-state="storyObjectiveCompletionState"
           :read-only="isViewingSharedProfile"
+          @toggle-chapter="handleStoryChapterToggle"
           @toggle-objective="handleStoryObjectiveToggle"
         />
       </template>
@@ -805,6 +806,12 @@
     }
     return state;
   });
+  const handleStoryChapterToggle = (chapterId: string) => {
+    if (isViewingSharedProfile.value) {
+      return;
+    }
+    tarkovStore.toggleStoryChapterComplete(chapterId);
+  };
   const handleStoryObjectiveToggle = (chapterId: string, objectiveId: string) => {
     if (isViewingSharedProfile.value) {
       return;

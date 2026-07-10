@@ -697,7 +697,9 @@
     readOnly?: boolean;
     showChapterActions?: boolean;
   }
-  const props = defineProps<Props>();
+  const props = withDefaults(defineProps<Props>(), {
+    showChapterActions: true,
+  });
   const { chapter } = toRefs(props);
   const emit = defineEmits<{
     toggleChapter: [chapterId: string];
