@@ -1,3 +1,10 @@
+## [1.55.3](https://github.com/tarkovtracker-org/TarkovTracker/compare/v1.55.2...v1.55.3) (2026-07-10)
+
+
+### Bug Fixes
+
+* **tasks:** backfill trader standing when marking available ([#518](https://github.com/tarkovtracker-org/TarkovTracker/issues/518)) ([592771d](https://github.com/tarkovtracker-org/TarkovTracker/commit/592771d24c3827fb08d9e296b39fe0a30f37efdd))
+
 ## [1.55.2](https://github.com/tarkovtracker-org/TarkovTracker/compare/v1.55.1...v1.55.2) (2026-07-09)
 
 
