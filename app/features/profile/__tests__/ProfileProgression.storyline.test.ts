@@ -3,7 +3,6 @@ import { mockNuxtImport } from '@nuxt/test-utils/runtime';
 import { mount } from '@vue/test-utils';
 import { createPinia, setActivePinia } from 'pinia';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
-const toggleStoryChapterCompleteMock = vi.fn();
 const setStoryChapterCompleteMock = vi.fn();
 const setStoryChapterUncompleteMock = vi.fn();
 const setStoryObjectiveCompleteMock = vi.fn();
@@ -63,7 +62,6 @@ vi.mock('@/stores/useTarkov', () => ({
     setStoryChapterUncomplete: setStoryChapterUncompleteMock,
     setStoryObjectiveComplete: setStoryObjectiveCompleteMock,
     setStoryObjectiveUncomplete: setStoryObjectiveUncompleteMock,
-    toggleStoryChapterComplete: toggleStoryChapterCompleteMock,
     getCurrentGameMode: () => 'pvp',
     getGameEdition: () => 1,
     getPvPProgressData: () => createProgressData(pvpOverrides),
