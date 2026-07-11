@@ -103,8 +103,16 @@ export class ApiGatewayRateLimiter {
     try {
       const stored = await this.state.storage.get<RateLimitState>('state');
       this.loaded = true;
-      if (stored && Date.now() < stored.resetAt) {
-        this.data = stored;
+      // Sliding-window resetAt is oldestTimestamp + windowMs, so it can elapse
+      // while younger timestamps are still inside the window. Keep sliding
+      // state for the fetch path to prune; only fixed windows may discard by
+      // resetAt alone.
+      if (stored) {
+        if (stored.mode === 'sliding' || Date.now() < stored.resetAt) {
+          this.data = stored;
+        } else {
+          this.data = undefined;
+        }
       } else {
         this.data = undefined;
       }
@@ -181,7 +189,14 @@ export class ApiGatewayRateLimiter {
         // pruned timestamps/resetAt are recomputed from storage on the next
         // load, so persisting on every throttled hit would only add Durable
         // Object write amplification under sustained bursts.
-        this.data = { count: timestamps.length, resetAt, windowSec, mode, timestamps };
+        this.data = {
+          count: timestamps.length,
+          resetAt,
+          windowSec,
+          mode,
+          timestamps,
+          ...(ephemeral && { ephemeral: true }),
+        };
         if (ephemeral) await this.scheduleCleanup(resetAt);
         return this.json({ allowed: false, remaining: 0, resetAt });
       }

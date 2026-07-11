@@ -333,6 +333,34 @@ describe('ApiGatewayRateLimiter durable object', () => {
     }
   });
 
+  it('keeps younger sliding hits when stored resetAt has already elapsed', async () => {
+    vi.useFakeTimers();
+    try {
+      // resetAt = oldest + window. At cold load the oldest is past cutoff but
+      // two younger hits remain; discarding whole state would under-enforce.
+      vi.setSystemTime(new Date('2026-07-05T12:00:00.100Z'));
+      const state = makeState();
+      const olderTs = Date.parse('2026-07-05T11:59:00Z');
+      const midTs = Date.parse('2026-07-05T11:59:20Z');
+      const youngerTs = Date.parse('2026-07-05T11:59:40Z');
+      await state.storage.put('state', {
+        count: 3,
+        resetAt: olderTs + 60_000,
+        windowSec: 60,
+        mode: 'sliding',
+        timestamps: [olderTs, midTs, youngerTs],
+      });
+      const limiter = new ApiGatewayRateLimiter(state);
+      const res = (await (await limiter.fetch(
+        limiterRequest({ limit: 2, windowSec: 60, mode: 'sliding' })
+      )).json()) as { allowed: boolean; remaining: number };
+      expect(res.allowed).toBe(false);
+      expect(res.remaining).toBe(0);
+    } finally {
+      vi.useRealTimers();
+    }
+  });
+
   it('handles config change from sliding to fixed-window on expired state', async () => {
     vi.useFakeTimers();
     try {
