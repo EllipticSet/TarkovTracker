@@ -57,13 +57,14 @@ type RateLimitOptions = {
   anchor?: RateLimitAnchor;
   mode?: RateLimitMode;
 };
-type RateLimitState = {
+export type RateLimitState = {
   count: number;
   resetAt: number;
   windowSec: number;
   anchor?: RateLimitAnchor;
   mode?: RateLimitMode;
   timestamps?: number[];
+  ephemeral?: boolean;
 };
 type RateLimitResponse = {
   allowed: boolean;
@@ -123,6 +124,7 @@ export class ApiGatewayRateLimiter {
       mode?: string;
       refund?: boolean;
       resetAt?: number;
+      ephemeral?: boolean;
     };
     try {
       payload = (await request.json()) as {
@@ -132,6 +134,7 @@ export class ApiGatewayRateLimiter {
         mode?: string;
         refund?: boolean;
         resetAt?: number;
+        ephemeral?: boolean;
       };
     } catch {
       return new Response('Bad Request', { status: 400 });
@@ -163,6 +166,7 @@ export class ApiGatewayRateLimiter {
     }
     const anchor: RateLimitAnchor | undefined = payload.anchor === 'utc-day' ? 'utc-day' : undefined;
     const mode: RateLimitMode | undefined = payload.mode === 'sliding' ? 'sliding' : undefined;
+    const ephemeral = payload.ephemeral === true;
     await this.load();
     const now = Date.now();
     const windowMs = windowSec * 1000;
@@ -178,11 +182,13 @@ export class ApiGatewayRateLimiter {
         // load, so persisting on every throttled hit would only add Durable
         // Object write amplification under sustained bursts.
         this.data = { count: timestamps.length, resetAt, windowSec, mode, timestamps };
+        if (ephemeral) await this.scheduleCleanup(resetAt);
         return this.json({ allowed: false, remaining: 0, resetAt });
       }
       timestamps.push(now);
-      this.data = { count: timestamps.length, resetAt: timestamps[0] + windowMs, windowSec, mode, timestamps };
+      this.data = { count: timestamps.length, resetAt: timestamps[0] + windowMs, windowSec, mode, timestamps, ...(ephemeral && { ephemeral: true }) };
       await this.state.storage.put('state', this.data);
+      if (ephemeral) await this.scheduleCleanup(this.data.resetAt);
       return this.json({
         allowed: true,
         remaining: Math.max(limit - timestamps.length, 0),
@@ -196,8 +202,9 @@ export class ApiGatewayRateLimiter {
       this.data.mode !== undefined;
     if (configChanged || now >= this.data!.resetAt) {
       const resetAt = anchor === 'utc-day' ? nextUtcMidnight(now) : now + windowMs;
-      this.data = { count: 0, resetAt, windowSec, anchor };
+      this.data = { count: 0, resetAt, windowSec, anchor, ...(ephemeral && { ephemeral: true }) };
     }
+    if (ephemeral) await this.scheduleCleanup(this.data!.resetAt);
     if (this.data!.count >= limit) {
       return this.json({
         allowed: false,
@@ -213,22 +220,30 @@ export class ApiGatewayRateLimiter {
       resetAt: this.data!.resetAt,
     });
   }
-  // Transitional handler: drains alarms scheduled by previous deployments
-  // without rescheduling. New deployments no longer call scheduleCleanup.
-  // Removal is tracked in #529 — removal date based on deployment time +
-  // max alarm horizon (~24h 1s) + retry period + safety buffer.
-  //
-  // Design tradeoff: removing per-object alarms intentionally trades alarm
-  // invocation overhead for persistent Durable Object storage associated with
-  // inactive rate-limit keys. Objects whose keys never receive another request
-  // retain their stored state indefinitely, which remains billable per
-  // Cloudflare's DO pricing until deleteAll() is called. load() treats expired
-  // state as absent for rate-limiting correctness, but storage is not reclaimed.
-  // A separate cleanup mechanism may be needed if namespace growth is material.
+  // Schedule self-cleanup for ephemeral keys (e.g. IP-derived, requester-
+  // target-mode combinations from Pages endpoints) so abandoned high-
+  // cardinality objects do not retain billable storage forever. The alarm
+  // fires shortly after the window resets and wipes all storage.
+  // Bounded authenticated keys (daily-*/burst-* keyed by user_id) do not
+  // schedule alarms — their cardinality is bounded by the user count, and
+  // load() treats expired state as absent for rate-limiting correctness.
+  // Alarms from previous deployments (without the ephemeral flag in stored
+  // state) are drained without rescheduling.
+  private async scheduleCleanup(resetAt: number): Promise<void> {
+    const cleanupAt = resetAt + 1000;
+    const existingAlarm = await this.state.storage.getAlarm();
+    if (existingAlarm !== cleanupAt) {
+      await this.state.storage.setAlarm(cleanupAt);
+    }
+  }
   async alarm(): Promise<void> {
     try {
       const stored = await this.state.storage.get<RateLimitState>('state');
       if (stored && Date.now() < stored.resetAt) {
+        if (stored.ephemeral === true) {
+          await this.state.storage.setAlarm(stored.resetAt + 1000);
+          return;
+        }
         this.data = undefined;
         this.loaded = false;
         return;

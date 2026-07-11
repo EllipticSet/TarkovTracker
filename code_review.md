@@ -150,9 +150,12 @@ Hard rules the reviewer must verify for every diff:
 - **Platform:** Cloudflare Pages (frontend), Cloudflare Workers (api-gateway,
   precompute), Supabase (database, auth, realtime, edge functions).
 - **Frontend rollback:** Pages deployments can be rolled back via the Cloudflare
-  dashboard or `wrangler pages deployment rollback`.
+  dashboard (Pages project → Deployments → target production deployment →
+  Rollback to this deployment). Wrangler does not provide a CLI rollback for
+  Pages.
 - **Workers rollback:** Workers versions can be rolled back via
-  `wrangler deployments rollback`.
+  `wrangler rollback [VERSION_ID]`. Omitting the version ID selects the
+  preceding version interactively.
 - **Supabase rollback:** Migrations may not be reversible. Treat migration-only
   PRs as high-risk and require a rollback plan in the PR description. If a down
   migration exists, verify it actually reverses the up migration.

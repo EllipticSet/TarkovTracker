@@ -1,5 +1,5 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
-import worker, { ApiGatewayRateLimiter } from '../index';
+import worker, { ApiGatewayRateLimiter, type RateLimitState } from '../index';
 import { isKnownTier, TIER_LIMITS, UPGRADE_URL } from '../limits';
 import { deleteMemoryCache } from '../utils/memory-cache';
 import type { Env } from '../types';
@@ -378,6 +378,157 @@ describe('ApiGatewayRateLimiter durable object', () => {
     )).json()) as { allowed: boolean };
     expect(throttled.allowed).toBe(false);
     expect(setAlarmSpy).not.toHaveBeenCalled();
+  });
+
+  it('schedules cleanup alarm for ephemeral sliding-window requests', async () => {
+    vi.useFakeTimers();
+    try {
+      vi.setSystemTime(new Date('2026-07-05T12:00:00Z'));
+      const state = makeState();
+      const setAlarmSpy = vi.spyOn(state.storage, 'setAlarm');
+      const limiter = new ApiGatewayRateLimiter(state);
+      const res = await limiter.fetch(
+        limiterRequest({ limit: 5, windowSec: 60, mode: 'sliding', ephemeral: true })
+      );
+      const body = (await res.json()) as { allowed: boolean; resetAt: number };
+      expect(body.allowed).toBe(true);
+      expect(setAlarmSpy).toHaveBeenCalledTimes(1);
+      expect(setAlarmSpy).toHaveBeenCalledWith(body.resetAt + 1000);
+    } finally {
+      vi.useRealTimers();
+    }
+  });
+
+  it('schedules cleanup alarm for ephemeral fixed-window requests', async () => {
+    vi.useFakeTimers();
+    try {
+      vi.setSystemTime(new Date('2026-07-05T12:00:00Z'));
+      const state = makeState();
+      const setAlarmSpy = vi.spyOn(state.storage, 'setAlarm');
+      const limiter = new ApiGatewayRateLimiter(state);
+      const res = await limiter.fetch(
+        limiterRequest({ limit: 5, windowSec: 60, ephemeral: true })
+      );
+      const body = (await res.json()) as { allowed: boolean; resetAt: number };
+      expect(body.allowed).toBe(true);
+      expect(setAlarmSpy).toHaveBeenCalledTimes(1);
+      expect(setAlarmSpy).toHaveBeenCalledWith(body.resetAt + 1000);
+    } finally {
+      vi.useRealTimers();
+    }
+  });
+
+  it('keeps cleanup alarm scheduled on ephemeral throttled sliding-window deny path', async () => {
+    vi.useFakeTimers();
+    try {
+      vi.setSystemTime(new Date('2026-07-05T12:00:00Z'));
+      const state = makeState();
+      const limiter = new ApiGatewayRateLimiter(state);
+      const payload = { limit: 1, windowSec: 60, mode: 'sliding', ephemeral: true };
+      const first = await limiter.fetch(limiterRequest(payload));
+      const firstBody = (await first.json()) as { allowed: boolean; resetAt: number };
+      expect(firstBody.allowed).toBe(true);
+      const alarmAfterAllow = await state.storage.getAlarm();
+      expect(alarmAfterAllow).toBe(firstBody.resetAt + 1000);
+      const throttled = await limiter.fetch(limiterRequest(payload));
+      const body = (await throttled.json()) as { allowed: boolean; resetAt: number };
+      expect(body.allowed).toBe(false);
+      const alarmAfterDeny = await state.storage.getAlarm();
+      expect(alarmAfterDeny).toBe(body.resetAt + 1000);
+    } finally {
+      vi.useRealTimers();
+    }
+  });
+
+  it('alarm reschedules when ephemeral state is still active', async () => {
+    vi.useFakeTimers();
+    try {
+      vi.setSystemTime(new Date('2026-07-05T12:00:00Z'));
+      const state = makeState();
+      const resetAt = Date.parse('2026-07-05T12:01:00Z');
+      await state.storage.put('state', {
+        count: 1,
+        resetAt,
+        windowSec: 60,
+        ephemeral: true,
+      });
+      await state.storage.setAlarm(resetAt + 1000);
+      const setAlarmSpy = vi.spyOn(state.storage, 'setAlarm');
+      const limiter = new ApiGatewayRateLimiter(state);
+      await limiter.alarm();
+      expect(setAlarmSpy).toHaveBeenCalledWith(resetAt + 1000);
+      const stored = await state.storage.get<RateLimitState>('state');
+      expect(stored).toBeDefined();
+    } finally {
+      vi.useRealTimers();
+    }
+  });
+
+  it('alarm deletes storage when ephemeral state is expired', async () => {
+    vi.useFakeTimers();
+    try {
+      vi.setSystemTime(new Date('2026-07-05T12:02:00Z'));
+      const state = makeState();
+      const resetAt = Date.parse('2026-07-05T12:00:00Z');
+      await state.storage.put('state', {
+        count: 1,
+        resetAt,
+        windowSec: 60,
+        ephemeral: true,
+      });
+      const deleteAllSpy = vi.spyOn(state.storage, 'deleteAll');
+      const setAlarmSpy = vi.spyOn(state.storage, 'setAlarm');
+      const limiter = new ApiGatewayRateLimiter(state);
+      await limiter.alarm();
+      expect(deleteAllSpy).toHaveBeenCalledTimes(1);
+      expect(setAlarmSpy).not.toHaveBeenCalled();
+      const stored = await state.storage.get<RateLimitState>('state');
+      expect(stored).toBeUndefined();
+    } finally {
+      vi.useRealTimers();
+    }
+  });
+
+  it('alarm does not reschedule for non-ephemeral state (transitional drain)', async () => {
+    vi.useFakeTimers();
+    try {
+      vi.setSystemTime(new Date('2026-07-05T12:00:30Z'));
+      const state = makeState();
+      const resetAt = Date.parse('2026-07-05T12:01:00Z');
+      await state.storage.put('state', {
+        count: 1,
+        resetAt,
+        windowSec: 60,
+      });
+      const setAlarmSpy = vi.spyOn(state.storage, 'setAlarm');
+      const deleteAllSpy = vi.spyOn(state.storage, 'deleteAll');
+      const limiter = new ApiGatewayRateLimiter(state);
+      await limiter.alarm();
+      expect(setAlarmSpy).not.toHaveBeenCalled();
+      expect(deleteAllSpy).not.toHaveBeenCalled();
+    } finally {
+      vi.useRealTimers();
+    }
+  });
+
+  it('alarm deletes storage for expired non-ephemeral state', async () => {
+    vi.useFakeTimers();
+    try {
+      vi.setSystemTime(new Date('2026-07-05T12:02:00Z'));
+      const state = makeState();
+      const resetAt = Date.parse('2026-07-05T12:00:00Z');
+      await state.storage.put('state', {
+        count: 1,
+        resetAt,
+        windowSec: 60,
+      });
+      const deleteAllSpy = vi.spyOn(state.storage, 'deleteAll');
+      const limiter = new ApiGatewayRateLimiter(state);
+      await limiter.alarm();
+      expect(deleteAllSpy).toHaveBeenCalledTimes(1);
+    } finally {
+      vi.useRealTimers();
+    }
   });
 });
 

@@ -292,7 +292,7 @@ const consumeDurableRateLimit = async (
     const response = await stub.fetch('https://rate-limit', {
       method: 'POST',
       headers: { 'content-type': 'application/json' },
-      body: JSON.stringify({ limit, windowSec }),
+      body: JSON.stringify({ limit, windowSec, ephemeral: true }),
       signal: controller.signal,
     });
     if (!response.ok) {
