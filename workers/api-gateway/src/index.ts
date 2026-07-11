@@ -12,6 +12,7 @@ import { BURST_WINDOW_SEC, DAILY_WINDOW_SEC, TIER_LIMITS, upgradeMessage } from 
 import { OPENAPI_JSON } from './openapi';
 import { resolveTier } from './services/supporter';
 import { recordUsage } from './services/usage';
+import { logger } from './utils/logger';
 import type {
   ApiToken,
   Env,
@@ -98,12 +99,17 @@ export class ApiGatewayRateLimiter {
   }
   private async load() {
     if (this.loaded) return;
-    const stored = await this.state.storage.get<RateLimitState>('state');
-    this.loaded = true;
-    if (stored && Date.now() < stored.resetAt) {
-      this.data = stored;
-    } else {
-      this.data = undefined;
+    try {
+      const stored = await this.state.storage.get<RateLimitState>('state');
+      this.loaded = true;
+      if (stored && Date.now() < stored.resetAt) {
+        this.data = stored;
+      } else {
+        this.data = undefined;
+      }
+    } catch (error) {
+      logger.error('rate limiter storage load failed', { id: this.state.id.toString(), error });
+      throw error;
     }
   }
   async fetch(request: Request): Promise<Response> {
@@ -209,17 +215,31 @@ export class ApiGatewayRateLimiter {
   }
   // Transitional handler: drains alarms scheduled by previous deployments
   // without rescheduling. New deployments no longer call scheduleCleanup.
-  // This can be removed once all pre-deployment alarms have fired (Phase 2).
+  // Removal is tracked in #529 — removal date based on deployment time +
+  // max alarm horizon (~24h 1s) + retry period + safety buffer.
+  //
+  // Design tradeoff: removing per-object alarms intentionally trades alarm
+  // invocation overhead for persistent Durable Object storage associated with
+  // inactive rate-limit keys. Objects whose keys never receive another request
+  // retain their stored state indefinitely, which remains billable per
+  // Cloudflare's DO pricing until deleteAll() is called. load() treats expired
+  // state as absent for rate-limiting correctness, but storage is not reclaimed.
+  // A separate cleanup mechanism may be needed if namespace growth is material.
   async alarm(): Promise<void> {
-    const stored = await this.state.storage.get<RateLimitState>('state');
-    if (stored && Date.now() < stored.resetAt) {
+    try {
+      const stored = await this.state.storage.get<RateLimitState>('state');
+      if (stored && Date.now() < stored.resetAt) {
+        this.data = undefined;
+        this.loaded = false;
+        return;
+      }
       this.data = undefined;
       this.loaded = false;
-      return;
+      await this.state.storage.deleteAll();
+    } catch (error) {
+      logger.error('rate limiter alarm cleanup failed', { id: this.state.id.toString(), error });
+      throw error;
     }
-    this.data = undefined;
-    this.loaded = false;
-    await this.state.storage.deleteAll();
   }
 }
 async function rateLimit(

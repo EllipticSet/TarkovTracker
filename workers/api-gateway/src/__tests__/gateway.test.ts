@@ -801,6 +801,9 @@ describe('api-gateway', () => {
   });
 });
 describe('ApiGatewayRateLimiter storage cleanup', () => {
+  afterEach(() => {
+    vi.restoreAllMocks();
+  });
   const createStorageMock = () => {
     const store = new Map<string, unknown>();
     let alarm: number | null = null;
@@ -852,7 +855,6 @@ describe('ApiGatewayRateLimiter storage cleanup', () => {
     await limiter.alarm();
     expect(mock.storage.deleteAll).toHaveBeenCalledTimes(1);
     expect(mock.store.has('state')).toBe(false);
-    vi.restoreAllMocks();
   });
   it('transitional alarm preserves active state without rescheduling', async () => {
     const mock = createStorageMock();
@@ -866,7 +868,6 @@ describe('ApiGatewayRateLimiter storage cleanup', () => {
     expect(mock.storage.deleteAll).not.toHaveBeenCalled();
     expect(mock.store.has('state')).toBe(true);
     expect(mock.storage.setAlarm).not.toHaveBeenCalled();
-    vi.restoreAllMocks();
   });
   it('transitional alarm wipes expired state without rescheduling', async () => {
     const mock = createStorageMock();
@@ -880,6 +881,5 @@ describe('ApiGatewayRateLimiter storage cleanup', () => {
     expect(mock.storage.deleteAll).toHaveBeenCalledTimes(1);
     expect(mock.store.has('state')).toBe(false);
     expect(mock.storage.setAlarm).not.toHaveBeenCalled();
-    vi.restoreAllMocks();
   });
 });
