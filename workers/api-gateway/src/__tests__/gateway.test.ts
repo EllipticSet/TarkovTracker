@@ -827,23 +827,37 @@ describe('ApiGatewayRateLimiter storage cleanup', () => {
       },
     };
   };
-  const callLimit = (limiter: ApiGatewayRateLimiter, limit = 5, windowSec = 60) =>
+  const callLimit = (
+    limiter: ApiGatewayRateLimiter,
+    limit = 5,
+    windowSec = 60,
+    options: { retain?: boolean } = {}
+  ) =>
     limiter.fetch(
       new Request('https://rate-limit', {
         method: 'POST',
         headers: { 'content-type': 'application/json' },
-        body: JSON.stringify({ limit, windowSec }),
+        body: JSON.stringify({ limit, windowSec, ...options }),
       })
     );
-  it('does not schedule a cleanup alarm when a request is counted', async () => {
+  it('does not schedule a cleanup alarm when retain is set', async () => {
     const mock = createStorageMock();
     const limiter = new ApiGatewayRateLimiter({
       storage: mock.storage,
     } as unknown as DurableObjectState);
-    await callLimit(limiter);
+    await callLimit(limiter, 5, 60, { retain: true });
     expect(mock.storage.setAlarm).not.toHaveBeenCalled();
   });
-  it('wipes all storage when a transitional alarm fires after expiry', async () => {
+  it('schedules a cleanup alarm by default when retain is omitted', async () => {
+    const mock = createStorageMock();
+    const limiter = new ApiGatewayRateLimiter({
+      storage: mock.storage,
+    } as unknown as DurableObjectState);
+    const res = await callLimit(limiter);
+    const body = (await res.json()) as { resetAt: number };
+    expect(mock.storage.setAlarm).toHaveBeenCalledWith(body.resetAt + 1000);
+  });
+  it('wipes all storage when a cleanup alarm fires after expiry', async () => {
     const mock = createStorageMock();
     const limiter = new ApiGatewayRateLimiter({
       storage: mock.storage,
@@ -856,26 +870,43 @@ describe('ApiGatewayRateLimiter storage cleanup', () => {
     expect(mock.storage.deleteAll).toHaveBeenCalledTimes(1);
     expect(mock.store.has('state')).toBe(false);
   });
-  it('transitional alarm preserves active state without rescheduling', async () => {
+  it('retained active state is preserved by transitional alarm without rescheduling', async () => {
     const mock = createStorageMock();
     const limiter = new ApiGatewayRateLimiter({
       storage: mock.storage,
     } as unknown as DurableObjectState);
-    await callLimit(limiter, 5, 60);
+    await callLimit(limiter, 5, 60, { retain: true });
+    // Seed a legacy alarm over retained state (pre-deploy transitional drain).
     const stored = mock.store.get('state') as { resetAt: number };
+    mock.storage.setAlarm.mockClear();
     vi.spyOn(Date, 'now').mockReturnValue(stored.resetAt - 1000);
     await limiter.alarm();
     expect(mock.storage.deleteAll).not.toHaveBeenCalled();
     expect(mock.store.has('state')).toBe(true);
     expect(mock.storage.setAlarm).not.toHaveBeenCalled();
   });
-  it('transitional alarm wipes expired state without rescheduling', async () => {
+  it('ephemeral active state is preserved and rescheduled by alarm', async () => {
     const mock = createStorageMock();
     const limiter = new ApiGatewayRateLimiter({
       storage: mock.storage,
     } as unknown as DurableObjectState);
     await callLimit(limiter, 5, 60);
     const stored = mock.store.get('state') as { resetAt: number };
+    mock.storage.setAlarm.mockClear();
+    vi.spyOn(Date, 'now').mockReturnValue(stored.resetAt - 1000);
+    await limiter.alarm();
+    expect(mock.storage.deleteAll).not.toHaveBeenCalled();
+    expect(mock.store.has('state')).toBe(true);
+    expect(mock.storage.setAlarm).toHaveBeenCalledWith(stored.resetAt + 1000);
+  });
+  it('cleanup alarm wipes expired state without rescheduling', async () => {
+    const mock = createStorageMock();
+    const limiter = new ApiGatewayRateLimiter({
+      storage: mock.storage,
+    } as unknown as DurableObjectState);
+    await callLimit(limiter, 5, 60);
+    const stored = mock.store.get('state') as { resetAt: number };
+    mock.storage.setAlarm.mockClear();
     vi.spyOn(Date, 'now').mockReturnValue(stored.resetAt + 5000);
     await limiter.alarm();
     expect(mock.storage.deleteAll).toHaveBeenCalledTimes(1);

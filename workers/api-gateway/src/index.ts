@@ -132,7 +132,7 @@ export class ApiGatewayRateLimiter {
       mode?: string;
       refund?: boolean;
       resetAt?: number;
-      ephemeral?: boolean;
+      retain?: boolean;
     };
     try {
       payload = (await request.json()) as {
@@ -142,7 +142,7 @@ export class ApiGatewayRateLimiter {
         mode?: string;
         refund?: boolean;
         resetAt?: number;
-        ephemeral?: boolean;
+        retain?: boolean;
       };
     } catch {
       return new Response('Bad Request', { status: 400 });
@@ -174,7 +174,10 @@ export class ApiGatewayRateLimiter {
     }
     const anchor: RateLimitAnchor | undefined = payload.anchor === 'utc-day' ? 'utc-day' : undefined;
     const mode: RateLimitMode | undefined = payload.mode === 'sliding' ? 'sliding' : undefined;
-    const ephemeral = payload.ephemeral === true;
+    // Cleanup is the default for high-cardinality callers (Pages, legacy, unknown).
+    // Authenticated gateway quotas opt in to long retention via retain: true so a
+    // Worker-first deploy never drops cleanup for keys that omit the flag.
+    const ephemeral = payload.retain !== true;
     await this.load();
     const now = Date.now();
     const windowMs = windowSec * 1000;
@@ -201,7 +204,14 @@ export class ApiGatewayRateLimiter {
         return this.json({ allowed: false, remaining: 0, resetAt });
       }
       timestamps.push(now);
-      this.data = { count: timestamps.length, resetAt: timestamps[0] + windowMs, windowSec, mode, timestamps, ...(ephemeral && { ephemeral: true }) };
+      this.data = {
+        count: timestamps.length,
+        resetAt: timestamps[0] + windowMs,
+        windowSec,
+        mode,
+        timestamps,
+        ...(ephemeral && { ephemeral: true }),
+      };
       await this.state.storage.put('state', this.data);
       if (ephemeral) await this.scheduleCleanup(this.data.resetAt);
       return this.json({
@@ -218,6 +228,10 @@ export class ApiGatewayRateLimiter {
     if (configChanged || now >= this.data!.resetAt) {
       const resetAt = anchor === 'utc-day' ? nextUtcMidnight(now) : now + windowMs;
       this.data = { count: 0, resetAt, windowSec, anchor, ...(ephemeral && { ephemeral: true }) };
+    } else if (ephemeral) {
+      // Re-stamp cleanup eligibility on an existing window so a pre-flag stored
+      // state still reschedules when its alarm fires mid-window.
+      this.data!.ephemeral = true;
     }
     if (ephemeral) await this.scheduleCleanup(this.data!.resetAt);
     if (this.data!.count >= limit) {
@@ -235,15 +249,15 @@ export class ApiGatewayRateLimiter {
       resetAt: this.data!.resetAt,
     });
   }
-  // Schedule self-cleanup for ephemeral keys (e.g. IP-derived, requester-
-  // target-mode combinations from Pages endpoints) so abandoned high-
-  // cardinality objects do not retain billable storage forever. The alarm
-  // fires shortly after the window resets and wipes all storage.
-  // Bounded authenticated keys (daily-*/burst-* keyed by user_id) do not
-  // schedule alarms — their cardinality is bounded by the user count, and
-  // load() treats expired state as absent for rate-limiting correctness.
-  // Alarms from previous deployments (without the ephemeral flag in stored
-  // state) are drained without rescheduling.
+  // Schedule self-cleanup by default for high-cardinality keys (IP-derived,
+  // requester-target-mode combinations from Pages endpoints) so abandoned
+  // objects do not retain billable storage forever. The alarm fires shortly
+  // after the window resets and wipes all storage.
+  // Bounded authenticated keys (daily-*/burst-* keyed by user_id) pass
+  // retain: true so they skip alarms; load() treats expired state as absent
+  // for rate-limiting correctness.
+  // Alarms from previous deployments without the ephemeral flag in stored
+  // state are drained without rescheduling while the window is still active.
   private async scheduleCleanup(resetAt: number): Promise<void> {
     const cleanupAt = resetAt + 1000;
     const existingAlarm = await this.state.storage.getAlarm();
@@ -251,17 +265,33 @@ export class ApiGatewayRateLimiter {
       await this.state.storage.setAlarm(cleanupAt);
     }
   }
+  private isStateActive(stored: RateLimitState, now: number): { active: boolean; resetAt: number } {
+    if (stored.mode === 'sliding') {
+      const windowMs = (stored.windowSec || 0) * 1000;
+      const cutoff = now - windowMs;
+      const timestamps = (stored.timestamps ?? []).filter((ts) => ts > cutoff);
+      if (!timestamps.length) {
+        return { active: false, resetAt: stored.resetAt };
+      }
+      return { active: true, resetAt: timestamps[0] + windowMs };
+    }
+    return { active: now < stored.resetAt, resetAt: stored.resetAt };
+  }
   async alarm(): Promise<void> {
     try {
       const stored = await this.state.storage.get<RateLimitState>('state');
-      if (stored && Date.now() < stored.resetAt) {
-        if (stored.ephemeral === true) {
-          await this.state.storage.setAlarm(stored.resetAt + 1000);
+      const now = Date.now();
+      if (stored) {
+        const { active, resetAt } = this.isStateActive(stored, now);
+        if (active) {
+          if (stored.ephemeral === true) {
+            await this.state.storage.setAlarm(resetAt + 1000);
+            return;
+          }
+          this.data = undefined;
+          this.loaded = false;
           return;
         }
-        this.data = undefined;
-        this.loaded = false;
-        return;
       }
       this.data = undefined;
       this.loaded = false;
@@ -289,7 +319,13 @@ async function rateLimit(
     const res = await stub.fetch('https://rate-limit', {
       method: 'POST',
       headers: { 'content-type': 'application/json' },
-      body: JSON.stringify({ limit, windowSec, anchor: options?.anchor, mode: options?.mode }),
+      body: JSON.stringify({
+        limit,
+        windowSec,
+        anchor: options?.anchor,
+        mode: options?.mode,
+        retain: true,
+      }),
       signal: controller.signal,
     });
     const durationMs = Date.now() - startedAt;

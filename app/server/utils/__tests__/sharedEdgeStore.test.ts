@@ -228,7 +228,7 @@ describe('consumeSharedRateLimit', () => {
     expect(cacheMatch).not.toHaveBeenCalled();
     const requestInit = stubFetch.mock.calls[0]?.[1] as RequestInit | undefined;
     const sentBody = JSON.parse(String(requestInit?.body));
-    expect(sentBody).toEqual({ limit: 5, windowSec: 60, ephemeral: true });
+    expect(sentBody).toEqual({ limit: 5, windowSec: 60 });
   });
   it('blocks when the durable object limiter denies the request', async () => {
     const { consumeSharedRateLimit } = await import('@/server/utils/sharedEdgeStore');
