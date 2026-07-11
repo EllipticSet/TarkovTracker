@@ -1,3 +1,24 @@
+## [1.55.6](https://github.com/tarkovtracker-org/TarkovTracker/compare/v1.55.5...v1.55.6) (2026-07-11)
+
+
+### Bug Fixes
+
+* **app:** throttle client log beacons and cache CORS preflights ([#527](https://github.com/tarkovtracker-org/TarkovTracker/issues/527)) ([2e39283](https://github.com/tarkovtracker-org/TarkovTracker/commit/2e3928316fa6ab3dbdfa120812d385f8cb3b9934))
+
+## [1.55.5](https://github.com/tarkovtracker-org/TarkovTracker/compare/v1.55.4...v1.55.5) (2026-07-11)
+
+
+### Bug Fixes
+
+* **app:** populate skill image links from tarkov.dev CDN ([#522](https://github.com/tarkovtracker-org/TarkovTracker/issues/522)) ([5ea73ff](https://github.com/tarkovtracker-org/TarkovTracker/commit/5ea73ffc75a59b2f42a0f01d79e18813bc336346))
+
+## [1.55.4](https://github.com/tarkovtracker-org/TarkovTracker/compare/v1.55.3...v1.55.4) (2026-07-10)
+
+
+### Bug Fixes
+
+* **app:** tighten fuzzy search matching ([#519](https://github.com/tarkovtracker-org/TarkovTracker/issues/519)) ([78759f0](https://github.com/tarkovtracker-org/TarkovTracker/commit/78759f09fdb9e30596266d88911405254483fc40))
+
 ## [1.55.3](https://github.com/tarkovtracker-org/TarkovTracker/compare/v1.55.2...v1.55.3) (2026-07-10)
 
 
