@@ -85,3 +85,10 @@ export const LINK_ICONS: Record<ResourceLinkType, string> = {
   api: 'i-mdi-api',
   download: 'i-mdi-download',
 };
+export const LINK_LABEL_FALLBACKS: Record<ResourceLinkType, string> = {
+  website: 'Website',
+  github: 'GitHub',
+  discord: 'Discord',
+  api: 'API',
+  download: 'Download',
+};

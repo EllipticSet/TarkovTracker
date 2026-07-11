@@ -33,7 +33,7 @@
         color="primary"
         variant="soft"
         :icon="guideIcon"
-        :label="t('page.resources.view_guide')"
+        :label="t('page.resources.view_guide', 'View Guide')"
       />
       <UButton
         v-for="link in resource.links"
@@ -45,13 +45,17 @@
         color="neutral"
         variant="ghost"
         :icon="LINK_ICONS[link.type]"
-        :label="t(`page.resources.link_types.${link.type}`)"
+        :label="t(`page.resources.link_types.${link.type}`, LINK_LABEL_FALLBACKS[link.type])"
       />
     </div>
   </div>
 </template>
 <script setup lang="ts">
-  import { LINK_ICONS, type Resource } from '@/features/resources/resourceData';
+  import {
+    LINK_ICONS,
+    LINK_LABEL_FALLBACKS,
+    type Resource,
+  } from '@/features/resources/resourceData';
   const { t } = useI18n({ useScope: 'global' });
   const props = defineProps<{ resource: Resource }>();
   const name = computed(() => t(`page.resources.items.${props.resource.slug}.name`));

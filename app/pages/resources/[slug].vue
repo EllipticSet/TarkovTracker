@@ -2,13 +2,20 @@
   <UContainer class="px-4 py-8">
     <div v-if="!resource || !resource.hasGuide" class="mx-auto max-w-2xl py-16 text-center">
       <UIcon name="i-mdi-alert-circle-outline" class="text-surface-500 mb-3 h-12 w-12" />
-      <p class="text-surface-400">{{ t('page.resources.guide_not_found') }}</p>
+      <p class="text-surface-400">
+        {{
+          t(
+            'page.resources.guide_not_found',
+            'Guide not found. The resource you are looking for may not have a guide yet.'
+          )
+        }}
+      </p>
       <UButton
         to="/resources"
         color="primary"
         variant="soft"
         class="mt-4"
-        :label="t('page.resources.back_to_hub')"
+        :label="t('page.resources.back_to_hub', 'Back to Resources')"
         icon="i-mdi-arrow-left"
       />
     </div>
@@ -23,7 +30,7 @@
           </div>
           <div>
             <p class="text-primary-300/80 text-xs font-semibold tracking-[0.3em] uppercase">
-              {{ t('page.resources.guide_label') }}
+              {{ t('page.resources.guide_label', 'Guide') }}
             </p>
             <h1 class="text-2xl font-bold text-white">{{ guideTitle }}</h1>
           </div>
@@ -33,7 +40,7 @@
           class="text-surface-400 hover:text-primary-400 text-sm transition-colors"
         >
           <UIcon name="i-mdi-arrow-left" class="mr-1 inline h-4 w-4" />
-          {{ t('page.resources.back_to_hub') }}
+          {{ t('page.resources.back_to_hub', 'Back to Resources') }}
         </NuxtLink>
       </header>
       <div class="flex flex-wrap gap-2">
@@ -47,18 +54,18 @@
           color="neutral"
           variant="soft"
           :icon="LINK_ICONS[link.type]"
-          :label="t(`page.resources.link_types.${link.type}`)"
+          :label="t(`page.resources.link_types.${link.type}`, LINK_LABEL_FALLBACKS[link.type])"
         />
       </div>
       <ResourceGuideSection
-        :title="t('page.resources.guide_sections.overview')"
+        :title="t('page.resources.guide_sections.overview', 'Overview')"
         icon="i-mdi-information-outline"
       >
         <p class="text-surface-200 text-sm leading-relaxed">{{ overviewText }}</p>
       </ResourceGuideSection>
       <ResourceGuideSection
         v-if="resource.guide && resource.guide.steps > 0"
-        :title="t('page.resources.guide_sections.setup')"
+        :title="t('page.resources.guide_sections.setup', 'Getting Started')"
         icon="i-mdi-playlist-check"
       >
         <ol class="space-y-3">
@@ -81,7 +88,7 @@
       </ResourceGuideSection>
       <ResourceGuideSection
         v-if="resource.guide && resource.guide.tips > 0"
-        :title="t('page.resources.guide_sections.tips')"
+        :title="t('page.resources.guide_sections.tips', 'Tips & Tricks')"
         icon="i-mdi-lightbulb-on-outline"
       >
         <ul class="space-y-2">
@@ -100,7 +107,7 @@
       </ResourceGuideSection>
       <ResourceGuideSection
         v-if="resource.guide && resource.guide.faq > 0"
-        :title="t('page.resources.guide_sections.faq')"
+        :title="t('page.resources.guide_sections.faq', 'Common Questions')"
         icon="i-mdi-help-circle-outline"
       >
         <div class="space-y-4">
@@ -122,7 +129,11 @@
   </UContainer>
 </template>
 <script setup lang="ts">
-  import { LINK_ICONS, getResourceBySlug } from '@/features/resources/resourceData';
+  import {
+    LINK_ICONS,
+    LINK_LABEL_FALLBACKS,
+    getResourceBySlug,
+  } from '@/features/resources/resourceData';
   import ResourceGuideSection from '@/features/resources/ResourceGuideSection.vue';
   const { t } = useI18n({ useScope: 'global' });
   const route = useRoute();
@@ -133,13 +144,24 @@
   });
   const resource = computed(() => getResourceBySlug(slug.value));
   const guideTitle = computed(() => t(`page.resources.items.${slug.value}.name`));
-  const overviewText = computed(() => t(`page.resources.guides.${slug.value}.overview`));
+  const overviewText = computed(() =>
+    resource.value?.hasGuide
+      ? t(`page.resources.guides.${slug.value}.overview`)
+      : t(
+          'page.resources.subtitle',
+          'Community tools, integrations, and guides to help you get the most out of TarkovTracker and the wider Escape from Tarkov ecosystem.'
+        )
+  );
   definePageMeta({ layout: 'default' });
   useSeoMeta({
     title: computed(() =>
       resource.value?.hasGuide
-        ? t('page.resources.guide_title_template', { name: guideTitle.value })
-        : t('page.resources.title')
+        ? t(
+            'page.resources.guide_title_template',
+            { name: guideTitle.value },
+            `${guideTitle.value} Guide`
+          )
+        : t('page.resources.title', 'Resources & Guides')
     ),
     description: computed(() => overviewText.value),
   });

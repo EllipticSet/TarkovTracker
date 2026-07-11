@@ -3,15 +3,20 @@
     <div class="mx-auto flex w-full max-w-5xl flex-col gap-8">
       <header class="text-center">
         <h1 class="text-2xl font-bold text-white sm:text-3xl">
-          {{ t('page.resources.title') }}
+          {{ t('page.resources.title', 'Resources & Guides') }}
         </h1>
         <p class="text-surface-400 mx-auto mt-2 max-w-xl text-sm">
-          {{ t('page.resources.subtitle') }}
+          {{
+            t(
+              'page.resources.subtitle',
+              'Community tools, integrations, and guides to help you get the most out of TarkovTracker and the wider Escape from Tarkov ecosystem.'
+            )
+          }}
         </p>
       </header>
       <div v-if="featuredResources.length" class="space-y-4">
         <h2 class="text-surface-400 text-xs font-semibold tracking-wider uppercase">
-          {{ t('page.resources.section_featured') }}
+          {{ t('page.resources.section_featured', 'Featured') }}
         </h2>
         <div class="grid gap-6 md:grid-cols-2">
           <ResourceCard
@@ -23,7 +28,7 @@
       </div>
       <div class="space-y-4">
         <h2 class="text-surface-400 text-xs font-semibold tracking-wider uppercase">
-          {{ t('page.resources.section_all') }}
+          {{ t('page.resources.section_all', 'All Resources') }}
         </h2>
         <div class="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
           <ResourceCard
@@ -42,10 +47,20 @@
   const { t } = useI18n({ useScope: 'global' });
   definePageMeta({ layout: 'default' });
   useSeoMeta({
-    title: computed(() => t('page.resources.title')),
-    description: computed(() => t('page.resources.subtitle')),
-    ogTitle: computed(() => t('page.resources.title')),
-    ogDescription: computed(() => t('page.resources.subtitle')),
+    title: computed(() => t('page.resources.title', 'Resources & Guides')),
+    description: computed(() =>
+      t(
+        'page.resources.subtitle',
+        'Community tools, integrations, and guides to help you get the most out of TarkovTracker and the wider Escape from Tarkov ecosystem.'
+      )
+    ),
+    ogTitle: computed(() => t('page.resources.title', 'Resources & Guides')),
+    ogDescription: computed(() =>
+      t(
+        'page.resources.subtitle',
+        'Community tools, integrations, and guides to help you get the most out of TarkovTracker and the wider Escape from Tarkov ecosystem.'
+      )
+    ),
   });
   const featuredResources = computed(() => RESOURCES.filter((r) => r.featured));
   const otherResources = computed(() => RESOURCES.filter((r) => !r.featured));
