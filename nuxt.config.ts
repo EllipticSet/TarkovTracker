@@ -1,5 +1,5 @@
 // https://nuxt.com/docs/api/configuration/nuxt-config
-import { readdirSync, readFileSync, writeFileSync } from 'node:fs';
+import { readdirSync, readFileSync, writeFileSync, type Dirent } from 'node:fs';
 import { join, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { resolveTrustProxySetting } from './app/utils/apiProtectionConfig';
@@ -250,9 +250,9 @@ export default defineNuxtConfig({
         }
         const bareNodeImportRe = /import\s*["']node:[^"']+["']\s*;?/g;
         const walk = (dir: string) => {
-          let entries: ReturnType<typeof readdirSync>;
+          let entries: Dirent[];
           try {
-            entries = readdirSync(dir, { withFileTypes: true });
+            entries = readdirSync(dir, { withFileTypes: true, encoding: 'utf8' });
           } catch {
             return;
           }
