@@ -98,8 +98,8 @@ export class ApiGatewayRateLimiter {
   }
   private async load() {
     if (this.loaded) return;
-    this.loaded = true;
     const stored = await this.state.storage.get<RateLimitState>('state');
+    this.loaded = true;
     if (stored && Date.now() < stored.resetAt) {
       this.data = stored;
     } else {
@@ -211,6 +211,12 @@ export class ApiGatewayRateLimiter {
   // without rescheduling. New deployments no longer call scheduleCleanup.
   // This can be removed once all pre-deployment alarms have fired (Phase 2).
   async alarm(): Promise<void> {
+    const stored = await this.state.storage.get<RateLimitState>('state');
+    if (stored && Date.now() < stored.resetAt) {
+      this.data = undefined;
+      this.loaded = false;
+      return;
+    }
     this.data = undefined;
     this.loaded = false;
     await this.state.storage.deleteAll();

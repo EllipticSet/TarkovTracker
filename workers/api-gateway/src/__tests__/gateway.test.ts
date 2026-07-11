@@ -840,18 +840,21 @@ describe('ApiGatewayRateLimiter storage cleanup', () => {
     await callLimit(limiter);
     expect(mock.storage.setAlarm).not.toHaveBeenCalled();
   });
-  it('wipes all storage when a transitional alarm fires', async () => {
+  it('wipes all storage when a transitional alarm fires after expiry', async () => {
     const mock = createStorageMock();
     const limiter = new ApiGatewayRateLimiter({
       storage: mock.storage,
     } as unknown as DurableObjectState);
     await callLimit(limiter, 5, 60);
     expect(mock.store.has('state')).toBe(true);
+    const stored = mock.store.get('state') as { resetAt: number };
+    vi.spyOn(Date, 'now').mockReturnValue(stored.resetAt + 5000);
     await limiter.alarm();
     expect(mock.storage.deleteAll).toHaveBeenCalledTimes(1);
     expect(mock.store.has('state')).toBe(false);
+    vi.restoreAllMocks();
   });
-  it('transitional alarm does not reschedule even when state is still active', async () => {
+  it('transitional alarm preserves active state without rescheduling', async () => {
     const mock = createStorageMock();
     const limiter = new ApiGatewayRateLimiter({
       storage: mock.storage,
@@ -859,6 +862,20 @@ describe('ApiGatewayRateLimiter storage cleanup', () => {
     await callLimit(limiter, 5, 60);
     const stored = mock.store.get('state') as { resetAt: number };
     vi.spyOn(Date, 'now').mockReturnValue(stored.resetAt - 1000);
+    await limiter.alarm();
+    expect(mock.storage.deleteAll).not.toHaveBeenCalled();
+    expect(mock.store.has('state')).toBe(true);
+    expect(mock.storage.setAlarm).not.toHaveBeenCalled();
+    vi.restoreAllMocks();
+  });
+  it('transitional alarm wipes expired state without rescheduling', async () => {
+    const mock = createStorageMock();
+    const limiter = new ApiGatewayRateLimiter({
+      storage: mock.storage,
+    } as unknown as DurableObjectState);
+    await callLimit(limiter, 5, 60);
+    const stored = mock.store.get('state') as { resetAt: number };
+    vi.spyOn(Date, 'now').mockReturnValue(stored.resetAt + 5000);
     await limiter.alarm();
     expect(mock.storage.deleteAll).toHaveBeenCalledTimes(1);
     expect(mock.store.has('state')).toBe(false);
