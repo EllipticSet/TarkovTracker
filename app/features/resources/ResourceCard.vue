@@ -58,7 +58,11 @@
   } from '@/features/resources/resourceData';
   const { t } = useI18n({ useScope: 'global' });
   const props = defineProps<{ resource: Resource }>();
-  const name = computed(() => t(`page.resources.items.${props.resource.slug}.name`));
-  const description = computed(() => t(`page.resources.items.${props.resource.slug}.description`));
+  const name = computed(() =>
+    t(`page.resources.items.${props.resource.slug}.name`, props.resource.slug)
+  );
+  const description = computed(() =>
+    t(`page.resources.items.${props.resource.slug}.description`, '')
+  );
   const guideIcon = 'i-mdi-book-open-page-variant';
 </script>

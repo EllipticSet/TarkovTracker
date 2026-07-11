@@ -77,10 +77,10 @@
             </span>
             <div class="min-w-0 flex-1">
               <p class="text-surface-100 text-sm font-medium">
-                {{ t(`page.resources.guides.${resource.slug}.step_${n}_title`) }}
+                {{ t(`page.resources.guides.${resource.slug}.step_${n}_title`, '') }}
               </p>
               <p class="text-surface-400 mt-0.5 text-sm">
-                {{ t(`page.resources.guides.${resource.slug}.step_${n}_desc`) }}
+                {{ t(`page.resources.guides.${resource.slug}.step_${n}_desc`, '') }}
               </p>
             </div>
           </li>
@@ -101,7 +101,7 @@
               name="i-mdi-lightbulb-outline"
               class="text-warning-400 mt-0.5 h-4 w-4 shrink-0"
             />
-            <span>{{ t(`page.resources.guides.${resource.slug}.tip_${n}`) }}</span>
+            <span>{{ t(`page.resources.guides.${resource.slug}.tip_${n}`, '') }}</span>
           </li>
         </ul>
       </ResourceGuideSection>
@@ -117,10 +117,10 @@
             class="border-b border-white/5 pb-3 last:border-0 last:pb-0"
           >
             <p class="text-surface-100 text-sm font-medium">
-              {{ t(`page.resources.guides.${resource.slug}.faq_${n}_q`) }}
+              {{ t(`page.resources.guides.${resource.slug}.faq_${n}_q`, '') }}
             </p>
             <p class="text-surface-400 mt-1 text-sm">
-              {{ t(`page.resources.guides.${resource.slug}.faq_${n}_a`) }}
+              {{ t(`page.resources.guides.${resource.slug}.faq_${n}_a`, '') }}
             </p>
           </div>
         </div>
@@ -143,10 +143,10 @@
     return value ?? '';
   });
   const resource = computed(() => getResourceBySlug(slug.value));
-  const guideTitle = computed(() => t(`page.resources.items.${slug.value}.name`));
+  const guideTitle = computed(() => t(`page.resources.items.${slug.value}.name`, slug.value));
   const overviewText = computed(() =>
     resource.value?.hasGuide
-      ? t(`page.resources.guides.${slug.value}.overview`)
+      ? t(`page.resources.guides.${slug.value}.overview`, '')
       : t(
           'page.resources.subtitle',
           'Community tools, integrations, and guides to help you get the most out of TarkovTracker and the wider Escape from Tarkov ecosystem.'
