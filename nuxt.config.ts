@@ -346,6 +346,7 @@ export default defineNuxtConfig({
     name: 'Tarkov Tracker',
   },
   sitemap: {
+    zeroRuntime: true,
     xslColumns: [
       { label: 'URL', width: '65%' },
       { label: 'Last Modified', select: 'sitemap:lastmod', width: '25%' },
