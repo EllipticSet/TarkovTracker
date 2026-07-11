@@ -261,6 +261,107 @@ describe('ApiGatewayRateLimiter durable object', () => {
     };
     expect(blocked.allowed).toBe(false);
   });
+
+  it('treats expired fixed-window persisted state as absent on load', async () => {
+    vi.useFakeTimers();
+    vi.setSystemTime(new Date('2026-07-05T12:00:00Z'));
+    const state = makeState();
+    await state.storage.put('state', {
+      count: 1,
+      resetAt: Date.parse('2026-07-05T11:00:00Z'),
+      windowSec: 3600,
+      anchor: 'utc-day',
+    });
+    const limiter = new ApiGatewayRateLimiter(state);
+    const res = (await (await limiter.fetch(
+      limiterRequest({ limit: 1, windowSec: 86400, anchor: 'utc-day' })
+    )).json()) as { allowed: boolean; remaining: number };
+    expect(res.allowed).toBe(true);
+    expect(res.remaining).toBe(0);
+    vi.useRealTimers();
+  });
+
+  it('treats expired sliding-window persisted state as absent on load', async () => {
+    vi.useFakeTimers();
+    vi.setSystemTime(new Date('2026-07-05T12:00:00Z'));
+    const state = makeState();
+    await state.storage.put('state', {
+      count: 3,
+      resetAt: Date.parse('2026-07-05T11:59:00Z'),
+      windowSec: 60,
+      mode: 'sliding',
+      timestamps: [Date.parse('2026-07-05T11:58:00Z')],
+    });
+    const limiter = new ApiGatewayRateLimiter(state);
+    const res = (await (await limiter.fetch(
+      limiterRequest({ limit: 3, windowSec: 60, mode: 'sliding' })
+    )).json()) as { allowed: boolean; remaining: number };
+    expect(res.allowed).toBe(true);
+    expect(res.remaining).toBe(2);
+    vi.useRealTimers();
+  });
+
+  it('prunes expired timestamps from a sliding window with mixed entries', async () => {
+    vi.useFakeTimers();
+    const baseTime = new Date('2026-07-05T12:00:00Z');
+    vi.setSystemTime(baseTime);
+    const state = makeState();
+    const expiredTs = Date.parse('2026-07-05T11:58:30Z');
+    const validTs = Date.parse('2026-07-05T11:59:30Z');
+    await state.storage.put('state', {
+      count: 2,
+      resetAt: validTs + 60_000,
+      windowSec: 60,
+      mode: 'sliding',
+      timestamps: [expiredTs, validTs],
+    });
+    const limiter = new ApiGatewayRateLimiter(state);
+    const res = (await (await limiter.fetch(
+      limiterRequest({ limit: 2, windowSec: 60, mode: 'sliding' })
+    )).json()) as { allowed: boolean; remaining: number };
+    expect(res.allowed).toBe(true);
+    expect(res.remaining).toBe(0);
+    vi.useRealTimers();
+  });
+
+  it('handles config change from sliding to fixed-window on expired state', async () => {
+    vi.useFakeTimers();
+    vi.setSystemTime(new Date('2026-07-05T12:00:00Z'));
+    const state = makeState();
+    await state.storage.put('state', {
+      count: 5,
+      resetAt: Date.parse('2026-07-05T11:00:00Z'),
+      windowSec: 60,
+      mode: 'sliding',
+      timestamps: [Date.parse('2026-07-05T10:59:00Z')],
+    });
+    const limiter = new ApiGatewayRateLimiter(state);
+    const res = (await (await limiter.fetch(
+      limiterRequest({ limit: 1, windowSec: 86400, anchor: 'utc-day' })
+    )).json()) as { allowed: boolean; resetAt: number };
+    expect(res.allowed).toBe(true);
+    expect(res.resetAt).toBe(Date.parse('2026-07-06T00:00:00Z'));
+    vi.useRealTimers();
+  });
+
+  it('does not re-read storage on repeated calls within one object lifetime', async () => {
+    const state = makeState();
+    const getSpy = vi.spyOn(state.storage, 'get');
+    const limiter = new ApiGatewayRateLimiter(state);
+    await limiter.fetch(limiterRequest({ limit: 5, windowSec: 60 }));
+    const firstCallCount = getSpy.mock.calls.length;
+    await limiter.fetch(limiterRequest({ limit: 5, windowSec: 60 }));
+    expect(getSpy.mock.calls.length).toBe(firstCallCount);
+  });
+
+  it('does not call setAlarm during normal request processing', async () => {
+    const state = makeState();
+    const setAlarmSpy = vi.spyOn(state.storage, 'setAlarm');
+    const limiter = new ApiGatewayRateLimiter(state);
+    await limiter.fetch(limiterRequest({ limit: 5, windowSec: 60, mode: 'sliding' }));
+    await limiter.fetch(limiterRequest({ limit: 5, windowSec: 60, anchor: 'utc-day' }));
+    expect(setAlarmSpy).not.toHaveBeenCalled();
+  });
 });
 
 describe('tiered quotas in the worker', () => {

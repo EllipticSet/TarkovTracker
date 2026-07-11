@@ -832,32 +832,26 @@ describe('ApiGatewayRateLimiter storage cleanup', () => {
         body: JSON.stringify({ limit, windowSec }),
       })
     );
-  it('schedules a cleanup alarm after the window when a request is counted', async () => {
+  it('does not schedule a cleanup alarm when a request is counted', async () => {
     const mock = createStorageMock();
     const limiter = new ApiGatewayRateLimiter({
       storage: mock.storage,
     } as unknown as DurableObjectState);
-    const before = Date.now();
     await callLimit(limiter);
-    expect(mock.storage.setAlarm).toHaveBeenCalledTimes(1);
-    const scheduled = mock.storage.setAlarm.mock.calls[0]?.[0] as number;
-    expect(scheduled).toBeGreaterThan(before + 60_000);
+    expect(mock.storage.setAlarm).not.toHaveBeenCalled();
   });
-  it('wipes all storage when the cleanup alarm fires after the window', async () => {
+  it('wipes all storage when a transitional alarm fires', async () => {
     const mock = createStorageMock();
     const limiter = new ApiGatewayRateLimiter({
       storage: mock.storage,
     } as unknown as DurableObjectState);
     await callLimit(limiter, 5, 60);
     expect(mock.store.has('state')).toBe(true);
-    const stored = mock.store.get('state') as { resetAt: number };
-    vi.spyOn(Date, 'now').mockReturnValue(stored.resetAt + 5000);
     await limiter.alarm();
     expect(mock.storage.deleteAll).toHaveBeenCalledTimes(1);
     expect(mock.store.has('state')).toBe(false);
-    vi.restoreAllMocks();
   });
-  it('reschedules cleanup instead of wiping when a newer window is still active', async () => {
+  it('transitional alarm does not reschedule even when state is still active', async () => {
     const mock = createStorageMock();
     const limiter = new ApiGatewayRateLimiter({
       storage: mock.storage,
@@ -866,9 +860,9 @@ describe('ApiGatewayRateLimiter storage cleanup', () => {
     const stored = mock.store.get('state') as { resetAt: number };
     vi.spyOn(Date, 'now').mockReturnValue(stored.resetAt - 1000);
     await limiter.alarm();
-    expect(mock.storage.deleteAll).not.toHaveBeenCalled();
-    expect(mock.store.has('state')).toBe(true);
-    expect(mock.storage.setAlarm).toHaveBeenLastCalledWith(stored.resetAt + 1000);
+    expect(mock.storage.deleteAll).toHaveBeenCalledTimes(1);
+    expect(mock.store.has('state')).toBe(false);
+    expect(mock.storage.setAlarm).not.toHaveBeenCalled();
     vi.restoreAllMocks();
   });
 });

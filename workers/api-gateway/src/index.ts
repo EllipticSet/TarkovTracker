@@ -88,6 +88,7 @@ function nextUtcMidnight(now: number): number {
 const LEGACY_API_DEPRECATION_DATE = '@1783296000';
 export class ApiGatewayRateLimiter {
   private data?: RateLimitState;
+  private loaded = false;
   constructor(private state: DurableObjectState) {}
   private json(body: RateLimitResponse) {
     return new Response(JSON.stringify(body), {
@@ -96,9 +97,14 @@ export class ApiGatewayRateLimiter {
     });
   }
   private async load() {
-    if (this.data) return;
+    if (this.loaded) return;
+    this.loaded = true;
     const stored = await this.state.storage.get<RateLimitState>('state');
-    if (stored) this.data = stored;
+    if (stored && Date.now() < stored.resetAt) {
+      this.data = stored;
+    } else {
+      this.data = undefined;
+    }
   }
   async fetch(request: Request): Promise<Response> {
     if (request.method !== 'POST') {
@@ -166,13 +172,11 @@ export class ApiGatewayRateLimiter {
         // load, so persisting on every throttled hit would only add Durable
         // Object write amplification under sustained bursts.
         this.data = { count: timestamps.length, resetAt, windowSec, mode, timestamps };
-        await this.scheduleCleanup(resetAt);
         return this.json({ allowed: false, remaining: 0, resetAt });
       }
       timestamps.push(now);
       this.data = { count: timestamps.length, resetAt: timestamps[0] + windowMs, windowSec, mode, timestamps };
       await this.state.storage.put('state', this.data);
-      await this.scheduleCleanup(this.data.resetAt);
       return this.json({
         allowed: true,
         remaining: Math.max(limit - timestamps.length, 0),
@@ -188,7 +192,6 @@ export class ApiGatewayRateLimiter {
       const resetAt = anchor === 'utc-day' ? nextUtcMidnight(now) : now + windowMs;
       this.data = { count: 0, resetAt, windowSec, anchor };
     }
-    await this.scheduleCleanup(this.data!.resetAt);
     if (this.data!.count >= limit) {
       return this.json({
         allowed: false,
@@ -204,24 +207,12 @@ export class ApiGatewayRateLimiter {
       resetAt: this.data!.resetAt,
     });
   }
-  // Schedule self-cleanup so abandoned keys (e.g. rotated teamId/userId in
-  // pre-auth rate-limit keys) do not retain billable storage forever. The
-  // alarm fires shortly after the window resets and wipes all storage.
-  private async scheduleCleanup(resetAt: number): Promise<void> {
-    const cleanupAt = resetAt + 1000;
-    const existingAlarm = await this.state.storage.getAlarm();
-    if (existingAlarm !== cleanupAt) {
-      await this.state.storage.setAlarm(cleanupAt);
-    }
-  }
+  // Transitional handler: drains alarms scheduled by previous deployments
+  // without rescheduling. New deployments no longer call scheduleCleanup.
+  // This can be removed once all pre-deployment alarms have fired (Phase 2).
   async alarm(): Promise<void> {
-    const stored = await this.state.storage.get<RateLimitState>('state');
-    // If a newer window is still active, reschedule cleanup instead of wiping it.
-    if (stored && Date.now() < stored.resetAt) {
-      await this.state.storage.setAlarm(stored.resetAt + 1000);
-      return;
-    }
     this.data = undefined;
+    this.loaded = false;
     await this.state.storage.deleteAll();
   }
 }
