@@ -1,5 +1,5 @@
 // https://nuxt.com/docs/api/configuration/nuxt-config
-import { readdirSync, readFileSync, statSync, writeFileSync } from 'node:fs';
+import { readdirSync, readFileSync, writeFileSync } from 'node:fs';
 import { join, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { resolveTrustProxySetting } from './app/utils/apiProtectionConfig';
@@ -248,22 +248,29 @@ export default defineNuxtConfig({
         if (!String(nitro.options.preset || '').includes('cloudflare')) {
           return;
         }
-        // Side-effect-only: import"node:foo" / import "node:foo";
-        // Named imports (import x from "node:foo", import { y } from "node:foo")
-        // do not match because a binding/from clause sits between import and the quote.
         const bareNodeImportRe = /import\s*["']node:[^"']+["']\s*;?/g;
         const walk = (dir: string) => {
-          for (const entry of readdirSync(dir)) {
-            const full = join(dir, entry);
-            if (statSync(full).isDirectory()) {
+          let entries: ReturnType<typeof readdirSync>;
+          try {
+            entries = readdirSync(dir, { withFileTypes: true });
+          } catch {
+            return;
+          }
+          for (const entry of entries) {
+            const full = join(dir, entry.name);
+            if (entry.isDirectory()) {
               walk(full);
               continue;
             }
-            if (!/\.(m?js|cjs)$/.test(entry)) continue;
-            const source = readFileSync(full, 'utf8');
-            if (!source.includes('node:')) continue;
-            const next = source.replace(bareNodeImportRe, '');
-            if (next !== source) writeFileSync(full, next);
+            if (!/\.(m?js|cjs)$/.test(entry.name)) continue;
+            try {
+              const source = readFileSync(full, 'utf8');
+              if (!source.includes('node:')) continue;
+              const next = source.replace(bareNodeImportRe, '');
+              if (next !== source) writeFileSync(full, next);
+            } catch {
+              // Skip if the path vanished mid-walk (should not happen mid-build).
+            }
           }
         };
         walk(nitro.options.output.serverDir);
