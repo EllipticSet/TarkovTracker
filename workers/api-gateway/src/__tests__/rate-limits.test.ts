@@ -19,6 +19,9 @@ const makeState = () => {
       setAlarm: async (at: number) => {
         alarm = at;
       },
+      deleteAlarm: async () => {
+        alarm = null;
+      },
       deleteAll: async () => {
         store.clear();
         alarm = null;
@@ -550,10 +553,12 @@ describe('ApiGatewayRateLimiter durable object', () => {
         timestamps: [olderTs, midTs, youngerTs],
         ephemeral: true,
       });
+      const deleteAlarmSpy = vi.spyOn(state.storage, 'deleteAlarm');
       const deleteAllSpy = vi.spyOn(state.storage, 'deleteAll');
       const setAlarmSpy = vi.spyOn(state.storage, 'setAlarm');
       const limiter = new ApiGatewayRateLimiter(state);
       await limiter.alarm();
+      expect(deleteAlarmSpy).not.toHaveBeenCalled();
       expect(deleteAllSpy).not.toHaveBeenCalled();
       expect(setAlarmSpy).toHaveBeenCalledWith(midTs + 60_000 + 1000);
       const stored = await state.storage.get<RateLimitState>('state');
@@ -575,11 +580,16 @@ describe('ApiGatewayRateLimiter durable object', () => {
         windowSec: 60,
         ephemeral: true,
       });
+      const deleteAlarmSpy = vi.spyOn(state.storage, 'deleteAlarm');
       const deleteAllSpy = vi.spyOn(state.storage, 'deleteAll');
       const setAlarmSpy = vi.spyOn(state.storage, 'setAlarm');
       const limiter = new ApiGatewayRateLimiter(state);
       await limiter.alarm();
+      expect(deleteAlarmSpy).toHaveBeenCalledTimes(1);
       expect(deleteAllSpy).toHaveBeenCalledTimes(1);
+      expect(deleteAlarmSpy.mock.invocationCallOrder[0]).toBeLessThan(
+        deleteAllSpy.mock.invocationCallOrder[0]
+      );
       expect(setAlarmSpy).not.toHaveBeenCalled();
       const stored = await state.storage.get<RateLimitState>('state');
       expect(stored).toBeUndefined();
@@ -600,10 +610,12 @@ describe('ApiGatewayRateLimiter durable object', () => {
         windowSec: 60,
       });
       const setAlarmSpy = vi.spyOn(state.storage, 'setAlarm');
+      const deleteAlarmSpy = vi.spyOn(state.storage, 'deleteAlarm');
       const deleteAllSpy = vi.spyOn(state.storage, 'deleteAll');
       const limiter = new ApiGatewayRateLimiter(state);
       await limiter.alarm();
       expect(setAlarmSpy).not.toHaveBeenCalled();
+      expect(deleteAlarmSpy).not.toHaveBeenCalled();
       expect(deleteAllSpy).not.toHaveBeenCalled();
     } finally {
       vi.useRealTimers();
@@ -621,10 +633,15 @@ describe('ApiGatewayRateLimiter durable object', () => {
         resetAt,
         windowSec: 60,
       });
+      const deleteAlarmSpy = vi.spyOn(state.storage, 'deleteAlarm');
       const deleteAllSpy = vi.spyOn(state.storage, 'deleteAll');
       const limiter = new ApiGatewayRateLimiter(state);
       await limiter.alarm();
+      expect(deleteAlarmSpy).toHaveBeenCalledTimes(1);
       expect(deleteAllSpy).toHaveBeenCalledTimes(1);
+      expect(deleteAlarmSpy.mock.invocationCallOrder[0]).toBeLessThan(
+        deleteAllSpy.mock.invocationCallOrder[0]
+      );
     } finally {
       vi.useRealTimers();
     }

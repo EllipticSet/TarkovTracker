@@ -295,6 +295,7 @@ export class ApiGatewayRateLimiter {
       }
       this.data = undefined;
       this.loaded = false;
+      await this.state.storage.deleteAlarm();
       await this.state.storage.deleteAll();
     } catch (error) {
       logger.error('rate limiter alarm cleanup failed', { id: this.state.id.toString(), error });

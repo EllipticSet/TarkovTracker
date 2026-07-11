@@ -820,6 +820,9 @@ describe('ApiGatewayRateLimiter storage cleanup', () => {
         setAlarm: vi.fn(async (time: number) => {
           alarm = time;
         }),
+        deleteAlarm: vi.fn(async () => {
+          alarm = null;
+        }),
         deleteAll: vi.fn(async () => {
           store.clear();
           alarm = null;
@@ -867,6 +870,7 @@ describe('ApiGatewayRateLimiter storage cleanup', () => {
     const stored = mock.store.get('state') as { resetAt: number };
     vi.spyOn(Date, 'now').mockReturnValue(stored.resetAt + 5000);
     await limiter.alarm();
+    expect(mock.storage.deleteAlarm).toHaveBeenCalledTimes(1);
     expect(mock.storage.deleteAll).toHaveBeenCalledTimes(1);
     expect(mock.store.has('state')).toBe(false);
   });
@@ -881,6 +885,7 @@ describe('ApiGatewayRateLimiter storage cleanup', () => {
     mock.storage.setAlarm.mockClear();
     vi.spyOn(Date, 'now').mockReturnValue(stored.resetAt - 1000);
     await limiter.alarm();
+    expect(mock.storage.deleteAlarm).not.toHaveBeenCalled();
     expect(mock.storage.deleteAll).not.toHaveBeenCalled();
     expect(mock.store.has('state')).toBe(true);
     expect(mock.storage.setAlarm).not.toHaveBeenCalled();
@@ -895,6 +900,7 @@ describe('ApiGatewayRateLimiter storage cleanup', () => {
     mock.storage.setAlarm.mockClear();
     vi.spyOn(Date, 'now').mockReturnValue(stored.resetAt - 1000);
     await limiter.alarm();
+    expect(mock.storage.deleteAlarm).not.toHaveBeenCalled();
     expect(mock.storage.deleteAll).not.toHaveBeenCalled();
     expect(mock.store.has('state')).toBe(true);
     expect(mock.storage.setAlarm).toHaveBeenCalledWith(stored.resetAt + 1000);
@@ -909,6 +915,7 @@ describe('ApiGatewayRateLimiter storage cleanup', () => {
     mock.storage.setAlarm.mockClear();
     vi.spyOn(Date, 'now').mockReturnValue(stored.resetAt + 5000);
     await limiter.alarm();
+    expect(mock.storage.deleteAlarm).toHaveBeenCalledTimes(1);
     expect(mock.storage.deleteAll).toHaveBeenCalledTimes(1);
     expect(mock.store.has('state')).toBe(false);
     expect(mock.storage.setAlarm).not.toHaveBeenCalled();
