@@ -1,6 +1,6 @@
 // https://nuxt.com/docs/api/configuration/nuxt-config
-import { readFileSync } from 'node:fs';
-import { resolve } from 'node:path';
+import { readdirSync, readFileSync, statSync, writeFileSync } from 'node:fs';
+import { join, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { resolveTrustProxySetting } from './app/utils/apiProtectionConfig';
 import { SUPPORTED_LOCALES } from './app/utils/locales';
@@ -241,6 +241,32 @@ export default defineNuxtConfig({
           include: ['/*'],
           exclude: ['/_fonts/*', '/_nuxt/*', '/img/*', '/favicon.ico', '/robots.txt'],
         },
+      },
+    },
+    hooks: {
+      compiled(nitro) {
+        if (!String(nitro.options.preset || '').includes('cloudflare')) {
+          return;
+        }
+        // Side-effect-only: import"node:foo" / import "node:foo";
+        // Named imports (import x from "node:foo", import { y } from "node:foo")
+        // do not match because a binding/from clause sits between import and the quote.
+        const bareNodeImportRe = /import\s*["']node:[^"']+["']\s*;?/g;
+        const walk = (dir: string) => {
+          for (const entry of readdirSync(dir)) {
+            const full = join(dir, entry);
+            if (statSync(full).isDirectory()) {
+              walk(full);
+              continue;
+            }
+            if (!/\.(m?js|cjs)$/.test(entry)) continue;
+            const source = readFileSync(full, 'utf8');
+            if (!source.includes('node:')) continue;
+            const next = source.replace(bareNodeImportRe, '');
+            if (next !== source) writeFileSync(full, next);
+          }
+        };
+        walk(nitro.options.output.serverDir);
       },
     },
   },
