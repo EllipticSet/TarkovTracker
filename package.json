@@ -35,7 +35,7 @@
   "devDependencies": {
     "@cloudflare/workers-types": "^4.20260409.1",
     "@codecov/nuxt-plugin": "^2.0.1",
-    "@commitlint/cli": "^20.5.0",
+    "@commitlint/cli": "^21.0.2",
     "@commitlint/config-conventional": "^20.5.0",
     "@google/design.md": "^0.1.1",
     "@nuxt/eslint": "^1.15.2",
