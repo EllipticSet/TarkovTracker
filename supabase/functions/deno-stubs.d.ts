@@ -14,12 +14,6 @@ declare namespace Deno {
   ): void
 }
 
-declare module "https://deno.land/std@0.168.0/http/server.ts" {
-  export function serve(
-    handler: (req: Request) => Response | Promise<Response>
-  ): void
-}
-
 declare module "shared/auth" {
   export function authenticateUser(req: Request): Promise<{ user: { id: string }; supabase: unknown } | { error: string; status: number }>
   export function handleCorsPreflight(req: Request): Response | null

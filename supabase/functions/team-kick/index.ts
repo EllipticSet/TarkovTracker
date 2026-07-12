@@ -1,4 +1,3 @@
-import { serve } from 'https://deno.land/std@0.168.0/http/server.ts';
 import {
   authenticateUser,
   handleCorsPreflight,
@@ -11,7 +10,7 @@ import {
 } from '../_shared/auth.ts';
 import { enforceUserMutationRateLimit } from '../_shared/rate-limit.ts';
 
-serve(async (req) => {
+Deno.serve(async (req) => {
   // Handle CORS preflight requests
   const corsResponse = handleCorsPreflight(req);
   if (corsResponse) return corsResponse;
