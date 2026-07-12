@@ -1,3 +1,12 @@
+## [1.56.1](https://github.com/tarkovtracker-org/TarkovTracker/compare/v1.56.0...v1.56.1) (2026-07-12)
+
+
+### Bug Fixes
+
+* **app:** keep subsequence scores below initialism tier ([daa0a9d](https://github.com/tarkovtracker-org/TarkovTracker/commit/daa0a9dfcff4f828629d04d602c6abb773edcfb4))
+* **api:** migrate edge functions from Deno std serve to Deno.serve ([86dac2f](https://github.com/tarkovtracker-org/TarkovTracker/commit/86dac2f279818a0eeaf20150b9cc1cbdc3f37c6a))
+* **api:** return 400 for invalid JSON on batch task updates ([d75a186](https://github.com/tarkovtracker-org/TarkovTracker/commit/d75a186fc71d1b4e31221b05ef154d71be9dd22e))
+
 # [1.56.0](https://github.com/tarkovtracker-org/TarkovTracker/compare/v1.55.7...v1.56.0) (2026-07-12)
 
 
