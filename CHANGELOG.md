@@ -1,3 +1,10 @@
+## [1.56.3](https://github.com/tarkovtracker-org/TarkovTracker/compare/v1.56.2...v1.56.3) (2026-07-12)
+
+
+### Bug Fixes
+
+* **config:** reduce Cloudflare Pages function usage ([#541](https://github.com/tarkovtracker-org/TarkovTracker/issues/541)) ([50ccdb5](https://github.com/tarkovtracker-org/TarkovTracker/commit/50ccdb53129f892de86c82da90ac80d359b409db))
+
 ## [1.56.2](https://github.com/tarkovtracker-org/TarkovTracker/compare/v1.56.1...v1.56.2) (2026-07-12)
 
 
