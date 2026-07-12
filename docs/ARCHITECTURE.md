@@ -408,6 +408,7 @@ pnpm run test:api-gateway
 Build command: pnpm run build
 Build output: dist
 Root directory: /
+Node.js version: 24.x
 # Optional build-tool pin (Pages build image). Detection also works from
 # pnpm-lock.yaml + packageManager without this env var.
 # PNPM_VERSION: 10.34.5

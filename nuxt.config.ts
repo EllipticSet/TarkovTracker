@@ -14,6 +14,7 @@ import {
   resolveSupabaseRuntimeConfig,
   TARKOV_IMAGE_DOMAINS,
 } from './app/utils/runtimeConfig';
+import { stripBareNodeImports } from './app/utils/stripBareNodeImports';
 const __dirname = fileURLToPath(new URL('.', import.meta.url));
 const appDir = resolve(__dirname, 'app');
 const testsDir = resolve(__dirname, 'tests');
@@ -248,7 +249,6 @@ export default defineNuxtConfig({
         if (!String(nitro.options.preset || '').includes('cloudflare')) {
           return;
         }
-        const bareNodeImportRe = /import\s*["']node:[^"']+["']\s*;?/g;
         const walk = (dir: string) => {
           let entries: Dirent[];
           try {
@@ -265,8 +265,7 @@ export default defineNuxtConfig({
             if (!/\.(m?js|cjs)$/.test(entry.name)) continue;
             try {
               const source = readFileSync(full, 'utf8');
-              if (!source.includes('node:')) continue;
-              const next = source.replace(bareNodeImportRe, '');
+              const next = stripBareNodeImports(source);
               if (next !== source) writeFileSync(full, next);
             } catch {
               // Skip if the path vanished mid-walk (should not happen mid-build).
