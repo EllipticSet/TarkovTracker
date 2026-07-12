@@ -10,11 +10,16 @@ const setStoryObjectiveUncompleteMock = vi.fn();
 const isStoryChapterCompleteMock = vi.fn(() => false);
 const isStoryObjectiveCompleteMock = vi.fn(() => false);
 let pvpOverrides: Record<string, unknown> = {};
+let pveOverrides: Record<string, unknown> = {};
+const routeState = {
+  params: {} as Record<string, string | undefined>,
+  query: {} as Record<string, string | undefined>,
+};
 const storyChaptersMetadata = [
   {
     id: 'chapter-1',
     name: 'Chapter 1',
-    normalizedName: 'tour',
+    normalizedName: 'prologue',
     wikiLink: '',
     order: 1,
     objectives: [
@@ -65,7 +70,7 @@ vi.mock('@/stores/useTarkov', () => ({
     getCurrentGameMode: () => 'pvp',
     getGameEdition: () => 1,
     getPvPProgressData: () => createProgressData(pvpOverrides),
-    getPvEProgressData: () => createProgressData(),
+    getPvEProgressData: () => createProgressData(pveOverrides),
     getDisplayName: () => 'User',
     getTarkovUid: () => null,
   }),
@@ -114,7 +119,7 @@ vi.mock('@/utils/progressInvalidation', () => ({
 vi.mock('@/composables/useCopyToClipboard', () => ({
   useCopyToClipboard: () => ({ copyToClipboard: vi.fn() }),
 }));
-mockNuxtImport('useRoute', () => () => ({ params: {}, query: {} }));
+mockNuxtImport('useRoute', () => () => routeState);
 mockNuxtImport('useRouter', () => () => ({ replace: vi.fn() }));
 mockNuxtImport('useI18n', () => () => ({
   t: (key: string, fallback?: string) => fallback ?? key,
@@ -124,7 +129,12 @@ mockNuxtImport('useSeoMeta', () => () => {});
 mockNuxtImport('useNuxtApp', () => () => ({
   $supabase: {
     user: { loggedIn: false, id: null },
-    client: { from: () => ({ upsert: vi.fn() }) },
+    client: {
+      auth: {
+        getSession: vi.fn().mockResolvedValue({ data: { session: null } }),
+      },
+      from: () => ({ upsert: vi.fn() }),
+    },
   },
 }));
 vi.mock('vue-i18n', async (importOriginal) => ({
@@ -144,9 +154,10 @@ const createWrapper = async () => {
         ProfileTasksTab: true,
         ProfileHideoutTab: true,
         ProfileStorylineTab: {
+          props: ['readOnly'],
           emits: ['toggle-chapter', 'toggle-objective'],
           template:
-            '<div data-testid="storyline-tab"><button data-testid="toggle-chapter" @click="$emit(\'toggle-chapter\', \'chapter-1\')" /></div>',
+            '<div data-testid="storyline-tab" :data-read-only="String(readOnly)"><button data-testid="toggle-chapter" @click="$emit(\'toggle-chapter\', \'chapter-1\')" /></div>',
         },
         UTabs: {
           props: ['items', 'modelValue'],
@@ -163,13 +174,29 @@ const createWrapper = async () => {
     },
   });
 };
+const expectNoStoryStoreWrites = () => {
+  expect(setStoryChapterCompleteMock).not.toHaveBeenCalled();
+  expect(setStoryChapterUncompleteMock).not.toHaveBeenCalled();
+  expect(setStoryObjectiveCompleteMock).not.toHaveBeenCalled();
+  expect(setStoryObjectiveUncompleteMock).not.toHaveBeenCalled();
+};
 describe('ProfileProgression storyline chapter toggle', () => {
   beforeEach(() => {
     vi.clearAllMocks();
     setActivePinia(createPinia());
     pvpOverrides = {};
+    pveOverrides = {};
+    routeState.params = {};
+    routeState.query = {};
     isStoryChapterCompleteMock.mockReturnValue(false);
     isStoryObjectiveCompleteMock.mockReturnValue(false);
+    vi.stubGlobal(
+      '$fetch',
+      vi.fn().mockResolvedValue({
+        data: createProgressData(),
+        gameEdition: 1,
+      })
+    );
   });
   it('delegates chapter toggle to store and auto-completes non-route objectives', async () => {
     const wrapper = await createWrapper();
@@ -198,6 +225,27 @@ describe('ProfileProgression storyline chapter toggle', () => {
     await wrapper.get('[data-testid="toggle-chapter"]').trigger('click');
     expect(setStoryChapterUncompleteMock).toHaveBeenCalledWith('chapter-1');
     expect(setStoryObjectiveUncompleteMock).toHaveBeenCalledWith('chapter-1', 'obj-1');
+    wrapper.unmount();
+  });
+  it('does not mutate store when viewing a shared profile', async () => {
+    routeState.params = { userId: '11111111-1111-4111-8111-111111111111', mode: 'pvp' };
+    const wrapper = await createWrapper();
+    await vi.waitFor(() => {
+      expect(wrapper.find('[data-testid="tabs"]').exists()).toBe(true);
+    });
+    await wrapper.get('[data-testid="select-storyline-tab"]').trigger('click');
+    expect(wrapper.get('[data-testid="storyline-tab"]').attributes('data-read-only')).toBe('true');
+    await wrapper.get('[data-testid="toggle-chapter"]').trigger('click');
+    expectNoStoryStoreWrites();
+    wrapper.unmount();
+  });
+  it('does not mutate store when selected mode differs from current game mode', async () => {
+    routeState.query = { mode: 'pve' };
+    const wrapper = await createWrapper();
+    await wrapper.get('[data-testid="select-storyline-tab"]').trigger('click');
+    expect(wrapper.get('[data-testid="storyline-tab"]').attributes('data-read-only')).toBe('true');
+    await wrapper.get('[data-testid="toggle-chapter"]').trigger('click');
+    expectNoStoryStoreWrites();
     wrapper.unmount();
   });
 });

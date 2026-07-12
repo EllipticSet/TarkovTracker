@@ -56,7 +56,7 @@
   import { useStorylineChapters } from '@/composables/useStorylineChapters';
   import ChapterCard from '@/features/storyline/components/ChapterCard.vue';
   import { useTarkovStore } from '@/stores/useTarkov';
-  import { getAutoCompletableObjectiveIds } from '@/utils/storylineObjectives';
+  import { toggleStoryChapterWithLinearObjectives } from '@/utils/storylineObjectives';
   const { t } = useI18n({ useScope: 'global' });
   definePageMeta({
     layout: 'default',
@@ -74,24 +74,20 @@
     return storylineChapters.value.filter((chapter) => chapter.complete).length;
   });
   const toggleChapter = (chapterId: string) => {
-    const isComplete = tarkovStore.isStoryChapterComplete(chapterId);
     const chapter = chapters.value.find((entry) => entry.id === chapterId);
-    const objectiveIds = chapter ? getAutoCompletableObjectiveIds(chapter.objectives) : [];
-    if (isComplete) {
-      tarkovStore.setStoryChapterUncomplete(chapterId);
-      for (const objectiveId of objectiveIds) {
-        if (tarkovStore.isStoryObjectiveComplete(chapterId, objectiveId)) {
-          tarkovStore.setStoryObjectiveUncomplete(chapterId, objectiveId);
-        }
-      }
-    } else {
-      tarkovStore.setStoryChapterComplete(chapterId);
-      for (const objectiveId of objectiveIds) {
-        if (!tarkovStore.isStoryObjectiveComplete(chapterId, objectiveId)) {
-          tarkovStore.setStoryObjectiveComplete(chapterId, objectiveId);
-        }
-      }
-    }
+    toggleStoryChapterWithLinearObjectives({
+      chapterId,
+      isChapterComplete: tarkovStore.isStoryChapterComplete(chapterId),
+      objectives: chapter?.objectives,
+      isObjectiveComplete: (objectiveId) =>
+        tarkovStore.isStoryObjectiveComplete(chapterId, objectiveId),
+      setChapterComplete: (id) => tarkovStore.setStoryChapterComplete(id),
+      setChapterUncomplete: (id) => tarkovStore.setStoryChapterUncomplete(id),
+      setObjectiveComplete: (id, objectiveId) =>
+        tarkovStore.setStoryObjectiveComplete(id, objectiveId),
+      setObjectiveUncomplete: (id, objectiveId) =>
+        tarkovStore.setStoryObjectiveUncomplete(id, objectiveId),
+    });
   };
   const toggleObjective = (chapterId: string, objectiveId: string) => {
     if (tarkovStore.isStoryObjectiveComplete(chapterId, objectiveId)) {

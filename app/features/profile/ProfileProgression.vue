@@ -213,7 +213,7 @@
           v-else-if="selectedTabIndex === 3"
           :story-chapter-completion-state="storyChapterCompletionState"
           :story-objective-completion-state="storyObjectiveCompletionState"
-          :read-only="isViewingSharedProfile"
+          :read-only="isViewingSharedProfile || !isViewingCurrentMode"
           @toggle-chapter="handleStoryChapterToggle"
           @toggle-objective="handleStoryObjectiveToggle"
         />
@@ -253,8 +253,8 @@
   import { logger } from '@/utils/logger';
   import { computeInvalidProgress } from '@/utils/progressInvalidation';
   import {
-    getAutoCompletableObjectiveIds,
     orderedStoryObjectives,
+    toggleStoryChapterWithLinearObjectives,
   } from '@/utils/storylineObjectives';
   import { buildTarkovDevProfileUrl } from '@/utils/tarkovDevProfileUrl';
   import { getCompletionFlags, type RawTaskCompletion } from '@/utils/taskStatus';
@@ -810,30 +810,26 @@
     return state;
   });
   const handleStoryChapterToggle = (chapterId: string) => {
-    if (isViewingSharedProfile.value) {
+    if (isViewingSharedProfile.value || !isViewingCurrentMode.value) {
       return;
     }
-    const isComplete = storyChapterCompletionState.value[chapterId] === true;
     const chapter = metadataStore.storyChapters.find((value) => value.id === chapterId);
-    const objectiveIds = chapter ? getAutoCompletableObjectiveIds(chapter.objectives) : [];
-    if (isComplete) {
-      tarkovStore.setStoryChapterUncomplete(chapterId);
-      for (const objectiveId of objectiveIds) {
-        if (storyObjectiveCompletionState.value[chapterId]?.[objectiveId] === true) {
-          tarkovStore.setStoryObjectiveUncomplete(chapterId, objectiveId);
-        }
-      }
-    } else {
-      tarkovStore.setStoryChapterComplete(chapterId);
-      for (const objectiveId of objectiveIds) {
-        if (storyObjectiveCompletionState.value[chapterId]?.[objectiveId] !== true) {
-          tarkovStore.setStoryObjectiveComplete(chapterId, objectiveId);
-        }
-      }
-    }
+    toggleStoryChapterWithLinearObjectives({
+      chapterId,
+      isChapterComplete: storyChapterCompletionState.value[chapterId] === true,
+      objectives: chapter?.objectives,
+      isObjectiveComplete: (objectiveId) =>
+        storyObjectiveCompletionState.value[chapterId]?.[objectiveId] === true,
+      setChapterComplete: (id) => tarkovStore.setStoryChapterComplete(id),
+      setChapterUncomplete: (id) => tarkovStore.setStoryChapterUncomplete(id),
+      setObjectiveComplete: (id, objectiveId) =>
+        tarkovStore.setStoryObjectiveComplete(id, objectiveId),
+      setObjectiveUncomplete: (id, objectiveId) =>
+        tarkovStore.setStoryObjectiveUncomplete(id, objectiveId),
+    });
   };
   const handleStoryObjectiveToggle = (chapterId: string, objectiveId: string) => {
-    if (isViewingSharedProfile.value) {
+    if (isViewingSharedProfile.value || !isViewingCurrentMode.value) {
       return;
     }
     const objectiveState = storyObjectiveCompletionState.value[chapterId]?.[objectiveId] === true;

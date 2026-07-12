@@ -125,6 +125,25 @@ describe('storyline page', () => {
     expect(setStoryObjectiveUncompleteMock).toHaveBeenCalledWith('chapter-1', 'obj-4');
     wrapper.unmount();
   });
+  it('skips already-complete linear objectives when marking chapter complete', async () => {
+    objectiveCompletionState['chapter-1:obj-3'] = true;
+    const wrapper = createWrapper();
+    await wrapper.get('[data-testid="chapter-card"]').trigger('click');
+    expect(setStoryChapterCompleteMock).toHaveBeenCalledWith('chapter-1');
+    expect(setStoryObjectiveCompleteMock).toHaveBeenCalledWith('chapter-1', 'obj-4');
+    expect(setStoryObjectiveCompleteMock).not.toHaveBeenCalledWith('chapter-1', 'obj-3');
+    wrapper.unmount();
+  });
+  it('skips already-incomplete linear objectives when marking chapter incomplete', async () => {
+    chapterCompletionState['chapter-1'] = true;
+    objectiveCompletionState['chapter-1:obj-3'] = true;
+    const wrapper = createWrapper();
+    await wrapper.get('[data-testid="chapter-card"]').trigger('click');
+    expect(setStoryChapterUncompleteMock).toHaveBeenCalledWith('chapter-1');
+    expect(setStoryObjectiveUncompleteMock).toHaveBeenCalledWith('chapter-1', 'obj-3');
+    expect(setStoryObjectiveUncompleteMock).not.toHaveBeenCalledWith('chapter-1', 'obj-4');
+    wrapper.unmount();
+  });
   it('marks objective complete when no route blocker exists', async () => {
     const wrapper = createWrapper();
     const objectiveCard = wrapper.get('[data-testid="objective-card"]');

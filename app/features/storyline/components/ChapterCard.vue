@@ -306,10 +306,10 @@
                     :class="
                       objective.complete
                         ? objective.type === 'optional'
-                          ? 'text-surface-500 min-w-0 flex-1 break-words line-through'
+                          ? 'text-surface-500 min-w-0 flex-1 wrap-break-word line-through'
                           : 'text-surface-500 line-through'
                         : objective.type === 'optional'
-                          ? 'text-surface-300 min-w-0 flex-1 break-words'
+                          ? 'text-surface-300 min-w-0 flex-1 wrap-break-word'
                           : 'text-surface-300'
                     "
                   >
@@ -563,8 +563,8 @@
                     class="text-xs"
                     :class="
                       objective.complete
-                        ? 'text-surface-500 min-w-0 flex-1 break-words line-through'
-                        : 'text-surface-300 min-w-0 flex-1 break-words'
+                        ? 'text-surface-500 min-w-0 flex-1 wrap-break-word line-through'
+                        : 'text-surface-300 min-w-0 flex-1 wrap-break-word'
                     "
                   >
                     {{ objective.description }}
