@@ -119,10 +119,16 @@ vi.mock('@/utils/progressInvalidation', () => ({
 vi.mock('@/composables/useCopyToClipboard', () => ({
   useCopyToClipboard: () => ({ copyToClipboard: vi.fn() }),
 }));
+const translate = (key: string, fallbackOrParams?: string | Record<string, unknown>) => {
+  if (typeof fallbackOrParams === 'string') {
+    return fallbackOrParams;
+  }
+  return key;
+};
 mockNuxtImport('useRoute', () => () => routeState);
 mockNuxtImport('useRouter', () => () => ({ replace: vi.fn() }));
 mockNuxtImport('useI18n', () => () => ({
-  t: (key: string, fallback?: string) => fallback ?? key,
+  t: translate,
   locale: { value: 'en' },
 }));
 mockNuxtImport('useSeoMeta', () => () => {});
@@ -140,7 +146,7 @@ mockNuxtImport('useNuxtApp', () => () => ({
 vi.mock('vue-i18n', async (importOriginal) => ({
   ...(await importOriginal<typeof import('vue-i18n')>()),
   useI18n: () => ({
-    t: (key: string, fallback?: string) => fallback ?? key,
+    t: translate,
     locale: { value: 'en' },
   }),
 }));
@@ -150,9 +156,9 @@ const createWrapper = async () => {
     global: {
       plugins: [createPinia()],
       stubs: {
-        ProfileOverviewTab: true,
-        ProfileTasksTab: true,
-        ProfileHideoutTab: true,
+        ProfileOverviewTab: { template: '<div data-testid="overview-tab" />' },
+        ProfileTasksTab: { template: '<div data-testid="tasks-tab" />' },
+        ProfileHideoutTab: { template: '<div data-testid="hideout-tab" />' },
         ProfileStorylineTab: {
           props: ['readOnly'],
           emits: ['toggle-chapter', 'toggle-objective'],
