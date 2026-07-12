@@ -1,3 +1,21 @@
+# [1.56.0](https://github.com/tarkovtracker-org/TarkovTracker/compare/v1.55.7...v1.56.0) (2026-07-12)
+
+
+### Bug Fixes
+
+* **config:** address production-readiness review findings ([3af3b2c](https://github.com/tarkovtracker-org/TarkovTracker/commit/3af3b2ccdc6641cdd25917f9404877fde100563b))
+* **config:** avoid CodeQL TOCTOU findings in CF worker postprocess ([921155d](https://github.com/tarkovtracker-org/TarkovTracker/commit/921155d1d2bf397168539758adadd16af3b462b2))
+* **config:** declare empty preview APP_URL and analytics vars ([3c66b51](https://github.com/tarkovtracker-org/TarkovTracker/commit/3c66b517fe18e0d3a3c0735202d95482f3322c3a))
+* **ci:** harden link check and drop bogus changelog issue refs ([959c35e](https://github.com/tarkovtracker-org/TarkovTracker/commit/959c35e86664ac7c83711827eb48a3fa77be35c7)), closes [hi#cardinality](https://github.com/hi/issues/cardinality)
+* **config:** quiet production build noise from sitemap runtime path ([e3a03a1](https://github.com/tarkovtracker-org/TarkovTracker/commit/e3a03a14df2a24412257b75dcef6c00528276262))
+* **config:** strip bare node: side-effect imports from CF worker ([2725338](https://github.com/tarkovtracker-org/TarkovTracker/commit/27253381fa619de04632b6cc035e4dae2bbdf48a)), closes [nitrojs/nitro#4164](https://github.com/nitrojs/nitro/issues/4164)
+* **config:** type readdir Dirent as utf8 string names ([480a563](https://github.com/tarkovtracker-org/TarkovTracker/commit/480a563ecee7d6881cada92f8134cfc953603046))
+
+
+### Features
+
+* **api:** harden rate limiting with per-IP backstop, token cap, and 429 observability ([#523](https://github.com/tarkovtracker-org/TarkovTracker/issues/523)) ([b34c04d](https://github.com/tarkovtracker-org/TarkovTracker/commit/b34c04daa0625f81b0c33a6f187f8d44c458cf7a)), closes [hi#cardinality](https://github.com/hi/issues/cardinality)
+
 ## [1.55.7](https://github.com/tarkovtracker-org/TarkovTracker/compare/v1.55.6...v1.55.7) (2026-07-11)
 
 
