@@ -403,12 +403,15 @@ pnpm run test:api-gateway
 ### Cloudflare Pages
 
 ```yaml
+# Cloudflare Pages project build configuration (dashboard / CI build settings).
+# Runtime app vars live in wrangler.toml [vars], not here.
 Build command: pnpm run build
 Build output: dist
 Root directory: /
 Node.js version: 24.x
-Environment variables:
-  PNPM_VERSION: 10.34.5
+# Optional build-tool pin (Pages build image). Detection also works from
+# pnpm-lock.yaml + packageManager without this env var.
+# PNPM_VERSION: 10.34.5
 ```
 
 ### Environment Variables
