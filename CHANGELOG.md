@@ -1,3 +1,11 @@
+## [1.56.2](https://github.com/tarkovtracker-org/TarkovTracker/compare/v1.56.1...v1.56.2) (2026-07-12)
+
+
+### Bug Fixes
+
+* **app:** auto-complete non-route objectives on chapter toggle ([b4b2324](https://github.com/tarkovtracker-org/TarkovTracker/commit/b4b23240a4f2c468435e237fd2827bc3ca6d1a3f))
+* **app:** enable storyline chapter completion toggle in profile and default ([661a65f](https://github.com/tarkovtracker-org/TarkovTracker/commit/661a65f0464d7ce586fd74cb75607c7c0e8c8e32))
+
 ## [1.56.1](https://github.com/tarkovtracker-org/TarkovTracker/compare/v1.56.0...v1.56.1) (2026-07-12)
 
 
