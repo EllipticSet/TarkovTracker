@@ -93,6 +93,41 @@ export const orderedStoryObjectives = (objectives: StoryObjectiveInput): StoryOb
     return a.id.localeCompare(b.id);
   });
 };
+export const getAutoCompletableObjectiveIds = (objectives: StoryObjectiveInput): string[] => {
+  return orderedStoryObjectives(objectives)
+    .filter((objective) => !objective.mutuallyExclusiveWith?.length)
+    .map((objective) => objective.id);
+};
+export interface ToggleStoryChapterWithLinearObjectivesOptions {
+  chapterId: string;
+  isChapterComplete: boolean;
+  objectives?: StoryObjectiveInput;
+  isObjectiveComplete: (objectiveId: string) => boolean;
+  setChapterComplete: (chapterId: string) => void;
+  setChapterUncomplete: (chapterId: string) => void;
+  setObjectiveComplete: (chapterId: string, objectiveId: string) => void;
+  setObjectiveUncomplete: (chapterId: string, objectiveId: string) => void;
+}
+export const toggleStoryChapterWithLinearObjectives = (
+  options: ToggleStoryChapterWithLinearObjectivesOptions
+): void => {
+  const objectiveIds = getAutoCompletableObjectiveIds(options.objectives);
+  if (options.isChapterComplete) {
+    options.setChapterUncomplete(options.chapterId);
+    for (const objectiveId of objectiveIds) {
+      if (options.isObjectiveComplete(objectiveId)) {
+        options.setObjectiveUncomplete(options.chapterId, objectiveId);
+      }
+    }
+    return;
+  }
+  options.setChapterComplete(options.chapterId);
+  for (const objectiveId of objectiveIds) {
+    if (!options.isObjectiveComplete(objectiveId)) {
+      options.setObjectiveComplete(options.chapterId, objectiveId);
+    }
+  }
+};
 export const normalizeStoryChapter = (chapter: StoryChapter): StoryChapter => {
   return {
     ...chapter,
