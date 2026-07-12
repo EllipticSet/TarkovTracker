@@ -1,4 +1,3 @@
-import { serve } from "https://deno.land/std@0.168.0/http/server.ts"
 import {
   authenticateUser,
   createErrorResponse,
@@ -23,7 +22,7 @@ const hashToken = async (token: string) => {
     .join("")
 }
 
-serve(async (req) => {
+Deno.serve(async (req) => {
   // CORS preflight
   const cors = handleCorsPreflight(req)
   if (cors) return cors
