@@ -1,3 +1,21 @@
+# [1.57.0](https://github.com/tarkovtracker-org/TarkovTracker/compare/v1.56.3...v1.57.0) (2026-07-13)
+
+
+### Bug Fixes
+
+* **app:** add i18n fallbacks for dynamic resource and guide keys ([da91b3e](https://github.com/tarkovtracker-org/TarkovTracker/commit/da91b3eee8cf111212ac924c7a4caeb30fabfc9b))
+* **app:** address PR review — i18n fallbacks, nav active state, SEO description ([0ceb9cf](https://github.com/tarkovtracker-org/TarkovTracker/commit/0ceb9cf638d10ba516199c945d326a63da937405))
+* **app:** address resources PR review findings ([9631f14](https://github.com/tarkovtracker-org/TarkovTracker/commit/9631f14755b3ae75cf37b8abd28e0bd61c2f22c9))
+* **app:** address resources review findings ([776b4a6](https://github.com/tarkovtracker-org/TarkovTracker/commit/776b4a630a2344eb844116599686599590bfca4c))
+* **app:** move resources hub to index.vue to fix nested route conflict ([6f91f41](https://github.com/tarkovtracker-org/TarkovTracker/commit/6f91f41ccab36018e1fb8bb3b702a9c19264d162))
+* **app:** resolve resources review threads ([92def4e](https://github.com/tarkovtracker-org/TarkovTracker/commit/92def4e40916fdc2bf0d7f67b56463aa5a53443c))
+
+
+### Features
+
+* **app:** add Resources Hub with guides for external community tools ([f40574b](https://github.com/tarkovtracker-org/TarkovTracker/commit/f40574b985c37b2b472614a96145c7fcd11f703c))
+* **app:** redesign resources directory and setup guides ([481f97b](https://github.com/tarkovtracker-org/TarkovTracker/commit/481f97b6f0d96e4dd8e3089b637d6ec80ff37953))
+
 ## [1.56.3](https://github.com/tarkovtracker-org/TarkovTracker/compare/v1.56.2...v1.56.3) (2026-07-12)
 
 
