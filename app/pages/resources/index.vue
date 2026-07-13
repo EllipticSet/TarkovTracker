@@ -49,6 +49,7 @@
             size="md"
             :color="activeCategory === filter.id ? 'primary' : 'neutral'"
             :variant="activeCategory === filter.id ? 'solid' : 'soft'"
+            :aria-pressed="activeCategory === filter.id"
             :class="[
               'min-h-9 px-4',
               activeCategory === filter.id

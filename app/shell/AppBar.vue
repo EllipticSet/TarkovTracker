@@ -218,6 +218,7 @@
   import { storeToRefs } from 'pinia';
   import { useKeybinds } from '@/composables/useKeybinds';
   import { useSupporter } from '@/composables/useSupporter';
+  import { getResourceBySlug } from '@/features/resources/resourceData';
   import { useActivityLogStore } from '@/stores/useActivityLogStore';
   import { useAppStore } from '@/stores/useApp';
   import { useMetadataStore } from '@/stores/useMetadata';
@@ -459,8 +460,9 @@
       const routeParams = (route.params as Record<string, unknown> | undefined) ?? {};
       const resourceSlug = normalizeRouteParam(routeParams.slug);
       if (resourceSlug) {
+        const resource = getResourceBySlug(resourceSlug);
         const itemNameKey = `page.resources.items.${resourceSlug}.name`;
-        if (te(itemNameKey)) {
+        if (resource?.hasGuide && te(itemNameKey)) {
           const resourceName = t(itemNameKey);
           return t(
             'page.resources.guide_title_template',
