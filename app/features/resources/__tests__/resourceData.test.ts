@@ -47,10 +47,14 @@ describe('resourceData locale parity', () => {
       (resource) => [resource.slug, resource] as const
     )
   )('has matching guide locale keys for %s', (slug, resource) => {
-    expect(resource.guide, `${slug} hasGuide without guide config`).toBeDefined();
-    const guideConfig = resource.guide!;
+    const guideConfig = resource.guide;
+    if (!guideConfig) {
+      throw new Error(`${slug} hasGuide without guide config`);
+    }
     const guideLocale = resourcesLocale.guides[slug];
-    expect(guideLocale, `missing page.resources.guides.${slug}`).toBeDefined();
+    if (!guideLocale) {
+      throw new Error(`missing page.resources.guides.${slug}`);
+    }
     const requiredKeys = expectedGuideKeys(guideConfig.steps, guideConfig.tips, guideConfig.faq);
     for (const key of requiredKeys) {
       expect(
