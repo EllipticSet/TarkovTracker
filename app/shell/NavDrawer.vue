@@ -66,14 +66,14 @@
       <div class="bg-surface-800 mx-3 my-2 h-px shrink-0" />
       <DrawerLinks :is-collapsed="isCollapsed" />
       <div class="bg-surface-800 mx-3 my-2 h-px shrink-0" />
-      <div class="flex flex-col gap-0.5 px-1">
+      <ul class="flex flex-col gap-0.5 px-1">
         <DrawerItem
           icon="i-mdi-compass-outline"
           locale-key="resources"
           to="/resources"
           :is-collapsed="isCollapsed"
         />
-      </div>
+      </ul>
     </div>
   </nav>
 </template>

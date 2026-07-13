@@ -80,7 +80,9 @@ describe('resourceData locale parity', () => {
       const faqMatch = key.match(/^faq_(\d+)_[qa]$/);
       if (faqMatch) {
         expect(Number(faqMatch[1]), `orphan ${slug}.${key}`).toBeLessThanOrEqual(guideConfig.faq);
+        continue;
       }
+      expect.fail(`unrecognized guide locale key ${slug}.${key}`);
     }
   });
   it('does not declare guide configs for resources without hasGuide', () => {
