@@ -30,10 +30,43 @@ Set these in Supabase Dashboard → Project Settings → Edge Functions:
 - `STRIPE_SECRET_KEY` (Stripe Dashboard → Developers → API keys); required so refund and
   dispute events can correlate the charge back to its subscription/customer before revoking
   supporter access. The function refuses to start without it.
+- `STRIPE_PRICE_SCAV_MONTHLY`, `STRIPE_PRICE_SCAV_6MONTH`, `STRIPE_PRICE_SCAV_YEARLY`
+- `STRIPE_PRICE_TIMMY_MONTHLY`, `STRIPE_PRICE_TIMMY_6MONTH`, `STRIPE_PRICE_TIMMY_YEARLY`
+- `STRIPE_PRICE_CHAD_MONTHLY`, `STRIPE_PRICE_CHAD_6MONTH`, `STRIPE_PRICE_CHAD_YEARLY`; the
+  webhook uses these IDs as the source of truth when a customer changes plans in Stripe's portal.
 - `SUPABASE_SERVICE_ROLE_KEY` and `SUPABASE_URL` (auto-injected in hosted Supabase)
 - `DISCORD_BOT_TOKEN`, `DISCORD_GUILD_ID`, `DISCORD_SUPPORTER_ROLE_ID` for role sync
   (per-tier role IDs `DISCORD_SCAV_ROLE_ID` / `DISCORD_TIMMY_ROLE_ID` / `DISCORD_CHAD_ROLE_ID`
   are optional)
+- `DISCORD_LINKED_ROLE_ID` for the role applied after a user links Discord from Settings.
+
+Configure the Stripe webhook endpoint to send:
+
+- `checkout.session.completed`
+- `checkout.session.async_payment_succeeded`
+- `checkout.session.async_payment_failed`
+- `customer.subscription.created`
+- `customer.subscription.updated`
+- `customer.subscription.deleted`
+- `invoice.paid`
+- `invoice.payment_failed`
+- `charge.refunded`
+- `charge.dispute.created`
+
+Checkout is only for the first subscription. Existing active or past-due subscribers change tiers,
+cancel, and update payment methods through Stripe Customer Portal. A partial refund does not revoke
+access; full refunds and chargebacks follow the revocation policy in the webhook.
+Configure one Stripe product per tier (Scav, Timmy, and Chad), with that tier's monthly, six-month,
+and yearly prices. Enable Customer Portal subscription updates across those three products, with
+`price` as an allowed update and immediate invoicing for prorations. Stripe rejects a portal product
+that contains multiple prices with the same billing interval, so do not collapse tiers into one
+product.
+
+### Account IP audit
+
+- `NUXT_ACCOUNT_IP_HASH_SECRET` for the Nuxt `/api/account/activity` route. It stores an HMAC
+  digest of each authenticated user's IP address, never the raw address. Use a unique, long random
+  value and retain it while historical hashes need to remain comparable.
 
 ## Optional Environment Variables
 
@@ -87,13 +120,27 @@ Set these in Supabase Dashboard → Project Settings → Edge Functions:
    the IP-level abuse observability the change introduced. Provision the secret **before** merging
    so the first post-merge request already has a non-null HMAC identifier. Do not commit the value.
 5. Confirm Cloudflare Pages and Cloudflare Workers Git deployments completed for `main`.
-6. Confirm workers are serving the expected revision:
+6. Deploy Supabase Edge Functions after every change under `supabase/functions/`:
+   ```bash
+   supabase functions deploy --use-api
+   ```
+   This deploys all functions using the per-function JWT settings in `supabase/config.toml`. Confirm
+   every changed function reports the expected version in the Supabase dashboard.
+7. Confirm workers are serving the expected revision:
    - `workers/api-gateway`
-7. Smoke test:
+8. Smoke test:
    - `https://tarkovtracker.org`
    - `https://api.tarkovtracker.org/health`
-8. If the tarkov.dev profile cleanup migration shipped, note that old manual backups may still
+9. If the tarkov.dev profile cleanup migration shipped, note that old manual backups may still
    contain historic imported profile snapshots until users regenerate them.
+
+When a user unlinks their Discord identity, the `discord-unlink` Edge Function first revokes all
+managed roles from that Discord account, then the client removes the identity and the database
+trigger deletes the corresponding `discord_account_links` row and clears the denormalized supporter
+Discord ID. Eligible lifetime and active-subscription roles are restored when an identity is linked
+again. Manual role sync removes stale tier roles, preserves the base Supporter role for users with
+paid support history, and reports a join-server warning when the Discord account is not a member of
+the configured guild.
 
 ## Known Benign Database Signals
 

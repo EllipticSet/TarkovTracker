@@ -463,6 +463,7 @@ Full resolution logic is in `app/utils/runtimeConfig.ts`.
 | `STRIPE_PRICE_CHAD_MONTHLY`        | Stripe price ID for Chad monthly plan             | Yes (prod) |
 | `STRIPE_PRICE_CHAD_6MONTH`         | Stripe price ID for Chad 6-month plan             | Yes (prod) |
 | `STRIPE_PRICE_CHAD_YEARLY`         | Stripe price ID for Chad yearly plan              | Yes (prod) |
+| `NUXT_ACCOUNT_IP_HASH_SECRET`      | HMAC secret for account-level IP audit records    | Yes (prod) |
 
 **Build-time / platform:**
 
@@ -480,8 +481,8 @@ Full resolution logic is in `app/utils/runtimeConfig.ts`.
 Functions. (`SUPABASE_SERVICE_ROLE_KEY` is deprecated only as a Nuxt app fallback; use
 `NUXT_SUPABASE_SERVICE_KEY` for Nuxt.) `STRIPE_SECRET_KEY` and `STRIPE_WEBHOOK_SECRET` are shared
 canonical names used by both Nuxt and Edge Functions. `DISCORD_BOT_TOKEN`, `DISCORD_GUILD_ID`,
-`DISCORD_SUPPORTER_ROLE_ID`, `CLOUDFLARE_ZONE_ID`, `CLOUDFLARE_API_TOKEN` are Edge-only.
-See `supabase/functions/.env.example`.
+`DISCORD_SUPPORTER_ROLE_ID`, `DISCORD_LINKED_ROLE_ID`, `CLOUDFLARE_ZONE_ID`,
+`CLOUDFLARE_API_TOKEN` are Edge-only. See `supabase/functions/.env.example`.
 
 **Cloudflare Workers** (`workers/api-gateway`, set via `wrangler secret put`):
 
