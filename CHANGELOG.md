@@ -1,3 +1,10 @@
+## [1.57.1](https://github.com/tarkovtracker-org/TarkovTracker/compare/v1.57.0...v1.57.1) (2026-07-15)
+
+
+### Bug Fixes
+
+* **app:** reconcile supporter entitlements and Discord links ([#547](https://github.com/tarkovtracker-org/TarkovTracker/issues/547)) ([172bd02](https://github.com/tarkovtracker-org/TarkovTracker/commit/172bd0227b043004d91261d9d76da19f8ceac4df))
+
 # [1.57.0](https://github.com/tarkovtracker-org/TarkovTracker/compare/v1.56.3...v1.57.0) (2026-07-13)
 
 
