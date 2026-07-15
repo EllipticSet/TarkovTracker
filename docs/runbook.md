@@ -99,33 +99,42 @@ product.
    Functions daily quota is exhausted.
 3. **Apply DB migrations manually** (CI does not deploy them; Supabase branch/preview deploy is
    intentionally disabled to avoid per-preview billing):
+
    ```bash
    supabase migration list --linked   # any row with a blank REMOTE column is pending
    supabase db push --linked          # apply pending migrations to production
    ```
+
    Skip only if `migration list` shows nothing pending. Verify the change landed afterward.
    **Ordering caveat:** workers auto-deploy from `main` (step 1) while migrations are manual, so
    a worker that depends on a new DB object (e.g. the `merge_progress_data` RPC) breaks production
    for the gap between merge and `db push`. For such changes, apply the pending migration to
    production **before** merging the worker change; adding a function ahead of its caller is safe.
+
 4. **Pre-deploy secret check (api-gateway Worker):** before merging a change that relies on
    `IP_HASH_SECRET` (e.g. any change to IP-backstop logging), confirm the secret is already
    provisioned on the production `api-gateway` Worker:
+
    ```bash
    wrangler secret list --config workers/api-gateway/wrangler.toml   # confirm IP_HASH_SECRET is listed
    wrangler secret put IP_HASH_SECRET --config workers/api-gateway/wrangler.toml   # set if missing
    ```
+
    The api-gateway Worker auto-deploys from `main` on merge. If `IP_HASH_SECRET` is absent at
    deploy time, every 429 and `ip_backstop_unavailable` log line emits `ip_hash: null`, defeating
    the IP-level abuse observability the change introduced. Provision the secret **before** merging
    so the first post-merge request already has a non-null HMAC identifier. Do not commit the value.
+
 5. Confirm Cloudflare Pages and Cloudflare Workers Git deployments completed for `main`.
 6. Deploy Supabase Edge Functions after every change under `supabase/functions/`:
+
    ```bash
    supabase functions deploy --use-api
    ```
+
    This deploys all functions using the per-function JWT settings in `supabase/config.toml`. Confirm
    every changed function reports the expected version in the Supabase dashboard.
+
 7. Confirm workers are serving the expected revision:
    - `workers/api-gateway`
 8. Smoke test:
@@ -183,11 +192,14 @@ These show up in Supabase logs / query performance and are expected. Do not trea
   (`supabase:check` = local reset + lint); no workflow runs `db push`. Supabase branch/preview
   auto-deploy is intentionally **disabled** (it bills per ephemeral preview DB). Applying to prod
   is a **manual step** after merge to `main` (see Deployment checklist):
+
   ```bash
   supabase migration list --linked   # confirm the new migration is pending (blank REMOTE column)
   supabase db push --linked          # applies pending migrations to production
   ```
+
   Then verify the change landed (e.g. catalog query / `has_column_privilege`).
+
 - Verify migrations reproduce prod: `supabase db reset --local`, then dump both and compare
   (`supabase db dump --local` vs `--linked`). Catalog-level checks (columns, constraints,
   indexes, grants, policies, functions, triggers via `information_schema` / `pg_catalog`) are
@@ -237,4 +249,5 @@ These show up in Supabase logs / query performance and are expected. Do not trea
    - `NUXT_SHARED_PROFILE_RATE_LIMIT_PER_MINUTE`
    - For `/api/tarkov-dev/profile`, add or tighten a Cloudflare rule; the app route also has a fixed per-IP limiter.
    - Cache API-backed shared rate limits are best-effort under concurrent bursts; use Cloudflare or Durable Objects for hard enforcement.
+   - Full ownership map (Worker DO vs Edge mutation limits vs Pages vs Auth): [`RATE_LIMITING.md`](./RATE_LIMITING.md).
 3. If API protection blocks valid traffic, update `API_ALLOWED_HOSTS` and redeploy.
