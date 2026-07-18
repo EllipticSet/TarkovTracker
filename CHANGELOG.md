@@ -1,3 +1,10 @@
+# [1.59.0](https://github.com/tarkovtracker-org/TarkovTracker/compare/v1.58.0...v1.59.0) (2026-07-18)
+
+
+### Features
+
+* **ui:** rework AppBar right cluster hierarchy and responsive behavior ([#554](https://github.com/tarkovtracker-org/TarkovTracker/issues/554)) ([9deb8db](https://github.com/tarkovtracker-org/TarkovTracker/commit/9deb8db701a3d10655097e64387181d9a80970b3)), closes [settings#keybinds](https://github.com/settings/issues/keybinds) [#keybinds](https://github.com/tarkovtracker-org/TarkovTracker/issues/keybinds)
+
 # [1.58.0](https://github.com/tarkovtracker-org/TarkovTracker/compare/v1.57.1...v1.58.0) (2026-07-18)
 
 
