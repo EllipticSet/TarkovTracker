@@ -30,7 +30,7 @@ jobs:
       - name: Install pnpm
         run: |
           corepack enable
-          corepack prepare pnpm@10.34.5 --activate
+          corepack prepare pnpm@11.14.0 --activate
 
       - name: Setup pnpm cache
         uses: actions/setup-node@48b55a011bda9f5d6aeb4c2d9c7362e8dae4041e
@@ -46,11 +46,8 @@ jobs:
         run: |
           audit_dir="$RUNNER_TEMP/pnpm-audit"
           mkdir -p "$audit_dir"
-          cp pnpm-lock.yaml "$audit_dir/pnpm-lock.yaml"
-          jq 'del(.engines.pnpm) | .packageManager = "pnpm@11.1.0"' \
-            package.json > "$audit_dir/package.json"
+          cp pnpm-lock.yaml package.json "$audit_dir/"
           echo "audit_dir=$audit_dir" >> "$GITHUB_OUTPUT"
-          corepack prepare pnpm@11.1.0 --activate
 
       - name: Audit production dependencies
         working-directory: ${{ steps.prepare-audit.outputs.audit_dir }}
