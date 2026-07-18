@@ -1,3 +1,10 @@
+# [1.58.0](https://github.com/tarkovtracker-org/TarkovTracker/compare/v1.57.1...v1.58.0) (2026-07-18)
+
+
+### Features
+
+* **ui:** improve dashboard empty states, visual hierarchy, and search shortcut ([#553](https://github.com/tarkovtracker-org/TarkovTracker/issues/553)) ([21dff5c](https://github.com/tarkovtracker-org/TarkovTracker/commit/21dff5cfb0543a905054be0ad7f2f9d731d33018))
+
 ## [1.57.1](https://github.com/tarkovtracker-org/TarkovTracker/compare/v1.57.0...v1.57.1) (2026-07-15)
 
 
