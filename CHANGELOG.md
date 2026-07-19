@@ -1,3 +1,10 @@
+## [1.59.1](https://github.com/tarkovtracker-org/TarkovTracker/compare/v1.59.0...v1.59.1) (2026-07-19)
+
+
+### Bug Fixes
+
+* **ci:** skip automation for locale-only PRs ([#556](https://github.com/tarkovtracker-org/TarkovTracker/issues/556)) ([a5cf0ae](https://github.com/tarkovtracker-org/TarkovTracker/commit/a5cf0ae30ebca972755d993845d56aaeed31284f))
+
 # [1.59.0](https://github.com/tarkovtracker-org/TarkovTracker/compare/v1.58.0...v1.59.0) (2026-07-18)
 
 
