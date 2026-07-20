@@ -94,7 +94,7 @@ type JsonItemsPayload = {
   playerLevels?: unknown;
   skills?: unknown;
 };
-type JsonTasksPayload = {
+export type JsonTasksPayload = {
   questItems?: unknown;
   tasks?: unknown;
   prestige?: unknown;
@@ -811,6 +811,8 @@ function adaptTaskCore(raw: JsonRecord, context: AdapterContext): Task {
     taskRequirements: Array.isArray(raw.taskRequirements)
       ? raw.taskRequirements.map((requirement) => adaptTaskRequirement(requirement, context))
       : undefined,
+    objectives: [],
+    failConditions: [],
     traderRequirements: Array.isArray(raw.traderRequirements)
       ? raw.traderRequirements.map((requirement) => adaptTraderRequirement(requirement, context))
       : undefined,

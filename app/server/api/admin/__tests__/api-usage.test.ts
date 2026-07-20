@@ -67,6 +67,7 @@ describe('GET /api/admin/api-usage', () => {
           reads: 1000,
           writes: 60,
           throttled: 12,
+          user_agent: 'TestClient/1.0',
         },
         {
           user_id: 'u2',
@@ -75,6 +76,7 @@ describe('GET /api/admin/api-usage', () => {
           reads: 200,
           writes: 20,
           throttled: 0,
+          user_agent: null,
         },
       ])
     );
@@ -98,7 +100,27 @@ describe('GET /api/admin/api-usage', () => {
       reads: 1000,
       writes: 60,
       throttled: 12,
+      userAgent: 'TestClient/1.0',
     });
-    expect(result.consumers[1]).toMatchObject({ userId: 'u2', tier: 'chad' });
+    expect(result.consumers[1]).toMatchObject({ userId: 'u2', tier: 'chad', userAgent: null });
+  });
+  it('normalizes a missing user-agent field to null', async () => {
+    mockFetch.mockResolvedValueOnce(jsonResponse([{ is_admin: true }])).mockResolvedValueOnce(
+      jsonResponse([
+        {
+          user_id: 'u1',
+          token_id: 't1',
+          tier: 'free',
+          reads: 1,
+          writes: 0,
+          throttled: 0,
+        },
+      ])
+    );
+    const { default: handler } = await import('@/server/api/admin/api-usage.get');
+    const result = (await handler(makeEvent({ id: 'admin-1' }))) as unknown as {
+      consumers: Array<{ userAgent: string | null }>;
+    };
+    expect(result.consumers[0]?.userAgent).toBeNull();
   });
 });
