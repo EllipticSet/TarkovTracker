@@ -1,3 +1,10 @@
+## [1.59.3](https://github.com/tarkovtracker-org/TarkovTracker/compare/v1.59.2...v1.59.3) (2026-07-20)
+
+
+### Bug Fixes
+
+* **api:** address PR 561 review findings ([#562](https://github.com/tarkovtracker-org/TarkovTracker/issues/562)) ([28e9bf2](https://github.com/tarkovtracker-org/TarkovTracker/commit/28e9bf2fa99fe190d78a64af8d60f37d727394b2))
+
 ## [1.59.2](https://github.com/tarkovtracker-org/TarkovTracker/compare/v1.59.1...v1.59.2) (2026-07-20)
 
 
