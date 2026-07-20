@@ -1,3 +1,10 @@
+## [1.59.2](https://github.com/tarkovtracker-org/TarkovTracker/compare/v1.59.1...v1.59.2) (2026-07-20)
+
+
+### Bug Fixes
+
+* **api:** close PR 555 review follow-ups ([#561](https://github.com/tarkovtracker-org/TarkovTracker/issues/561)) ([edb3e36](https://github.com/tarkovtracker-org/TarkovTracker/commit/edb3e368b93b59035b0c687a787dad62591136c8))
+
 ## [1.59.1](https://github.com/tarkovtracker-org/TarkovTracker/compare/v1.59.0...v1.59.1) (2026-07-19)
 
 
