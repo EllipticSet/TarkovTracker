@@ -71,7 +71,13 @@
     "user_label": "Utente",
     "user_avatar_alt": "Avatar utente",
     "supporter_badge_label": "Supporter",
-    "supporter_badge_aria": "Gestisci il tuo abbonamento supporter ({tier})"
+    "supporter_badge_aria": "Gestisci il tuo abbonamento supporter ({tier})",
+    "help_community_aria": "Aiuto & community",
+    "community_section": "Community",
+    "keyboard_shortcuts": "Scorciatoie tastiera",
+    "report_problem": "Segnala un problema",
+    "more_aria": "Altro",
+    "login_aria": "Accedi al tuo account"
   },
   "omnibar": {
     "title": "Cerca",
@@ -233,7 +239,8 @@
       "page_guide": "Guida rapida",
       "page_guide_unavailable": "Guida rapida non disponibile.",
       "onboarding": "Setup iniziale",
-      "onboarding_description": "Comincia con gli import, le basi e poi verifica le missioni."
+      "onboarding_description": "Comincia con gli import, le basi e poi verifica le missioni.",
+      "keyboard_shortcuts_error": "Impossibile aprire le scorciatoie da tastiera. Riprova."
     },
     "onboarding": {
       "title": "Setup",
@@ -617,6 +624,7 @@
         "rep_progress_label": "→ LF{level}",
         "scav_karma": "Scav Karma",
         "unlock_required": "Sblocco richiesto:",
+        "locked_summary": "{count} trader bloccati",
         "sort": {
           "aria_label": "Ordina i trader",
           "direction_aria_label": "Inverti ordinamento",
@@ -737,6 +745,7 @@
       "most_popular": "Più popolare",
       "fee_note": "Il prezzo indicato include le commissioni Stripe.",
       "tier_cta": "Abbonati",
+      "tier_login_cta": "Accedi per sottoscrivere",
       "tier_current_cta": "Livello attuale",
       "tier_change_cta": "Passa a questo livello",
       "current_tier_badge": "Livello attuale",
@@ -748,20 +757,33 @@
       "tier_chad_tagline": "Vero sostenitore veterano",
       "perk_badge": "Badge Supporter",
       "perk_discord": "Ruolo Supporter su Discord",
+      "perk_tier_role": "Livello {tier} su Discord (in arrivo)",
       "perk_early_access": "Accesso anticipato a nuove funzionalità",
       "perk_priority_support": "Supporto prioritario",
       "perk_feature_voting": "Priorità di voto su funzionalità",
-      "transparency_note": "Trasparenza sulle commissioni",
-      "transparency_detail": "I prezzi mostrati includono le commissioni di Stripe (2,9% + $0,30 per transazione, più lo 0,7% per gli abbonamenti). Questo significa che riceveremo l'intero importo base scelto — niente di meno.",
       "one_time_title": "Contributo una tantum",
-      "one_time_subtitle": "Preferisci non abbonarti? Fai una donazione una tantum a partire da {min} (commissioni incluse).",
-      "one_time_cta": "Dona una volta",
-      "login_required_warning": "Devi aver effettuato l'accesso per ricevere i vantaggi da Supporter.",
-      "price_breakdown": "{base}/mese a noi + {fees}/mese di commissioni Stripe",
-      "one_time_breakdown": "{base} a noi + {fees} di commissioni Stripe",
-      "billed_note": "Fatturato {total} ogni {label}",
-      "kofi_deprecation_title": "Supporto Ko-fi in fase di dismissione",
-      "kofi_deprecation_detail": "Stiamo passando all'elaborazione dei pagamenti diretta (Stripe), il che significa commissioni più basse e una parte maggiore del tuo contributo che ci arriva direttamente. Ko-fi rimane disponibile per ora, ma verrà rimosso una volta attivati i pagamenti Stripe.",
+      "one_time_subtitle": "Preferisci non abbonarti? Fai una donazione una tantum a partire da {min}.",
+      "one_time_cover_fees": "Includi tasse Stripe",
+      "one_time_fee_amount": "{fees} in tasse",
+      "one_time_amount_field_label": "Importo contributo",
+      "one_time_min_error": "{min} minimo",
+      "one_time_invalid_error": "Inserisci un importo valido",
+      "one_time_max_error": "{max} massimo",
+      "one_time_give_cta": "Dona {total}",
+      "one_time_login_cta": "Accedi per donare",
+      "one_time_net_note": "{net} arriverà a noi al netto delle tasse",
+      "one_time_perks_heading": "Include i vantaggi supporter",
+      "one_time_fee_transparency": "Le tasse di Stripe (2.9% + $0.30) sono mostrate prima di pagare.",
+      "perk_api_rate_limit": "Limiti API più elevati",
+      "perk_data_retention": "Ritenzione estesa account inattivo",
+      "login_required_warning": "Devi aver effettuato l'accesso per ricevere i vantaggi supporter.",
+      "price_to_us": "Va a noi",
+      "price_per_month_suffix": "/mese",
+      "price_stripe_fees": "Tasse Stripe",
+      "billed_every_label": "Fatturato ogni {label}",
+      "savings_note": "Risparmi {amount} vs. mensile",
+      "kofi_deprecation_title": "Ko-fi (opzione backup)",
+      "kofi_deprecation_detail": "Le sottoscrizioni e i contributi vengono eseguiti attraverso Stripe, il che significa commissioni più basse per te e meno tasse per noi. Ko-fi rimane disponibile come backup solo per contributi una tantum.",
       "alt_payments_title": "Altri metodi di pagamento in arrivo",
       "alt_payments_coming_soon": "Stiamo lavorando per aggiungere ulteriori opzioni di pagamento in modo che tutti possano contribuire nel modo che preferiscono.",
       "alt_payment_crypto": "Cripto",
@@ -1207,6 +1229,8 @@
           "token_value_missing": "Valore token non disponibile",
           "token_value_unavailable": "Valore token non disponibile",
           "token_value_unavailable_desc": "La tua API attuale non espone i valori token per i token esistenti.",
+          "token_cap_reached": "Limite token raggiunto",
+          "token_cap_reached_desc": "Puoi avere al massimo 3 token API attivi. Revoca un token esistente per crearne uno nuovo.",
           "revoke_button": "Revoca",
           "report": {
             "load_failed": "Caricamento del token API fallito",
@@ -1450,6 +1474,180 @@
     },
     "privacy": {
       "title": "Privacy Policy"
+    },
+    "resources": {
+      "title": "Risorse & Guide",
+      "subtitle": "Trova app companion, community tools, risorse per sviluppatori e guide per ottenere il massimo da TarkovTracker.",
+      "search_placeholder": "Cerca strumenti e guide...",
+      "clear_search": "Cancella ricerca",
+      "clear_filters": "Resetta filtri",
+      "no_results": "Nessuna risorsa corrisponde alla tua ricerca.",
+      "results_count": "{count} risorse trovate",
+      "results_count_one": "1 risorsa trovata",
+      "filter_label": "Filtra risorse per categoria",
+      "more": "Altro",
+      "more_actions": "Altre azioni",
+      "suggest_title": "Conosci una risorsa Tarkov utile?",
+      "suggest_description": "Suggerisci un tool o una guida per l'inclusione in questa pagina.",
+      "suggest_cta": "Suggerisci una risorsa",
+      "filters": {
+        "all": "Tutte"
+      },
+      "categories": {
+        "companion_apps": "Companion Apps",
+        "data_and_apis": "Dati & Strumenti Sviluppatori",
+        "calculators_and_reference": "Calcolatori & Riferimenti"
+      },
+      "category_badges": {
+        "companion_apps": "App desktop",
+        "data_and_apis": "Piattaforma dati",
+        "calculators_and_reference": "Riferimento"
+      },
+      "actions": {
+        "setup_guide": "Guida configurazione",
+        "read_guide": "Leggi la guida",
+        "api_documentation": "Documentazione API",
+        "open_calculator": "Apri calcolatore",
+        "view_changes": "Visualizza modifiche",
+        "open_tool": "Apri lo strumento",
+        "download_release": "Scarica l'ultima versione"
+      },
+      "view_guide": "Guida configurazione",
+      "back_to_hub": "Torna alle risorse",
+      "breadcrumb": "Breadcrumb",
+      "guide_label": "Guida",
+      "on_this_page": "Su questa pagina",
+      "compatibility_label": "Compatibilità",
+      "guide_not_found": "Guida non trovata. La risorsa che cerchi potrebbe non avere ancora una guida.",
+      "guide_title_template": "Guida {name}",
+      "meta": {
+        "windows": "Windows",
+        "setup_time": "Setup in 5 minuti",
+        "community_data": "Mantenuta dalla comunità",
+        "web_tool": "Web tool",
+        "companion_app": "App companion"
+      },
+      "link_types": {
+        "website": "Apri sito web",
+        "project_website": "Sito web progetto",
+        "github": "Visualizza sorgente",
+        "discord": "Supporto della community",
+        "api": "Documentazione API",
+        "download": "Download"
+      },
+      "guide_sections": {
+        "overview": "Sommario",
+        "setup": "Primi passi",
+        "troubleshooting": "Risoluzione problemi",
+        "tips": "Tips & Tricks",
+        "faq": "Common Questions"
+      },
+      "items": {
+        "tarkovdev": {
+          "name": "Tarkov.dev",
+          "description": "Community-maintained item, quest, trader, and market data for players and developers."
+        },
+        "tarkovmonitor": {
+          "name": "TarkovMonitor",
+          "description": "Read live raid data and automatically sync supported progress to TarkovTracker."
+        },
+        "ratscanner": {
+          "name": "RatScanner",
+          "description": "Scan in-game item tooltips to see market value, barter uses, and quest relevance."
+        },
+        "cultistcircle": {
+          "name": "CultistCircle",
+          "description": "Calculate possible Cultist Circle rewards from the items you contribute."
+        },
+        "tarkovchanges": {
+          "name": "Tarkov Changes",
+          "description": "Review item, quest, and gameplay changes between Tarkov updates."
+        }
+      },
+      "guides": {
+        "tarkovdev": {
+          "overview": "Tarkov.dev is the backbone of the community data ecosystem. It maintains an open-source dataset of items, quests, traders, hideout stations, and more, all accessible through a free GraphQL API. TarkovTracker itself uses this API to stay up to date with the latest game data. If you build tools, write guides, or just want to look up item stats, Tarkov.dev is the authoritative source.",
+          "step_1_title": "Browse the website",
+          "step_1_desc": "Visit tarkov.dev to search items, check quest requirements, view trader inventories, and explore hideout station data in a clean, ad-free interface.",
+          "step_2_title": "Use the GraphQL API",
+          "step_2_desc": "If you are a developer, point your GraphQL client at api.tarkov.dev. The API is free, requires no authentication for read queries, and has full schema documentation available at the endpoint.",
+          "step_3_title": "Join the community",
+          "step_3_desc": "The Hideout Discord is the hub for data contributors, tool developers, and bug reports. If you spot outdated data or want to contribute, this is where it happens.",
+          "tip_1": "The GraphQL API is rate-limited but generous. For production apps, cache responses client-side to avoid redundant queries.",
+          "tip_2": "Tarkov.dev data updates frequently during wipe seasons. If something looks wrong, it may already be fixed in the latest dataset.",
+          "faq_1_q": "Is the Tarkov.dev API free to use?",
+          "faq_1_a": "Yes, the GraphQL API is completely free for read queries. No API key or authentication is required for standard usage.",
+          "faq_2_q": "How often is the data updated?",
+          "faq_2_a": "Data is maintained by community contributors and updated as changes are discovered in-game. During active wipe periods, updates can happen multiple times per day."
+        },
+        "tarkovmonitor": {
+          "overview": "TarkovMonitor is a desktop application by The Hideout team that watches Escape from Tarkov log files and can automatically mark completed quests in TarkovTracker. It also provides audio notifications, local statistics, and optional Tarkov.dev website integration.",
+          "compatibility": "Keep TarkovMonitor running while you play so it can watch new game log entries. It does not read game memory.",
+          "step_1_title": "Download TarkovMonitor",
+          "step_1_desc": "Download the latest Windows release ZIP from the official GitHub Releases page.",
+          "step_2_title": "Extract and launch",
+          "step_2_desc": "Extract the archive to a permanent folder, then run TarkovMonitor.exe. Do not run it directly from inside the ZIP file.",
+          "step_3_title": "Connect your TarkovTracker account",
+          "step_3_desc": "In TarkovMonitor settings, open the TarkovTracker integration section. Create a read-write API token in TarkovTracker Settings, then paste it into TarkovMonitor.",
+          "step_4_title": "Play with TarkovMonitor open",
+          "step_4_desc": "Play normally while TarkovMonitor stays open. When the game writes a supported quest-completion event to its logs, TarkovMonitor can mark that quest complete in TarkovTracker.",
+          "troubleshooting_1_title": "Progress is not syncing",
+          "troubleshooting_1_desc": "Confirm the API token is read-write, has not expired, and that TarkovMonitor is running the latest release.",
+          "troubleshooting_2_title": "Earlier progress is missing",
+          "troubleshooting_2_desc": "Use Read Past Logs in Initial Setup, then choose the correct wipe and profile breakpoint.",
+          "troubleshooting_3_title": "Game mode looks wrong",
+          "troubleshooting_3_desc": "Match your TarkovTracker game mode setting to the mode you are playing, either PvP or PvE.",
+          "tip_1": "Generate a read-write API token in TarkovTracker settings. A read-only token cannot update progress.",
+          "tip_2": "Normal monitoring only processes new logs written while TarkovMonitor is running.",
+          "faq_1_q": "Is TarkovMonitor safe to use?",
+          "faq_1_a": "TarkovMonitor watches the log files that Escape from Tarkov writes locally. It does not read game memory, and the logs are not updated while a raid is in progress. Any third-party tool carries some risk, so use it at your own discretion.",
+          "faq_2_q": "Does TarkovMonitor work with PvE mode?",
+          "faq_2_a": "Yes. It supports both PvP and PvE. Match your TarkovTracker game mode setting to the mode you are playing.",
+          "faq_3_q": "Do I need TarkovMonitor to use TarkovTracker?",
+          "faq_3_a": "No. TarkovTracker funziona completamente con input manuale. TarkovMonitor automatizza solo gli aggiornamenti di avanzamento supportati."
+        },
+        "ratscanner": {
+          "overview": "RatScanner è uno strumento desktop open-source che identifica oggetti da screenshot in Escape da Tarkov e visualizza i dati in una sovrapposizione. Funziona esternamente e non accede alla memoria del gioco.",
+          "compatibility": "Usa la modalità finestra senza bordi. Lo schermo intero può impedire che la sovrapposizione appaia.",
+          "step_1_title": "Scarica l'ultimo ZIP",
+          "step_1_desc": "Scarica RatScanner.zip dalla pagina ufficiale GitHub. Il sito web potrebbe non visualizzare l'ultima versione.",
+          "step_2_title": "Estrai e avvia",
+          "step_2_desc": "Estrai lo ZIP in una cartella, quindi avvia RatScanner.exe. Non avviarlo direttamente dall'interno dell'archivio.",
+          "step_3_title": "Configura l'overlay",
+          "step_3_desc": "Scegli quali dettagli degli oggetti appaiono nella sovrapposizione, imposta l'opacità e conferma i tasti di scelta rapida.",
+          "step_4_title": "Scansiona un oggetto",
+          "step_4_desc": "Scansione nome: apri la finestra di ispezione dell'oggetto e fai clic sulla lente di ingrandimento. Scansione icone: tieni premuto il tasto modificatore configurato e fai clic con il tasto sinistro su un oggetto. RatScanner farà uno screenshot e visualizzerà i suoi dati.",
+          "troubleshooting_1_title": "RatScanner non si avvia",
+          "troubleshooting_1_desc": "Estrai prima la cartella completa, quindi esegui l'exe dall'interno della cartella. Se Windows o antivirus bloccano il file, conferma che sia stato scaricato dalla repository ufficiale Github.",
+          "troubleshooting_2_title": "Nessun oggetto rilevato",
+          "troubleshooting_2_desc": "Assicurarsi che l'interfaccia di ispezione dell'oggetto sia completamente visibile, quindi provare la scansione nome con la lente d'ingrandimento o la scansione icone cliccando il tasto modificatore.",
+          "troubleshooting_3_title": "L'overlay non appare",
+          "troubleshooting_3_desc": "Imposta Tarkov in modalità finestra senza bordi. Lo schermo intero esclusivo spesso nasconde le sovrapposizioni.",
+          "troubleshooting_4_title": "I prezzi sembrano obsoleti",
+          "troubleshooting_4_desc": "RatScanner scarica i dati da una fonte di terze parti, quindi i valori possono non essere aggiornati rispetto ai cambiamenti live del flea market.",
+          "tip_1": "Usa le impostazioni per scegliere quali dettagli vengono visualizzati e regolare l'opacità della sovrapposizione.",
+          "tip_2": "I valori di mercato visualizzati potrebbero essere in ritardo rispetto ai dati live in gioco.",
+          "faq_1_q": "RatScanner mi farà bannare?",
+          "faq_1_a": "RatScanner legge i dati usando l'acquisizione dello schermo e non modifica il client di gioco o interagisce con i server di gioco. La posizione di Battlestate Games sugli strumenti di terze parti può cambiare, quindi utilizzalo a tuo rischio.",
+          "faq_2_q": "RatScanner funziona con il flea market?",
+          "faq_2_a": "Sì. Mostra i prezzi correnti del flea market e può aiutare a confrontare il prezzo flea e quello dei trader.",
+          "faq_3_q": "RatScanner può mostrare gli oggetti necessari per TarkovTracker?",
+          "faq_3_a": "Può mostrare le informazioni generali ricevute dal fornitore di dati. Per i requisiti in base ai progressi personali di TarkovTracker, utilizzare la pagina Oggetti."
+        },
+        "cultistcircle": {
+          "overview": "CultistCircle is a free community-built calculator for the Cultist Circle feature in Escape from Tarkov. It lets you look up recipes — what items you can sacrifice and what you get in return — without having to experiment in-game. Built by a solo community developer, it is a handy reference for planning your circle trades efficiently.",
+          "step_1_title": "Visit the website",
+          "step_1_desc": "Go to cultistcircle.com to access the calculator. No account or download is required — it works entirely in your browser.",
+          "step_2_title": "Search for recipes",
+          "step_2_desc": "Use the search or browse functionality to find recipes by input item or output result. The calculator shows the trade ratios and possible outcomes for each combination.",
+          "tip_1": "Check the calculator before sacrificing rare items — some trades have much better value ratios than others.",
+          "tip_2": "Recipe data may lag behind game patches. If a recipe seems missing or incorrect, check back after the site has been updated.",
+          "faq_1_q": "Is CultistCircle free to use?",
+          "faq_1_a": "Yes, CultistCircle is completely free and runs in your browser with no account required.",
+          "faq_2_q": "Is CultistCircle affiliated with TarkovTracker?",
+          "faq_2_a": "No, CultistCircle is an independent project by a solo community developer. It is listed here as a useful community resource."
+        }
+      }
     }
   },
   "footer": {
@@ -1487,6 +1685,7 @@
     "tarkovchanges": "Tarkov Changes",
     "tarkovmonitor": "Tarkov Monitor",
     "credits": "Riconoscimenti",
+    "resources": "Resources",
     "settings": "Impostazioni",
     "profile": "Profilo",
     "kappa": "Kappa & Lightkeeper",
@@ -1713,7 +1912,8 @@
         "show_xp": "Mostra ricompense XP",
         "show_next": "Mostra missioni successive",
         "show_prev": "Mostra missioni precedenti",
-        "density": "Densità pannello"
+        "density": "Densità pannello",
+        "require_trader_levels": "Richiede livello di fedeltà trader e reputazione per la disponibilità della missione"
       },
       "defaults": {
         "title": "Viste predefinite"
@@ -1932,6 +2132,23 @@
       "cleanup_pending": "Alcune operazioni di pulizia dei dati sono ancora in corso e saranno completate a breve.",
       "redirect_message": "Grazie per aver usato TarkovTracker. Sarai reindirizzato alla dashboard.",
       "go_to_dashboard": "Vai alla Dashboard"
+    },
+    "discord_link": {
+      "title": "Discord Account",
+      "description": "Link your Discord account to receive the Linked role and keep supporter perks synchronized.",
+      "link_account": "Link Discord account",
+      "login_to_link": "Log in to link Discord",
+      "linked_as": "Linked as {username}",
+      "sync_roles": "Sync Discord roles",
+      "error_title": "Discord link unavailable",
+      "not_in_guild_title": "Join the Discord server",
+      "not_in_guild": "Your account is linked, but you must join the TarkovTracker Discord server before roles can be synchronized.",
+      "load_error": "We could not load your Discord account link.",
+      "link_error": "We could not start Discord account linking. Please try again.",
+      "unlink_account": "Unlink Discord account",
+      "unlink_requires_login": "Add another login method before unlinking your only sign-in identity.",
+      "unlink_error": "We could not unlink your Discord account. Your link remains active.",
+      "sync_error": "Your account is linked, but we could not synchronize Discord roles. Please try again later."
     },
     "prestige": {
       "title": "Prestigio",
