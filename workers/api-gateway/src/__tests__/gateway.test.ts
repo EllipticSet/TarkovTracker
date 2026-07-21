@@ -32,8 +32,13 @@ const BASE_ENV: Env = {
   SUPABASE_SERVICE_ROLE_KEY: 'service-key',
   ALLOWED_ORIGIN: '*',
 };
-const buildRequest = (path: string, init?: RequestInit) =>
-  new Request(`https://api.tarkovtracker.org${path}`, init);
+const buildRequest = (path: string, init?: RequestInit) => {
+  const headers = new Headers(init?.headers);
+  if (!headers.has('User-Agent')) {
+    headers.set('User-Agent', 'TestClient/1.0 (+https://example.com)');
+  }
+  return new Request(`https://api.tarkovtracker.org${path}`, { ...init, headers });
+};
 const jsonResponse = (payload: unknown, status = 200) =>
   new Response(JSON.stringify(payload), {
     status,
@@ -209,12 +214,62 @@ describe('api-gateway', () => {
     const res = await worker.fetch(buildRequest('/token', { method: 'GET' }), BASE_ENV);
     await expectErrorResponse(res, 401, 'Unauthorized');
   });
+  it('rejects requests with a missing User-Agent header', async () => {
+    const res = await worker.fetch(
+      new Request('https://api.tarkovtracker.org/token', {
+        method: 'GET',
+        headers: { Authorization: 'Bearer PVP_abc123' },
+      }),
+      BASE_ENV
+    );
+    const body = (await res.json()) as { success: boolean; error: string };
+    expect(res.status).toBe(400);
+    expect(body.success).toBe(false);
+    expect(body.error).toContain('User-Agent must be 5-200 characters');
+  });
+  it('rejects requests with a too-short User-Agent header', async () => {
+    const res = await worker.fetch(
+      buildRequest('/token', { method: 'GET', headers: { 'User-Agent': 'ab' } }),
+      BASE_ENV
+    );
+    const body = (await res.json()) as { success: boolean; error: string };
+    expect(res.status).toBe(400);
+    expect(body.success).toBe(false);
+    expect(body.error).toContain('User-Agent must be 5-200 characters');
+  });
+  it('rejects requests with an oversized User-Agent header', async () => {
+    const res = await worker.fetch(
+      buildRequest('/token', {
+        method: 'GET',
+        headers: { Authorization: 'Bearer PVP_abc123', 'User-Agent': 'x'.repeat(201) },
+      }),
+      BASE_ENV
+    );
+    expect(res.status).toBe(400);
+    const body = (await res.json()) as { success: boolean; error: string };
+    expect(body.success).toBe(false);
+    expect(body.error).toContain('User-Agent must be 5-200 characters');
+  });
+  it('validates User-Agent before issuing a legacy /api/v2 308 redirect', async () => {
+    const env: Env = { ...BASE_ENV, LEGACY_API_REDIRECT: 'true' };
+    const res = await worker.fetch(
+      new Request('https://tarkovtracker.org/api/v2/progress/task/task-1?foo=bar', {
+        method: 'POST',
+        headers: { ...AUTH_HEADERS, 'User-Agent': 'ab' },
+        body: JSON.stringify({ state: 'completed' }),
+      }),
+      env
+    );
+    expect(res.status).toBe(400);
+    const body = (await res.json()) as { success: boolean; error: string };
+    expect(body.error).toContain('User-Agent must be 5-200 characters');
+  });
   it('redirects legacy /api/v2 routes with 308 when LEGACY_API_REDIRECT is true', async () => {
     const env: Env = { ...BASE_ENV, LEGACY_API_REDIRECT: 'true' };
     const res = await worker.fetch(
       new Request('https://tarkovtracker.org/api/v2/progress/task/task-1?foo=bar', {
         method: 'POST',
-        headers: AUTH_HEADERS,
+        headers: { ...AUTH_HEADERS, 'User-Agent': 'TestClient/1.0 (+https://example.com)' },
         body: JSON.stringify({ state: 'completed' }),
       }),
       env
@@ -234,7 +289,10 @@ describe('api-gateway', () => {
     const res = await worker.fetch(
       new Request('https://tarkovtracker.org/api/progress', {
         method: 'GET',
-        headers: { Authorization: 'Bearer PVP_abc123' },
+        headers: {
+          Authorization: 'Bearer PVP_abc123',
+          'User-Agent': 'TestClient/1.0 (+https://example.com)',
+        },
       }),
       env
     );
@@ -243,7 +301,10 @@ describe('api-gateway', () => {
   });
   it('serves legacy /api/v2 routes normally when LEGACY_API_REDIRECT is off', async () => {
     const res = await worker.fetch(
-      new Request('https://tarkovtracker.org/api/v2/progress', { method: 'GET' }),
+      new Request('https://tarkovtracker.org/api/v2/progress', {
+        method: 'GET',
+        headers: { 'User-Agent': 'TestClient/1.0 (+https://example.com)' },
+      }),
       BASE_ENV
     );
     await expectErrorResponse(res, 401, 'Unauthorized');
@@ -505,7 +566,7 @@ describe('api-gateway', () => {
             id: 'task-main',
             name: 'Main Task',
             factionName: 'Any',
-              objectives: [],
+            objectives: [],
             taskRequirements: [],
           },
         ],
