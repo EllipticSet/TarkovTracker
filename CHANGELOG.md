@@ -1,3 +1,10 @@
+# [1.60.0](https://github.com/tarkovtracker-org/TarkovTracker/compare/v1.59.4...v1.60.0) (2026-07-21)
+
+
+### Features
+
+* **api:** enforce inbound User-Agent and propagate shared UA to upstream fetches ([#572](https://github.com/tarkovtracker-org/TarkovTracker/issues/572)) ([90657a8](https://github.com/tarkovtracker-org/TarkovTracker/commit/90657a814fe78e3747b6bccbc81cfb484823883d))
+
 ## [1.59.4](https://github.com/tarkovtracker-org/TarkovTracker/compare/v1.59.3...v1.59.4) (2026-07-21)
 
 
