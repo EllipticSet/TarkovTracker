@@ -1,3 +1,10 @@
+## [1.59.4](https://github.com/tarkovtracker-org/TarkovTracker/compare/v1.59.3...v1.59.4) (2026-07-21)
+
+
+### Bug Fixes
+
+* setup script writes .env, reads pnpm version from package.json ([#570](https://github.com/tarkovtracker-org/TarkovTracker/issues/570)) ([4460f03](https://github.com/tarkovtracker-org/TarkovTracker/commit/4460f03f79d8fbd4d7378eed8b13d5f712876050))
+
 ## [1.59.3](https://github.com/tarkovtracker-org/TarkovTracker/compare/v1.59.2...v1.59.3) (2026-07-20)
 
 
